@@ -10,6 +10,7 @@ import com.vwatek.apply.presentation.auth.AuthViewModel
 import com.vwatek.apply.ui.components.Sidebar
 import com.vwatek.apply.ui.screens.DashboardScreen
 import com.vwatek.apply.ui.screens.ResumeScreen
+import com.vwatek.apply.ui.screens.ResumeOptimizerScreen
 import com.vwatek.apply.ui.screens.CoverLetterScreen
 import com.vwatek.apply.ui.screens.InterviewScreen
 import com.vwatek.apply.ui.screens.SettingsScreen
@@ -20,6 +21,7 @@ import org.koin.core.context.GlobalContext
 enum class Screen {
     DASHBOARD,
     RESUMES,
+    RESUME_OPTIMIZER,
     COVER_LETTERS,
     INTERVIEW,
     SETTINGS,
@@ -79,6 +81,7 @@ fun App() {
                     onNavigateToInterview = { currentScreen = Screen.INTERVIEW }
                 )
                 Screen.RESUMES -> ResumeScreen()
+                Screen.RESUME_OPTIMIZER -> ResumeOptimizerScreen()
                 Screen.COVER_LETTERS -> CoverLetterScreen()
                 Screen.INTERVIEW -> InterviewScreen()
                 Screen.SETTINGS -> SettingsScreen()

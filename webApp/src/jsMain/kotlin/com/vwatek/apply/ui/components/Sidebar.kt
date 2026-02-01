@@ -122,6 +122,12 @@ fun Sidebar(
                 onClick = { onNavigate(Screen.RESUMES) }
             )
             NavItem(
+                label = "Optimizer",
+                icon = Icons.OPTIMIZE,
+                isActive = currentScreen == Screen.RESUME_OPTIMIZER,
+                onClick = { onNavigate(Screen.RESUME_OPTIMIZER) }
+            )
+            NavItem(
                 label = "Cover Letters",
                 icon = Icons.LETTER,
                 isActive = currentScreen == Screen.COVER_LETTERS,
@@ -231,6 +237,14 @@ private object Icons {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
+        </svg>
+    """
+    
+    const val OPTIMIZE = """
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
         </svg>
     """
 }
