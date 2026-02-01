@@ -1,6 +1,7 @@
 package com.vwatek.apply.ui.screens
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,6 +10,9 @@ import androidx.compose.runtime.setValue
 import com.vwatek.apply.presentation.auth.AuthIntent
 import com.vwatek.apply.presentation.auth.AuthView
 import com.vwatek.apply.presentation.auth.AuthViewModel
+import com.vwatek.apply.util.OAuthHelper
+import com.vwatek.apply.util.LinkedInCallbackResult
+import kotlinx.browser.window
 import org.jetbrains.compose.web.attributes.*
 import org.jetbrains.compose.web.dom.*
 import org.koin.core.context.GlobalContext
@@ -20,6 +24,57 @@ fun AuthScreen(
 ) {
     val viewModel = remember { GlobalContext.get().get<AuthViewModel>() }
     val state by viewModel.state.collectAsState()
+    var googleError by remember { mutableStateOf<String?>(null) }
+    var linkedInError by remember { mutableStateOf<String?>(null) }
+    var isGoogleLoading by remember { mutableStateOf(false) }
+    var isLinkedInLoading by remember { mutableStateOf(false) }
+    
+    // Initialize Google Sign-In when component mounts
+    LaunchedEffect(Unit) {
+        // Check for LinkedIn callback in URL
+        val url = window.location.href
+        if (url.contains("code=") || url.contains("error=")) {
+            when (val result = OAuthHelper.handleLinkedInCallback()) {
+                is LinkedInCallbackResult.Success -> {
+                    // Exchange authorization code for tokens via backend
+                    // For now, just show success
+                    console.log("LinkedIn auth code received: ${result.code}")
+                    // Clean up URL
+                    window.history.replaceState(null, "", window.location.pathname)
+                }
+                is LinkedInCallbackResult.Error -> {
+                    linkedInError = result.error
+                    window.history.replaceState(null, "", window.location.pathname)
+                }
+                LinkedInCallbackResult.NoCallback -> {
+                    // Not a callback, do nothing
+                }
+            }
+        }
+        
+        // Initialize Google Sign-In
+        try {
+            OAuthHelper.initializeGoogleSignIn(
+                clientId = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com", // Replace with actual Google Client ID
+                onSuccess = { userInfo ->
+                    isGoogleLoading = false
+                    // Create user from Google info
+                    viewModel.onIntent(AuthIntent.GoogleSignIn(
+                        email = userInfo.email,
+                        firstName = userInfo.givenName.ifEmpty { userInfo.name.split(" ").firstOrNull() ?: "" },
+                        lastName = userInfo.familyName.ifEmpty { userInfo.name.split(" ").lastOrNull() ?: "" },
+                        profilePicture = userInfo.picture
+                    ))
+                },
+                onError = { error ->
+                    isGoogleLoading = false
+                    googleError = error
+                }
+            )
+        } catch (e: Exception) {
+            console.log("Google Sign-In initialization failed: ${e.message}")
+        }
+    }
     
     // Navigate on successful login
     if (state.isAuthenticated && state.user != null) {
@@ -65,7 +120,9 @@ fun AuthScreen(
             when (state.currentView) {
                 AuthView.LOGIN -> LoginForm(
                     isLoading = state.isLoading,
-                    error = state.error,
+                    error = state.error ?: googleError ?: linkedInError,
+                    isGoogleLoading = isGoogleLoading,
+                    isLinkedInLoading = isLinkedInLoading,
                     onLogin = { email, password ->
                         viewModel.onIntent(AuthIntent.Login(email, password))
                     },
@@ -75,11 +132,32 @@ fun AuthScreen(
                     onSwitchToForgotPassword = {
                         viewModel.onIntent(AuthIntent.SwitchView(AuthView.FORGOT_PASSWORD))
                     },
-                    onGoogleLogin = { /* Google OAuth integration */ },
-                    onLinkedInLogin = {
-                        viewModel.onIntent(AuthIntent.GetLinkedInAuthUrl)
+                    onGoogleLogin = { 
+                        googleError = null
+                        isGoogleLoading = true
+                        OAuthHelper.promptGoogleSignIn()
                     },
-                    onClearError = { viewModel.onIntent(AuthIntent.ClearError) }
+                    onLinkedInLogin = {
+                        linkedInError = null
+                        isLinkedInLoading = true
+                        OAuthHelper.openLinkedInPopup(
+                            onSuccess = { code ->
+                                isLinkedInLoading = false
+                                console.log("LinkedIn auth successful, code: $code")
+                                // In production, exchange code for tokens via backend
+                                viewModel.onIntent(AuthIntent.LinkedInCallback(code))
+                            },
+                            onError = { error ->
+                                isLinkedInLoading = false
+                                linkedInError = error
+                            }
+                        )
+                    },
+                    onClearError = { 
+                        viewModel.onIntent(AuthIntent.ClearError)
+                        googleError = null
+                        linkedInError = null
+                    }
                 )
                 
                 AuthView.REGISTER -> RegisterForm(
@@ -124,6 +202,8 @@ fun AuthScreen(
 private fun LoginForm(
     isLoading: Boolean,
     error: String?,
+    isGoogleLoading: Boolean,
+    isLinkedInLoading: Boolean,
     onLogin: (email: String, password: String) -> Unit,
     onSwitchToRegister: () -> Unit,
     onSwitchToForgotPassword: () -> Unit,
@@ -144,7 +224,7 @@ private fun LoginForm(
                 classes("btn", "btn-sm")
                 onClick { onClearError() }
             }) {
-                Text("X")
+                Text("✕")
             }
         }
     }
@@ -153,29 +233,41 @@ private fun LoginForm(
     Div(attrs = { classes("social-login-buttons", "mb-lg") }) {
         Button(attrs = {
             classes("btn", "btn-social", "btn-google")
+            if (isGoogleLoading) attr("disabled", "true")
             onClick { onGoogleLogin() }
         }) {
-            RawHtml("""
-                <svg width="20" height="20" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
-            """)
-            Text("Continue with Google")
+            if (isGoogleLoading) {
+                Span(attrs = { classes("spinner-sm", "mr-sm") })
+                Text("Connecting...")
+            } else {
+                RawHtml("""
+                    <svg width="20" height="20" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                """)
+                Text("Continue with Google")
+            }
         }
         
         Button(attrs = {
             classes("btn", "btn-social", "btn-linkedin")
+            if (isLinkedInLoading) attr("disabled", "true")
             onClick { onLinkedInLogin() }
         }) {
-            RawHtml("""
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#0A66C2">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                </svg>
-            """)
-            Text("Continue with LinkedIn")
+            if (isLinkedInLoading) {
+                Span(attrs = { classes("spinner-sm", "mr-sm") })
+                Text("Connecting...")
+            } else {
+                RawHtml("""
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#0A66C2">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                """)
+                Text("Continue with LinkedIn")
+            }
         }
     }
     

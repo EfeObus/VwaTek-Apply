@@ -240,9 +240,32 @@ class GeminiService(
     }
     
     private suspend fun callGemini(prompt: String): String {
-        val apiKey = settingsRepository.getSetting("gemini_api_key") 
-            ?: throw IllegalStateException("API key not configured. Please add your Gemini API key in Settings.")
+        val apiKey = settingsRepository.getSetting("gemini_api_key")
+        val openAiKey = settingsRepository.getSetting("openai_api_key")
         
+        // Try Gemini first if API key is available
+        if (!apiKey.isNullOrBlank()) {
+            try {
+                return callGeminiApi(prompt, apiKey)
+            } catch (e: Exception) {
+                // If Gemini fails and we have OpenAI key, try fallback
+                if (!openAiKey.isNullOrBlank()) {
+                    println("Gemini API failed, falling back to OpenAI: ${e.message}")
+                    return callOpenAiApi(prompt, openAiKey)
+                }
+                throw e
+            }
+        }
+        
+        // If no Gemini key but we have OpenAI key, use OpenAI
+        if (!openAiKey.isNullOrBlank()) {
+            return callOpenAiApi(prompt, openAiKey)
+        }
+        
+        throw IllegalStateException("No AI API key configured. Please add your Gemini or OpenAI API key in Settings.")
+    }
+    
+    private suspend fun callGeminiApi(prompt: String, apiKey: String): String {
         val requestBody = GeminiRequest(
             contents = listOf(
                 GeminiContent(
@@ -259,6 +282,27 @@ class GeminiService(
         return response.candidates.firstOrNull()
             ?.content?.parts?.firstOrNull()?.text
             ?: throw IllegalStateException("No response from Gemini")
+    }
+    
+    private suspend fun callOpenAiApi(prompt: String, apiKey: String): String {
+        val openAiUrl = "https://api.openai.com/v1/chat/completions"
+        
+        val requestBody = OpenAiRequest(
+            model = "gpt-4o-mini",
+            messages = listOf(
+                OpenAiMessage(role = "user", content = prompt)
+            ),
+            temperature = 0.7
+        )
+        
+        val response: OpenAiResponse = httpClient.post(openAiUrl) {
+            contentType(ContentType.Application.Json)
+            header("Authorization", "Bearer $apiKey")
+            setBody(requestBody)
+        }.body()
+        
+        return response.choices.firstOrNull()?.message?.content
+            ?: throw IllegalStateException("No response from OpenAI")
     }
     
     private fun parseAnalysisResponse(response: String): AnalysisData {
@@ -358,4 +402,28 @@ private data class StarData(
     val action: String,
     val result: String,
     val suggestions: List<String>
+)
+
+// OpenAI API data classes for fallback
+@Serializable
+private data class OpenAiRequest(
+    val model: String,
+    val messages: List<OpenAiMessage>,
+    val temperature: Double = 0.7
+)
+
+@Serializable
+private data class OpenAiMessage(
+    val role: String,
+    val content: String
+)
+
+@Serializable
+private data class OpenAiResponse(
+    val choices: List<OpenAiChoice> = emptyList()
+)
+
+@Serializable
+private data class OpenAiChoice(
+    val message: OpenAiMessage? = null
 )

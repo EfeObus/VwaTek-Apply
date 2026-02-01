@@ -70,6 +70,17 @@ sealed class AuthIntent {
     data class LoginWithLinkedIn(val authCode: String) : AuthIntent()
     object GetLinkedInAuthUrl : AuthIntent()
     
+    // Google Sign-In with user info (from Google Identity Services)
+    data class GoogleSignIn(
+        val email: String,
+        val firstName: String,
+        val lastName: String,
+        val profilePicture: String? = null
+    ) : AuthIntent()
+    
+    // LinkedIn OAuth callback
+    data class LinkedInCallback(val authCode: String) : AuthIntent()
+    
     // Profile
     data class UpdateProfile(val user: User) : AuthIntent()
     object Logout : AuthIntent()
@@ -137,12 +148,60 @@ class AuthViewModel(
             AuthIntent.Logout -> performLogout()
             is AuthIntent.UploadResume -> uploadResume(intent.fileData, intent.fileName, intent.fileType)
             is AuthIntent.ImportFromLinkedIn -> importFromLinkedIn(intent.authCode)
+            is AuthIntent.GoogleSignIn -> handleGoogleSignIn(intent)
+            is AuthIntent.LinkedInCallback -> handleLinkedInCallback(intent.authCode)
             AuthIntent.ClearError -> _state.value = _state.value.copy(error = null)
             AuthIntent.ClearSuccess -> _state.value = _state.value.copy(
                 registrationSuccess = false,
                 passwordResetSent = false,
                 uploadedResume = null
             )
+        }
+    }
+    
+    private fun handleGoogleSignIn(intent: AuthIntent.GoogleSignIn) {
+        scope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            
+            // Create or login user with Google info
+            loginWithGoogle(intent.email) // Pass email as token since we get user info directly
+                .onSuccess { user ->
+                    // Update user with Google profile info if needed
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isAuthenticated = true,
+                        user = user,
+                        currentView = AuthView.PROFILE
+                    )
+                }
+                .onFailure { error ->
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = error.message ?: "Google sign-in failed"
+                    )
+                }
+        }
+    }
+    
+    private fun handleLinkedInCallback(authCode: String) {
+        scope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            
+            loginWithLinkedIn(authCode)
+                .onSuccess { user ->
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isAuthenticated = true,
+                        user = user,
+                        currentView = AuthView.PROFILE
+                    )
+                }
+                .onFailure { error ->
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = error.message ?: "LinkedIn sign-in failed"
+                    )
+                }
         }
     }
     
