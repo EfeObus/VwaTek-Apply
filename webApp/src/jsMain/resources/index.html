@@ -20,6 +20,19 @@
     
     <!-- Google Identity Services for Google Sign-In -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- 
+    API Keys Configuration (Optional)
+    Create a file named 'config.js' with the following content:
+    
+    window.VWATEK_CONFIG = {
+        GEMINI_API_KEY: 'your-gemini-api-key-here',
+        OPENAI_API_KEY: 'your-openai-api-key-here'
+    };
+    
+    See config.js.template for an example.
+    -->
+    <script src="config.js"></script>
 </head>
 <body>
     <div id="root"></div>
