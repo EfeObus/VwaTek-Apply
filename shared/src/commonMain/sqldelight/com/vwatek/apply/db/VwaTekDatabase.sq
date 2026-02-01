@@ -1,0 +1,147 @@
+-- Resume table
+CREATE TABLE Resume (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    content TEXT NOT NULL,
+    industry TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL
+);
+
+-- Resume Analysis table
+CREATE TABLE ResumeAnalysis (
+    id TEXT NOT NULL PRIMARY KEY,
+    resumeId TEXT NOT NULL,
+    jobDescription TEXT NOT NULL,
+    matchScore INTEGER NOT NULL,
+    missingKeywords TEXT NOT NULL,
+    recommendations TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    FOREIGN KEY (resumeId) REFERENCES Resume(id) ON DELETE CASCADE
+);
+
+-- Cover Letter table
+CREATE TABLE CoverLetter (
+    id TEXT NOT NULL PRIMARY KEY,
+    resumeId TEXT,
+    jobTitle TEXT NOT NULL,
+    companyName TEXT NOT NULL,
+    content TEXT NOT NULL,
+    tone TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    FOREIGN KEY (resumeId) REFERENCES Resume(id) ON DELETE SET NULL
+);
+
+-- Interview Session table
+CREATE TABLE InterviewSession (
+    id TEXT NOT NULL PRIMARY KEY,
+    resumeId TEXT,
+    jobTitle TEXT NOT NULL,
+    jobDescription TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'in_progress',
+    createdAt INTEGER NOT NULL,
+    completedAt INTEGER,
+    FOREIGN KEY (resumeId) REFERENCES Resume(id) ON DELETE SET NULL
+);
+
+-- Interview Question table
+CREATE TABLE InterviewQuestion (
+    id TEXT NOT NULL PRIMARY KEY,
+    sessionId TEXT NOT NULL,
+    question TEXT NOT NULL,
+    userAnswer TEXT,
+    aiFeedback TEXT,
+    questionOrder INTEGER NOT NULL,
+    createdAt INTEGER NOT NULL,
+    FOREIGN KEY (sessionId) REFERENCES InterviewSession(id) ON DELETE CASCADE
+);
+
+-- Settings table
+CREATE TABLE Settings (
+    key TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+-- Queries
+
+-- Resume queries
+selectAllResumes:
+SELECT * FROM Resume ORDER BY updatedAt DESC;
+
+selectResumeById:
+SELECT * FROM Resume WHERE id = ?;
+
+insertResume:
+INSERT INTO Resume (id, name, content, industry, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?);
+
+updateResume:
+UPDATE Resume SET name = ?, content = ?, industry = ?, updatedAt = ? WHERE id = ?;
+
+deleteResume:
+DELETE FROM Resume WHERE id = ?;
+
+-- Analysis queries
+selectAnalysesByResumeId:
+SELECT * FROM ResumeAnalysis WHERE resumeId = ? ORDER BY createdAt DESC;
+
+insertAnalysis:
+INSERT INTO ResumeAnalysis (id, resumeId, jobDescription, matchScore, missingKeywords, recommendations, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+deleteAnalysis:
+DELETE FROM ResumeAnalysis WHERE id = ?;
+
+-- Cover Letter queries
+selectAllCoverLetters:
+SELECT * FROM CoverLetter ORDER BY createdAt DESC;
+
+selectCoverLetterById:
+SELECT * FROM CoverLetter WHERE id = ?;
+
+insertCoverLetter:
+INSERT INTO CoverLetter (id, resumeId, jobTitle, companyName, content, tone, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+updateCoverLetter:
+UPDATE CoverLetter SET content = ? WHERE id = ?;
+
+deleteCoverLetter:
+DELETE FROM CoverLetter WHERE id = ?;
+
+-- Interview queries
+selectAllInterviewSessions:
+SELECT * FROM InterviewSession ORDER BY createdAt DESC;
+
+selectInterviewSessionById:
+SELECT * FROM InterviewSession WHERE id = ?;
+
+insertInterviewSession:
+INSERT INTO InterviewSession (id, resumeId, jobTitle, jobDescription, status, createdAt, completedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+updateInterviewSessionStatus:
+UPDATE InterviewSession SET status = ?, completedAt = ? WHERE id = ?;
+
+deleteInterviewSession:
+DELETE FROM InterviewSession WHERE id = ?;
+
+selectQuestionsBySessionId:
+SELECT * FROM InterviewQuestion WHERE sessionId = ? ORDER BY questionOrder;
+
+insertInterviewQuestion:
+INSERT INTO InterviewQuestion (id, sessionId, question, userAnswer, aiFeedback, questionOrder, createdAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+updateInterviewQuestion:
+UPDATE InterviewQuestion SET userAnswer = ?, aiFeedback = ? WHERE id = ?;
+
+-- Settings queries
+selectSetting:
+SELECT value FROM Settings WHERE key = ?;
+
+insertOrReplaceSetting:
+INSERT OR REPLACE INTO Settings (key, value) VALUES (?, ?);
+
+deleteSetting:
+DELETE FROM Settings WHERE key = ?;

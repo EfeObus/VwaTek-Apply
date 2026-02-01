@@ -1,0 +1,108 @@
+# .gitignore
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.vscode/
+
+# Kotlin
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Android
+local.properties
+*.apk
+*.ap_
+*.aab
+*.dex
+*.hprof
+/captures
+.externalNativeBuild/
+.cxx/
+
+# iOS
+iosApp/Pods/
+iosApp/.symlinks/
+iosApp/Flutter/
+iosApp/*.xcworkspace
+!iosApp/*.xcodeproj/project.xcworkspace/
+iosApp/build/
+iosApp/DerivedData/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+
+# Web
+webApp/build/
+webApp/node_modules/
+webApp/dist/
+*.js.map
+
+# Secrets and credentials
+secrets.properties
+local.properties
+*.keystore
+*.jks
+google-services.json
+GoogleService-Info.plist
+
+# API Keys
+*.key
+*.pem
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Test outputs
+test-results/
+test-output/
+coverage/
+*.exec
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~
+
+# Documentation build
+docs/_build/
+site/
