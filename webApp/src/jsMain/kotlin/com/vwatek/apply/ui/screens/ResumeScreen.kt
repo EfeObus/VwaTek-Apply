@@ -9,6 +9,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import com.vwatek.apply.domain.model.Resume
 import com.vwatek.apply.domain.model.ResumeSourceType
+import com.vwatek.apply.domain.model.ATSAnalysis
+import com.vwatek.apply.domain.model.IssueSeverity
 import com.vwatek.apply.presentation.resume.ResumeIntent
 import com.vwatek.apply.presentation.resume.ResumeViewModel
 import com.vwatek.apply.util.DocumentParser
@@ -33,6 +35,7 @@ fun ResumeScreen() {
     var showUploadModal by remember { mutableStateOf(false) }
     var showLinkedInModal by remember { mutableStateOf(false) }
     var showAnalyzeModal by remember { mutableStateOf(false) }
+    var showATSModal by remember { mutableStateOf(false) }
     var selectedResumeForAnalysis by remember { mutableStateOf<Resume?>(null) }
     
     Div {
@@ -190,6 +193,10 @@ fun ResumeScreen() {
                             selectedResumeForAnalysis = resume
                             showAnalyzeModal = true
                         },
+                        onATSAnalyze = {
+                            selectedResumeForAnalysis = resume
+                            showATSModal = true
+                        },
                         onDelete = {
                             viewModel.onIntent(ResumeIntent.DeleteResume(resume.id))
                         }
@@ -244,6 +251,29 @@ fun ResumeScreen() {
             )
         }
         
+        if (showATSModal && selectedResumeForAnalysis != null) {
+            ATSAnalysisModal(
+                resume = selectedResumeForAnalysis!!,
+                isAnalyzing = state.isATSAnalyzing,
+                onClose = { 
+                    showATSModal = false
+                    selectedResumeForAnalysis = null
+                },
+                onAnalyze = { jobDescription ->
+                    viewModel.onIntent(ResumeIntent.PerformATSAnalysis(selectedResumeForAnalysis!!, jobDescription))
+                    showATSModal = false
+                }
+            )
+        }
+        
+        // ATS Analysis Results Display
+        state.atsAnalysis?.let { atsAnalysis ->
+            ATSAnalysisResults(
+                analysis = atsAnalysis,
+                onClose = { viewModel.onIntent(ResumeIntent.ClearATSAnalysis) }
+            )
+        }
+        
         // Error Toast
         state.error?.let { error ->
             Div(attrs = { classes("toast", "toast-error") }) {
@@ -263,6 +293,7 @@ fun ResumeScreen() {
 private fun ResumeCard(
     resume: Resume,
     onAnalyze: () -> Unit,
+    onATSAnalyze: () -> Unit,
     onDelete: () -> Unit
 ) {
     Div(attrs = { classes("card") }) {
@@ -299,24 +330,30 @@ private fun ResumeCard(
             Text(resume.content.take(250) + if (resume.content.length > 250) "..." else "")
         }
         
-        Div(attrs = { classes("flex", "gap-sm") }) {
+        Div(attrs = { classes("flex", "gap-sm", "flex-wrap") }) {
             Button(attrs = {
                 classes("btn", "btn-primary")
                 onClick { onAnalyze() }
             }) {
-                Text("🔍 Analyze")
+                Text("Match Score")
+            }
+            Button(attrs = {
+                classes("btn", "btn-secondary")
+                onClick { onATSAnalyze() }
+            }) {
+                Text("ATS Check")
             }
             Button(attrs = {
                 classes("btn", "btn-outline")
             }) {
-                Text("✏️ Edit")
+                Text("Edit")
             }
             Button(attrs = {
                 classes("btn", "btn-ghost")
                 style { property("color", "var(--color-error)") }
                 onClick { onDelete() }
             }) {
-                Text("🗑️ Delete")
+                Text("Delete")
             }
         }
     }
@@ -862,4 +899,387 @@ private fun RawHtml(html: String) {
             onDispose { }
         }
     })
+}
+
+@Composable
+private fun ATSAnalysisModal(
+    resume: Resume,
+    isAnalyzing: Boolean,
+    onClose: () -> Unit,
+    onAnalyze: (jobDescription: String?) -> Unit
+) {
+    var jobDescription by remember { mutableStateOf("") }
+    var includeJobDescription by remember { mutableStateOf(false) }
+    
+    Div(attrs = { classes("modal-backdrop") }) {
+        Div(attrs = { classes("modal", "modal-lg") }) {
+            Div(attrs = { classes("modal-header") }) {
+                H3(attrs = { classes("modal-title") }) { Text("ATS Compatibility Check") }
+                Button(attrs = {
+                    classes("modal-close")
+                    onClick { onClose() }
+                }) { Text("x") }
+            }
+            
+            Div(attrs = { classes("modal-body") }) {
+                Div(attrs = { classes("alert", "alert-info", "mb-lg") }) {
+                    B { Text("Analyzing: ") }
+                    Text(resume.name)
+                }
+                
+                P(attrs = { classes("text-secondary", "mb-lg") }) {
+                    Text("Run a comprehensive ATS compatibility analysis to check formatting, structure, keywords, and readability.")
+                }
+                
+                Div(attrs = { classes("form-group") }) {
+                    Div(attrs = { classes("flex", "items-center", "gap-sm", "mb-md") }) {
+                        Input(InputType.Checkbox) {
+                            id("include-jd")
+                            checked(includeJobDescription)
+                            onInput { includeJobDescription = !includeJobDescription }
+                        }
+                        Label(attrs = { 
+                            attr("for", "include-jd")
+                            classes("form-label", "m-0")
+                        }) { 
+                            Text("Include job description for keyword matching (optional)") 
+                        }
+                    }
+                    
+                    if (includeJobDescription) {
+                        TextArea {
+                            classes("form-textarea")
+                            placeholder("Paste the job description to check keyword match...")
+                            value(jobDescription)
+                            onInput { jobDescription = it.value }
+                            style { property("min-height", "150px") }
+                        }
+                    }
+                }
+                
+                Div(attrs = { classes("card", "mb-lg") }) {
+                    H4(attrs = { classes("mb-sm") }) { Text("What this analysis checks:") }
+                    Ul(attrs = { classes("text-secondary") }) {
+                        Li { Text("ATS-friendly formatting (no tables, columns, headers/footers)") }
+                        Li { Text("Proper section structure (Contact, Summary, Experience, Education, Skills)") }
+                        Li { Text("Keyword density and relevance") }
+                        Li { Text("Readability and scannability") }
+                        Li { Text("Impact bullet suggestions (X-Y-Z format)") }
+                        Li { Text("Grammar and professional tone") }
+                    }
+                }
+            }
+            
+            Div(attrs = { classes("modal-footer") }) {
+                Button(attrs = {
+                    classes("btn", "btn-secondary")
+                    onClick { onClose() }
+                }) { Text("Cancel") }
+                Button(attrs = {
+                    classes("btn", "btn-primary")
+                    if (isAnalyzing) attr("disabled", "true")
+                    onClick { 
+                        onAnalyze(if (includeJobDescription && jobDescription.isNotBlank()) jobDescription else null)
+                    }
+                }) {
+                    if (isAnalyzing) {
+                        Span(attrs = { classes("spinner-sm", "mr-sm") })
+                        Text("Analyzing...")
+                    } else {
+                        Text("Run ATS Analysis")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ATSAnalysisResults(
+    analysis: ATSAnalysis,
+    onClose: () -> Unit
+) {
+    Div(attrs = { classes("modal-backdrop") }) {
+        Div(attrs = { 
+            classes("modal", "modal-xl")
+            style {
+                property("max-width", "900px")
+                property("max-height", "90vh")
+                property("overflow-y", "auto")
+            }
+        }) {
+            Div(attrs = { classes("modal-header") }) {
+                H3(attrs = { classes("modal-title") }) { Text("ATS Analysis Results") }
+                Button(attrs = {
+                    classes("modal-close")
+                    onClick { onClose() }
+                }) { Text("x") }
+            }
+            
+            Div(attrs = { classes("modal-body") }) {
+                // Score Overview
+                Div(attrs = { 
+                    classes("ats-score-overview", "mb-xl")
+                    style {
+                        property("background", "linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))")
+                        property("border-radius", "var(--radius-lg)")
+                        property("padding", "var(--spacing-xl)")
+                        property("color", "white")
+                    }
+                }) {
+                    Div(attrs = { classes("flex", "justify-between", "items-center", "mb-lg") }) {
+                        Div {
+                            H2(attrs = { style { property("margin", "0") } }) { Text("Overall ATS Score") }
+                            P(attrs = { style { property("opacity", "0.9"); property("margin", "0") } }) {
+                                Text("Based on formatting, structure, keywords, and readability")
+                            }
+                        }
+                        Div(attrs = {
+                            style {
+                                property("font-size", "3rem")
+                                property("font-weight", "700")
+                            }
+                        }) {
+                            Text("${analysis.overallScore}%")
+                        }
+                    }
+                    
+                    // Score Breakdown
+                    Div(attrs = { classes("grid", "grid-4") }) {
+                        ScoreCard("Formatting", analysis.formattingScore)
+                        ScoreCard("Structure", analysis.structureScore)
+                        ScoreCard("Keywords", analysis.keywordScore)
+                        ScoreCard("Readability", analysis.readabilityScore)
+                    }
+                }
+                
+                // Issues Section
+                if (analysis.formattingIssues.isNotEmpty() || analysis.structureIssues.isNotEmpty()) {
+                    Div(attrs = { classes("mb-xl") }) {
+                        H3(attrs = { classes("mb-md") }) { Text("Issues Found") }
+                        
+                        (analysis.formattingIssues + analysis.structureIssues).forEach { issue ->
+                            Div(attrs = { 
+                                classes("card", "mb-sm")
+                                style {
+                                    property("border-left", "4px solid ${
+                                        when (issue.severity) {
+                                            IssueSeverity.HIGH -> "var(--color-error)"
+                                            IssueSeverity.MEDIUM -> "var(--color-warning)"
+                                            IssueSeverity.LOW -> "var(--color-info)"
+                                        }
+                                    }")
+                                }
+                            }) {
+                                Div(attrs = { classes("flex", "justify-between", "items-start") }) {
+                                    Div {
+                                        Div(attrs = { classes("flex", "items-center", "gap-sm", "mb-xs") }) {
+                                            Span(attrs = { 
+                                                classes("badge")
+                                                style {
+                                                    property("background", when (issue.severity) {
+                                                        IssueSeverity.HIGH -> "var(--color-error)"
+                                                        IssueSeverity.MEDIUM -> "var(--color-warning)"
+                                                        IssueSeverity.LOW -> "var(--color-info)"
+                                                    })
+                                                    property("color", "white")
+                                                }
+                                            }) { Text(issue.severity.name) }
+                                            Span(attrs = { classes("badge", "badge-secondary") }) { Text(issue.category) }
+                                        }
+                                        P(attrs = { classes("mb-xs") }) { Text(issue.description) }
+                                        P(attrs = { classes("text-secondary", "text-sm", "m-0") }) {
+                                            B { Text("Suggestion: ") }
+                                            Text(issue.suggestion)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Recommendations
+                if (analysis.recommendations.isNotEmpty()) {
+                    Div(attrs = { classes("mb-xl") }) {
+                        H3(attrs = { classes("mb-md") }) { Text("Recommendations") }
+                        analysis.recommendations.sortedBy { it.priority }.forEach { rec ->
+                            Div(attrs = { classes("card", "mb-sm") }) {
+                                Div(attrs = { classes("flex", "items-start", "gap-md") }) {
+                                    Div(attrs = {
+                                        style {
+                                            property("background", "var(--color-primary)")
+                                            property("color", "white")
+                                            property("width", "32px")
+                                            property("height", "32px")
+                                            property("border-radius", "50%")
+                                            property("display", "flex")
+                                            property("align-items", "center")
+                                            property("justify-content", "center")
+                                            property("font-weight", "600")
+                                            property("flex-shrink", "0")
+                                        }
+                                    }) { Text("${rec.priority}") }
+                                    Div {
+                                        H4(attrs = { classes("mb-xs") }) { Text(rec.title) }
+                                        Span(attrs = { classes("badge", "badge-secondary", "mb-sm") }) { Text(rec.category) }
+                                        P(attrs = { classes("mb-xs") }) { Text(rec.description) }
+                                        P(attrs = { classes("text-secondary", "text-sm", "m-0") }) {
+                                            B { Text("Impact: ") }
+                                            Text(rec.impact)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Impact Bullets (X-Y-Z Format)
+                if (analysis.impactBullets.isNotEmpty()) {
+                    Div(attrs = { classes("mb-xl") }) {
+                        H3(attrs = { classes("mb-md") }) { Text("Impact Bullet Improvements (X-Y-Z Format)") }
+                        P(attrs = { classes("text-secondary", "mb-md") }) {
+                            Text("Transform weak bullets into powerful achievements: 'Accomplished [X] as measured by [Y], by doing [Z]'")
+                        }
+                        analysis.impactBullets.forEach { bullet ->
+                            Div(attrs = { classes("card", "mb-sm") }) {
+                                Div(attrs = { classes("mb-md") }) {
+                                    P(attrs = { classes("text-secondary", "mb-xs") }) { 
+                                        B { Text("Original:") }
+                                    }
+                                    P(attrs = { 
+                                        style { 
+                                            property("text-decoration", "line-through")
+                                            property("opacity", "0.7")
+                                        }
+                                    }) { Text(bullet.original) }
+                                }
+                                Div {
+                                    P(attrs = { classes("text-secondary", "mb-xs") }) { 
+                                        B { Text("Improved:") }
+                                    }
+                                    P(attrs = { 
+                                        classes("text-success")
+                                        style { property("font-weight", "500") }
+                                    }) { Text(bullet.improved) }
+                                }
+                                bullet.xyzFormat?.let { xyz ->
+                                    Div(attrs = { 
+                                        classes("mt-md")
+                                        style {
+                                            property("background", "var(--color-surface)")
+                                            property("padding", "var(--spacing-md)")
+                                            property("border-radius", "var(--radius-md)")
+                                        }
+                                    }) {
+                                        P(attrs = { classes("text-sm", "mb-xs") }) {
+                                            B { Text("X (Accomplished): ") }
+                                            Text(xyz.accomplished)
+                                        }
+                                        P(attrs = { classes("text-sm", "mb-xs") }) {
+                                            B { Text("Y (Measured by): ") }
+                                            Text(xyz.measuredBy)
+                                        }
+                                        P(attrs = { classes("text-sm", "m-0") }) {
+                                            B { Text("Z (By doing): ") }
+                                            Text(xyz.byDoing)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Grammar Issues
+                if (analysis.grammarIssues.isNotEmpty()) {
+                    Div(attrs = { classes("mb-xl") }) {
+                        H3(attrs = { classes("mb-md") }) { Text("Grammar and Tone Issues") }
+                        analysis.grammarIssues.forEach { issue ->
+                            Div(attrs = { classes("card", "mb-sm") }) {
+                                Span(attrs = { classes("badge", "badge-warning", "mb-sm") }) { Text(issue.type.name) }
+                                Div(attrs = { classes("flex", "gap-md") }) {
+                                    Div(attrs = { style { property("flex", "1") } }) {
+                                        P(attrs = { classes("text-secondary", "text-sm", "mb-xs") }) { Text("Original:") }
+                                        P(attrs = { 
+                                            style { 
+                                                property("text-decoration", "line-through")
+                                                property("color", "var(--color-error)")
+                                            }
+                                        }) { Text(issue.original) }
+                                    }
+                                    Div(attrs = { style { property("flex", "1") } }) {
+                                        P(attrs = { classes("text-secondary", "text-sm", "mb-xs") }) { Text("Corrected:") }
+                                        P(attrs = { classes("text-success") }) { Text(issue.corrected) }
+                                    }
+                                }
+                                P(attrs = { classes("text-secondary", "text-sm", "mt-sm", "m-0") }) {
+                                    Text(issue.explanation)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Keyword Density
+                if (analysis.keywordDensity.isNotEmpty()) {
+                    Div {
+                        H3(attrs = { classes("mb-md") }) { Text("Keyword Density") }
+                        Div(attrs = { classes("flex", "flex-wrap", "gap-sm") }) {
+                            analysis.keywordDensity.entries.sortedByDescending { it.value }.forEach { (keyword, count) ->
+                                Span(attrs = { 
+                                    classes("badge")
+                                    style {
+                                        property("background", "var(--color-surface)")
+                                        property("color", "var(--color-text)")
+                                        property("padding", "var(--spacing-sm) var(--spacing-md)")
+                                    }
+                                }) {
+                                    Text("$keyword ($count)")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Div(attrs = { classes("modal-footer") }) {
+                Button(attrs = {
+                    classes("btn", "btn-primary")
+                    onClick { onClose() }
+                }) { Text("Close") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScoreCard(label: String, score: Int) {
+    Div(attrs = {
+        style {
+            property("background", "rgba(255, 255, 255, 0.1)")
+            property("border-radius", "var(--radius-md)")
+            property("padding", "var(--spacing-md)")
+            property("text-align", "center")
+        }
+    }) {
+        Div(attrs = {
+            style {
+                property("font-size", "1.5rem")
+                property("font-weight", "700")
+                property("color", when {
+                    score >= 80 -> "#4ade80"
+                    score >= 60 -> "#fbbf24"
+                    else -> "#f87171"
+                })
+            }
+        }) { Text("$score%") }
+        Div(attrs = {
+            style {
+                property("font-size", "0.85rem")
+                property("opacity", "0.9")
+            }
+        }) { Text(label) }
+    }
 }

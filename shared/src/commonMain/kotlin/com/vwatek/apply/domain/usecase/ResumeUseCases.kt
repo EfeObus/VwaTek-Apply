@@ -4,11 +4,22 @@ import com.vwatek.apply.domain.model.Resume
 import com.vwatek.apply.domain.model.ResumeAnalysis
 import com.vwatek.apply.domain.model.CoverLetter
 import com.vwatek.apply.domain.model.CoverLetterTone
+import com.vwatek.apply.domain.model.ATSAnalysis
+import com.vwatek.apply.domain.model.ATSIssue
+import com.vwatek.apply.domain.model.ATSRecommendation
+import com.vwatek.apply.domain.model.ImpactBullet
+import com.vwatek.apply.domain.model.XYZFormat
+import com.vwatek.apply.domain.model.GrammarIssue
+import com.vwatek.apply.domain.model.IssueSeverity
+import com.vwatek.apply.domain.model.GrammarIssueType
 import com.vwatek.apply.domain.repository.ResumeRepository
 import com.vwatek.apply.domain.repository.AnalysisRepository
 import com.vwatek.apply.domain.repository.CoverLetterRepository
 import com.vwatek.apply.data.api.GeminiService
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class GetAllResumesUseCase(
     private val repository: ResumeRepository
@@ -112,4 +123,131 @@ class DeleteCoverLetterUseCase(
     private val repository: CoverLetterRepository
 ) {
     suspend operator fun invoke(id: String) = repository.deleteCoverLetter(id)
+}
+
+class PerformATSAnalysisUseCase(
+    private val geminiService: GeminiService
+) {
+    @OptIn(ExperimentalUuidApi::class)
+    suspend operator fun invoke(
+        resumeContent: String,
+        resumeId: String,
+        jobDescription: String? = null
+    ): Result<ATSAnalysis> {
+        return try {
+            val result = geminiService.performATSAnalysis(resumeContent, jobDescription)
+            
+            val analysis = ATSAnalysis(
+                id = Uuid.random().toString(),
+                resumeId = resumeId,
+                overallScore = result.overallScore,
+                formattingScore = result.formattingScore,
+                keywordScore = result.keywordScore,
+                structureScore = result.structureScore,
+                readabilityScore = result.readabilityScore,
+                formattingIssues = result.formattingIssues.map { 
+                    ATSIssue(
+                        severity = try { IssueSeverity.valueOf(it.severity) } catch (e: Exception) { IssueSeverity.MEDIUM },
+                        category = it.category,
+                        description = it.description,
+                        suggestion = it.suggestion
+                    )
+                },
+                structureIssues = result.structureIssues.map {
+                    ATSIssue(
+                        severity = try { IssueSeverity.valueOf(it.severity) } catch (e: Exception) { IssueSeverity.MEDIUM },
+                        category = it.category,
+                        description = it.description,
+                        suggestion = it.suggestion
+                    )
+                },
+                keywordDensity = result.keywordDensity,
+                recommendations = result.recommendations.map {
+                    ATSRecommendation(
+                        priority = it.priority,
+                        category = it.category,
+                        title = it.title,
+                        description = it.description,
+                        impact = it.impact
+                    )
+                },
+                impactBullets = result.impactBullets.map {
+                    ImpactBullet(
+                        original = it.original,
+                        improved = it.improved,
+                        xyzFormat = it.xyzFormat?.let { xyz ->
+                            XYZFormat(
+                                accomplished = xyz.accomplished,
+                                measuredBy = xyz.measuredBy,
+                                byDoing = xyz.byDoing
+                            )
+                        }
+                    )
+                },
+                grammarIssues = result.grammarIssues.map {
+                    GrammarIssue(
+                        original = it.original,
+                        corrected = it.corrected,
+                        explanation = it.explanation,
+                        type = try { GrammarIssueType.valueOf(it.type) } catch (e: Exception) { GrammarIssueType.GRAMMAR }
+                    )
+                },
+                createdAt = Clock.System.now()
+            )
+            
+            Result.success(analysis)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+
+class GenerateImpactBulletsUseCase(
+    private val geminiService: GeminiService
+) {
+    suspend operator fun invoke(
+        experiences: List<String>,
+        jobContext: String
+    ): Result<List<ImpactBullet>> {
+        return try {
+            val results = geminiService.generateImpactBullets(experiences, jobContext)
+            val bullets = results.map {
+                ImpactBullet(
+                    original = it.original,
+                    improved = it.improved,
+                    xyzFormat = if (it.accomplished.isNotBlank()) {
+                        XYZFormat(
+                            accomplished = it.accomplished,
+                            measuredBy = it.measuredBy,
+                            byDoing = it.byDoing
+                        )
+                    } else null
+                )
+            }
+            Result.success(bullets)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+
+class AnalyzeGrammarUseCase(
+    private val geminiService: GeminiService
+) {
+    suspend operator fun invoke(text: String): Result<List<GrammarIssue>> {
+        return try {
+            val results = geminiService.analyzeGrammarAndTone(text)
+            val issues = results.map {
+                GrammarIssue(
+                    original = it.original,
+                    corrected = it.corrected,
+                    explanation = it.explanation,
+                    type = try { GrammarIssueType.valueOf(it.type) } catch (e: Exception) { GrammarIssueType.GRAMMAR }
+                )
+            }
+            Result.success(issues)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

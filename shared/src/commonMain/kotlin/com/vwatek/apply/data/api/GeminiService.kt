@@ -239,6 +239,104 @@ class GeminiService(
         return parseStarResponse(response)
     }
     
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun performATSAnalysis(resumeContent: String, jobDescription: String?): ATSAnalysisResult {
+        val prompt = buildString {
+            appendLine("You are an expert ATS (Applicant Tracking System) analyst and resume optimization specialist.")
+            appendLine()
+            appendLine("Perform a comprehensive ATS compatibility analysis on the following resume.")
+            appendLine("Evaluate:")
+            appendLine("1. FORMATTING: Check for ATS-unfriendly elements (tables, columns, headers/footers, images, special characters)")
+            appendLine("2. STRUCTURE: Verify proper section organization (Contact, Summary, Experience, Education, Skills)")
+            appendLine("3. KEYWORDS: Analyze keyword density and relevance")
+            appendLine("4. READABILITY: Check for clear, scannable content")
+            appendLine("5. IMPACT: Identify bullet points that could use X-Y-Z format (Accomplished X as measured by Y, by doing Z)")
+            appendLine("6. GRAMMAR & TONE: Check for professional language, grammar issues, and consistency")
+            appendLine()
+            appendLine("RESUME:")
+            appendLine(resumeContent)
+            if (jobDescription != null) {
+                appendLine()
+                appendLine("TARGET JOB DESCRIPTION (for keyword matching):")
+                appendLine(jobDescription)
+            }
+            appendLine()
+            appendLine("Respond ONLY with valid JSON in this exact format:")
+            appendLine("""{
+  "overallScore": <0-100>,
+  "formattingScore": <0-100>,
+  "keywordScore": <0-100>,
+  "structureScore": <0-100>,
+  "readabilityScore": <0-100>,
+  "formattingIssues": [
+    {"severity": "HIGH|MEDIUM|LOW", "category": "<category>", "description": "<issue>", "suggestion": "<fix>"}
+  ],
+  "structureIssues": [
+    {"severity": "HIGH|MEDIUM|LOW", "category": "<category>", "description": "<issue>", "suggestion": "<fix>"}
+  ],
+  "keywordDensity": {"<keyword>": <count>},
+  "recommendations": [
+    {"priority": <1-5>, "category": "<category>", "title": "<title>", "description": "<details>", "impact": "<expected improvement>"}
+  ],
+  "impactBullets": [
+    {"original": "<current bullet>", "improved": "<rewritten with metrics>", "xyzFormat": {"accomplished": "<X>", "measuredBy": "<Y>", "byDoing": "<Z>"}}
+  ],
+  "grammarIssues": [
+    {"original": "<text>", "corrected": "<fixed text>", "explanation": "<why>", "type": "GRAMMAR|SPELLING|TONE|CLARITY|REDUNDANCY"}
+  ]
+}""")
+        }
+        
+        val response = callGemini(prompt)
+        return parseATSAnalysisResponse(response)
+    }
+    
+    suspend fun generateImpactBullets(experiences: List<String>, jobContext: String): List<ImpactBulletResult> {
+        val prompt = buildString {
+            appendLine("You are an expert resume writer specializing in high-impact achievement statements.")
+            appendLine()
+            appendLine("Transform the following experience bullet points into powerful X-Y-Z format statements:")
+            appendLine("'Accomplished [X] as measured by [Y], by doing [Z]'")
+            appendLine()
+            appendLine("JOB CONTEXT: $jobContext")
+            appendLine()
+            appendLine("BULLET POINTS TO IMPROVE:")
+            experiences.forEachIndexed { index, exp ->
+                appendLine("${index + 1}. $exp")
+            }
+            appendLine()
+            appendLine("Respond ONLY with valid JSON array:")
+            appendLine("""[{"original": "<original text>", "improved": "<X-Y-Z format>", "accomplished": "<X>", "measuredBy": "<Y>", "byDoing": "<Z>"}]""")
+        }
+        
+        val response = callGemini(prompt)
+        return parseImpactBulletsResponse(response)
+    }
+    
+    suspend fun analyzeGrammarAndTone(text: String): List<GrammarResult> {
+        val prompt = buildString {
+            appendLine("You are a professional editor specializing in resume and business writing.")
+            appendLine()
+            appendLine("Analyze the following text for grammar, spelling, tone, and clarity issues.")
+            appendLine("Focus on:")
+            appendLine("- Grammar and punctuation errors")
+            appendLine("- Spelling mistakes")
+            appendLine("- Passive voice (should be active)")
+            appendLine("- Weak verbs (should use strong action verbs)")
+            appendLine("- Redundant phrases")
+            appendLine("- Unprofessional tone")
+            appendLine()
+            appendLine("TEXT:")
+            appendLine(text)
+            appendLine()
+            appendLine("Respond ONLY with valid JSON array:")
+            appendLine("""[{"original": "<problematic text>", "corrected": "<fixed version>", "explanation": "<why this change>", "type": "GRAMMAR|SPELLING|TONE|CLARITY|REDUNDANCY"}]""")
+        }
+        
+        val response = callGemini(prompt)
+        return parseGrammarResponse(response)
+    }
+    
     private suspend fun callGemini(prompt: String): String {
         val apiKey = settingsRepository.getSetting("gemini_api_key")
         val openAiKey = settingsRepository.getSetting("openai_api_key")
@@ -352,9 +450,58 @@ class GeminiService(
         }
     }
     
+    private fun parseATSAnalysisResponse(response: String): ATSAnalysisResult {
+        val jsonString = extractJson(response)
+        return try {
+            json.decodeFromString<ATSAnalysisResult>(jsonString)
+        } catch (e: Exception) {
+            ATSAnalysisResult(
+                overallScore = 50,
+                formattingScore = 50,
+                keywordScore = 50,
+                structureScore = 50,
+                readabilityScore = 50,
+                formattingIssues = emptyList(),
+                structureIssues = emptyList(),
+                keywordDensity = emptyMap(),
+                recommendations = emptyList(),
+                impactBullets = emptyList(),
+                grammarIssues = emptyList()
+            )
+        }
+    }
+    
+    private fun parseImpactBulletsResponse(response: String): List<ImpactBulletResult> {
+        val jsonString = extractJsonArray(response)
+        return try {
+            json.decodeFromString<List<ImpactBulletResult>>(jsonString)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
+    private fun parseGrammarResponse(response: String): List<GrammarResult> {
+        val jsonString = extractJsonArray(response)
+        return try {
+            json.decodeFromString<List<GrammarResult>>(jsonString)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+    
     private fun extractJson(text: String): String {
         val startIndex = text.indexOf('{')
         val endIndex = text.lastIndexOf('}')
+        return if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
+            text.substring(startIndex, endIndex + 1)
+        } else {
+            text
+        }
+    }
+    
+    private fun extractJsonArray(text: String): String {
+        val startIndex = text.indexOf('[')
+        val endIndex = text.lastIndexOf(']')
         return if (startIndex != -1 && endIndex != -1 && endIndex > startIndex) {
             text.substring(startIndex, endIndex + 1)
         } else {
@@ -402,6 +549,78 @@ private data class StarData(
     val action: String,
     val result: String,
     val suggestions: List<String>
+)
+
+// ATS Analysis response data classes
+@Serializable
+data class ATSAnalysisResult(
+    val overallScore: Int,
+    val formattingScore: Int,
+    val keywordScore: Int,
+    val structureScore: Int,
+    val readabilityScore: Int,
+    val formattingIssues: List<ATSIssueData> = emptyList(),
+    val structureIssues: List<ATSIssueData> = emptyList(),
+    val keywordDensity: Map<String, Int> = emptyMap(),
+    val recommendations: List<ATSRecommendationData> = emptyList(),
+    val impactBullets: List<ImpactBulletData> = emptyList(),
+    val grammarIssues: List<GrammarIssueData> = emptyList()
+)
+
+@Serializable
+data class ATSIssueData(
+    val severity: String,
+    val category: String,
+    val description: String,
+    val suggestion: String
+)
+
+@Serializable
+data class ATSRecommendationData(
+    val priority: Int,
+    val category: String,
+    val title: String,
+    val description: String,
+    val impact: String
+)
+
+@Serializable
+data class ImpactBulletData(
+    val original: String,
+    val improved: String,
+    val xyzFormat: XYZFormatData? = null
+)
+
+@Serializable
+data class XYZFormatData(
+    val accomplished: String,
+    val measuredBy: String,
+    val byDoing: String
+)
+
+@Serializable
+data class GrammarIssueData(
+    val original: String,
+    val corrected: String,
+    val explanation: String,
+    val type: String
+)
+
+@Serializable
+data class ImpactBulletResult(
+    val original: String,
+    val improved: String,
+    val accomplished: String = "",
+    val measuredBy: String = "",
+    val byDoing: String = ""
+)
+
+@Serializable
+data class GrammarResult(
+    val original: String,
+    val corrected: String,
+    val explanation: String,
+    val type: String
 )
 
 // OpenAI API data classes for fallback

@@ -195,3 +195,77 @@ enum class SupportedFileType {
     DOC,
     TXT
 }
+
+// ATS Analysis Models
+@Serializable
+data class ATSAnalysis(
+    val id: String,
+    val resumeId: String,
+    val overallScore: Int,
+    val formattingScore: Int,
+    val keywordScore: Int,
+    val structureScore: Int,
+    val readabilityScore: Int,
+    val formattingIssues: List<ATSIssue>,
+    val structureIssues: List<ATSIssue>,
+    val keywordDensity: Map<String, Int>,
+    val recommendations: List<ATSRecommendation>,
+    val impactBullets: List<ImpactBullet>,
+    val grammarIssues: List<GrammarIssue>,
+    val createdAt: Instant
+)
+
+@Serializable
+data class ATSIssue(
+    val severity: IssueSeverity,
+    val category: String,
+    val description: String,
+    val suggestion: String
+)
+
+@Serializable
+enum class IssueSeverity {
+    HIGH,
+    MEDIUM,
+    LOW
+}
+
+@Serializable
+data class ATSRecommendation(
+    val priority: Int,
+    val category: String,
+    val title: String,
+    val description: String,
+    val impact: String
+)
+
+@Serializable
+data class ImpactBullet(
+    val original: String,
+    val improved: String,
+    val xyzFormat: XYZFormat?
+)
+
+@Serializable
+data class XYZFormat(
+    val accomplished: String,
+    val measuredBy: String,
+    val byDoing: String
+)
+
+@Serializable
+data class GrammarIssue(
+    val original: String,
+    val corrected: String,
+    val explanation: String,
+    val type: GrammarIssueType
+)
+
+@Serializable
+enum class GrammarIssueType {
+    GRAMMAR,
+    SPELLING,
+    TONE,
+    CLARITY,
+    REDUNDANCY
+}
