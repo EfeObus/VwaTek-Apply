@@ -24,6 +24,7 @@ import com.vwatek.apply.domain.repository.CoverLetterRepository
 import com.vwatek.apply.domain.repository.InterviewRepository
 import com.vwatek.apply.domain.repository.SettingsRepository
 import com.vwatek.apply.domain.repository.AuthRepository
+import com.vwatek.apply.domain.repository.AuthError
 import com.vwatek.apply.domain.repository.LinkedInRepository
 import com.vwatek.apply.domain.repository.FileUploadRepository
 import kotlinx.browser.localStorage
@@ -90,12 +91,120 @@ class LocalStorageAuthRepository : AuthRepository {
     private val usersKey = "vwatek_users"
     private val authKey = "vwatek_auth"
     
+    // Session expiration callbacks
+    private var onSessionExpiring: (() -> Unit)? = null
+    private var onSessionExpired: (() -> Unit)? = null
+    private var sessionCheckInterval: Int = 0
+    
     // Token expiration times
     private val TOKEN_EXPIRY_HOURS = 24L // Regular session: 24 hours
+    private val SESSION_WARNING_MINUTES = 5L // Warn 5 minutes before expiry
     private val REMEMBER_ME_EXPIRY_DAYS = 30L // Remember me: 30 days
     
     init {
         loadAuthState()
+        startSessionMonitor()
+    }
+    
+    /**
+     * Start monitoring session expiration
+     * Checks every minute and warns 5 minutes before expiry
+     */
+    private fun startSessionMonitor() {
+        // Check every minute
+        sessionCheckInterval = window.setInterval({
+            checkSessionExpiration()
+        }, 60000) // 60 seconds
+    }
+    
+    /**
+     * Stop the session monitor (call when logging out)
+     */
+    private fun stopSessionMonitor() {
+        if (sessionCheckInterval != 0) {
+            window.clearInterval(sessionCheckInterval)
+            sessionCheckInterval = 0
+        }
+    }
+    
+    /**
+     * Check if session is expired or expiring soon
+     */
+    private fun checkSessionExpiration() {
+        val stored = localStorage.getItem(authKey) ?: return
+        try {
+            val data = json.decodeFromString<AuthStateData>(stored)
+            val expiresAt = data.expiresAt?.let { Instant.parse(it) } ?: return
+            val now = Clock.System.now()
+            
+            if (now >= expiresAt) {
+                // Session expired
+                console.log("Session expired during monitoring")
+                handleSessionExpired()
+            } else {
+                // Check if expiring soon (within warning time)
+                val warningThreshold = expiresAt.minus(kotlin.time.Duration.parse("${SESSION_WARNING_MINUTES}m"))
+                if (now >= warningThreshold) {
+                    val minutesRemaining = (expiresAt - now).inWholeMinutes
+                    console.log("Session expiring in $minutesRemaining minutes")
+                    onSessionExpiring?.invoke()
+                }
+            }
+        } catch (e: Exception) {
+            console.error("Error checking session expiration: ${e.message}")
+        }
+    }
+    
+    /**
+     * Handle session expiration
+     */
+    private fun handleSessionExpired() {
+        _authState.value = AuthState()
+        localStorage.removeItem(authKey)
+        onSessionExpired?.invoke()
+    }
+    
+    /**
+     * Set callbacks for session expiration events
+     */
+    fun setSessionCallbacks(
+        onExpiring: (() -> Unit)? = null,
+        onExpired: (() -> Unit)? = null
+    ) {
+        onSessionExpiring = onExpiring
+        onSessionExpired = onExpired
+    }
+    
+    /**
+     * Get remaining session time in minutes
+     */
+    fun getSessionRemainingMinutes(): Long? {
+        val stored = localStorage.getItem(authKey) ?: return null
+        return try {
+            val data = json.decodeFromString<AuthStateData>(stored)
+            val expiresAt = data.expiresAt?.let { Instant.parse(it) } ?: return null
+            val now = Clock.System.now()
+            if (now >= expiresAt) 0L else (expiresAt - now).inWholeMinutes
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    /**
+     * Extend the current session (refresh token)
+     */
+    fun extendSession() {
+        val stored = localStorage.getItem(authKey) ?: return
+        try {
+            val data = json.decodeFromString<AuthStateData>(stored)
+            val rememberMe = data.rememberMe
+            
+            // Re-save with new expiration time
+            saveAuthState(rememberMe)
+            console.log("Session extended")
+        } catch (e: Exception) {
+            console.error("Error extending session: ${e.message}")
+        }
     }
     
     private fun loadAuthState() {
@@ -168,7 +277,17 @@ class LocalStorageAuthRepository : AuthRepository {
     override suspend fun registerWithEmail(data: RegistrationData): Result<User> {
         val users = loadUsers()
         if (users.any { it.email.equals(data.email, ignoreCase = true) }) {
-            return Result.failure(IllegalArgumentException("Email already registered"))
+            return Result.failure(AuthError.EmailAlreadyExists)
+        }
+        
+        // Validate email format
+        if (!data.email.contains("@") || !data.email.contains(".")) {
+            return Result.failure(AuthError.InvalidEmail)
+        }
+        
+        // Validate password strength (basic check)
+        if (data.password.length < 8) {
+            return Result.failure(AuthError.WeakPassword)
         }
         
         val now = Clock.System.now()
@@ -204,10 +323,18 @@ class LocalStorageAuthRepository : AuthRepository {
     
     override suspend fun loginWithEmail(email: String, password: String, rememberMe: Boolean): Result<User> {
         val users = loadUsers()
+        
+        // First check if user exists
+        val userByEmail = users.find { it.email.equals(email, ignoreCase = true) }
+        if (userByEmail == null) {
+            return Result.failure(AuthError.AccountNotFound)
+        }
+        
+        // Then verify password
         val userData = users.find { 
             it.email.equals(email, ignoreCase = true) && 
             (it.password?.let { storedPassword -> PasswordHasher.verifyPassword(password, storedPassword) } ?: false)
-        } ?: return Result.failure(IllegalArgumentException("Invalid email or password"))
+        } ?: return Result.failure(AuthError.InvalidCredentials)
         
         val user = userData.toUser()
         _authState.value = AuthState(
@@ -323,6 +450,7 @@ class LocalStorageAuthRepository : AuthRepository {
     }
     
     override suspend fun logout() {
+        stopSessionMonitor()
         _authState.value = AuthState()
         localStorage.removeItem(authKey)
     }
@@ -331,7 +459,7 @@ class LocalStorageAuthRepository : AuthRepository {
         val users = loadUsers().toMutableList()
         val index = users.indexOfFirst { it.id == user.id }
         if (index == -1) {
-            return Result.failure(IllegalArgumentException("User not found"))
+            return Result.failure(AuthError.NotAuthenticated)
         }
         
         val updated = users[index].copy(
@@ -359,7 +487,7 @@ class LocalStorageAuthRepository : AuthRepository {
         // In a real app, this would send a reset email via backend
         val users = loadUsers()
         if (!users.any { it.email.equals(email, ignoreCase = true) }) {
-            return Result.failure(IllegalArgumentException("Email not found"))
+            return Result.failure(AuthError.AccountNotFound)
         }
         // Simulate success
         return Result.success(Unit)
@@ -367,6 +495,55 @@ class LocalStorageAuthRepository : AuthRepository {
     
     override suspend fun isEmailAvailable(email: String): Boolean {
         return !loadUsers().any { it.email.equals(email, ignoreCase = true) }
+    }
+    
+    // Email verification stub implementations
+    override suspend fun sendVerificationEmail(email: String): Result<Unit> {
+        // STUB: In production, this would:
+        // 1. Generate a verification token
+        // 2. Store the token with expiration time
+        // 3. Send email via backend service (SendGrid, SES, etc.)
+        console.log("[Email Verification Stub] Sending verification email to: $email")
+        
+        val users = loadUsers()
+        if (!users.any { it.email.equals(email, ignoreCase = true) }) {
+            return Result.failure(AuthError.AccountNotFound)
+        }
+        
+        // Simulate sending email (in production, call backend API)
+        console.log("[Email Verification Stub] Verification email 'sent' successfully")
+        return Result.success(Unit)
+    }
+    
+    override suspend fun verifyEmail(token: String): Result<Unit> {
+        // STUB: In production, this would:
+        // 1. Validate the token exists and hasn't expired
+        // 2. Mark the user's email as verified
+        // 3. Delete the used token
+        console.log("[Email Verification Stub] Verifying email with token: ${token.take(8)}...")
+        
+        if (token.isEmpty()) {
+            return Result.failure(AuthError.InvalidVerificationToken)
+        }
+        
+        // In a real implementation, we would look up the token and update the user
+        // For now, just return success as a stub
+        console.log("[Email Verification Stub] Email verified successfully (stub)")
+        return Result.success(Unit)
+    }
+    
+    override suspend fun isEmailVerified(userId: String): Boolean {
+        // STUB: In production, check the user's emailVerified field
+        val users = loadUsers()
+        val user = users.find { it.id == userId }
+        
+        // For OAuth users (Google, LinkedIn), email is considered verified
+        if (user?.authProvider != null && user.authProvider != "EMAIL") {
+            return true
+        }
+        
+        // For email users, check the emailVerified field (defaults to false)
+        return user?.emailVerified == true
     }
     
     @OptIn(ExperimentalUuidApi::class)
@@ -916,6 +1093,7 @@ private data class UserData(
     val profileImageUrl: String?,
     val authProvider: String,
     val linkedInProfileUrl: String?,
+    val emailVerified: Boolean = false,
     val createdAt: String,
     val updatedAt: String
 ) {
@@ -931,6 +1109,7 @@ private data class UserData(
         profileImageUrl = profileImageUrl,
         authProvider = AuthProvider.valueOf(authProvider),
         linkedInProfileUrl = linkedInProfileUrl,
+        emailVerified = emailVerified,
         createdAt = Instant.parse(createdAt),
         updatedAt = Instant.parse(updatedAt)
     )
@@ -950,6 +1129,7 @@ private data class UserData(
             profileImageUrl = u.profileImageUrl,
             authProvider = u.authProvider.name,
             linkedInProfileUrl = u.linkedInProfileUrl,
+            emailVerified = u.emailVerified,
             createdAt = u.createdAt.toString(),
             updatedAt = u.updatedAt.toString()
         )

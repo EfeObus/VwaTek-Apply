@@ -15,6 +15,7 @@ data class User(
     val profileImageUrl: String? = null,
     val authProvider: AuthProvider,
     val linkedInProfileUrl: String? = null,
+    val emailVerified: Boolean = false,  // Email verification status
     val createdAt: Instant,
     val updatedAt: Instant
 )

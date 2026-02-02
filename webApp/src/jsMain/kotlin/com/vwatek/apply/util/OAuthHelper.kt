@@ -32,6 +32,40 @@ object OAuthHelper {
     }
     
     /**
+     * Check if Google Identity Services SDK is loaded
+     */
+    fun isGoogleSdkLoaded(): Boolean {
+        val google = js("window.google")
+        return google != null && google != undefined
+    }
+    
+    /**
+     * Wait for Google SDK to load with timeout
+     */
+    fun waitForGoogleSdk(
+        timeoutMs: Int = 5000,
+        onLoaded: () -> Unit,
+        onTimeout: () -> Unit
+    ) {
+        var elapsed = 0
+        val checkInterval = 100
+        var intervalHandle: Int = 0
+        
+        intervalHandle = window.setInterval({
+            if (isGoogleSdkLoaded()) {
+                window.clearInterval(intervalHandle)
+                onLoaded()
+            } else {
+                elapsed += checkInterval
+                if (elapsed >= timeoutMs) {
+                    window.clearInterval(intervalHandle)
+                    onTimeout()
+                }
+            }
+        }, checkInterval)
+    }
+    
+    /**
      * Initialize Google Sign-In
      */
     fun initializeGoogleSignIn(
@@ -39,12 +73,31 @@ object OAuthHelper {
         onSuccess: (userInfo: GoogleUserInfo) -> Unit,
         onError: (error: String) -> Unit
     ) {
+        // First check if SDK is loaded
+        if (!isGoogleSdkLoaded()) {
+            // Wait for SDK to load
+            waitForGoogleSdk(
+                onLoaded = {
+                    doInitializeGoogleSignIn(clientId, onSuccess, onError)
+                },
+                onTimeout = {
+                    console.warn("Google Sign-In SDK not loaded. Make sure the Google Identity Services script is included in your HTML.")
+                    onError("Google Sign-In is not available. Please check your internet connection and try again.")
+                }
+            )
+            return
+        }
+        
+        doInitializeGoogleSignIn(clientId, onSuccess, onError)
+    }
+    
+    private fun doInitializeGoogleSignIn(
+        clientId: String,
+        onSuccess: (userInfo: GoogleUserInfo) -> Unit,
+        onError: (error: String) -> Unit
+    ) {
         try {
             val google = js("window.google")
-            if (google == null || google == undefined) {
-                onError("Google Identity Services not loaded")
-                return
-            }
             
             val config = js("{}")
             config.client_id = clientId
@@ -65,6 +118,7 @@ object OAuthHelper {
             config.cancel_on_tap_outside = true
             
             google.accounts.id.initialize(config)
+            console.log("Google Sign-In initialized successfully")
         } catch (e: Exception) {
             onError("Failed to initialize Google Sign-In: ${e.message}")
         }
@@ -73,14 +127,29 @@ object OAuthHelper {
     /**
      * Prompt Google Sign-In popup
      */
-    fun promptGoogleSignIn() {
+    fun promptGoogleSignIn(): Boolean {
+        if (!isGoogleSdkLoaded()) {
+            console.error("Google SDK not loaded - cannot prompt sign-in")
+            return false
+        }
+        
         try {
             val google = js("window.google")
-            if (google != null && google != undefined) {
-                google.accounts.id.prompt { _: dynamic -> }
+            google.accounts.id.prompt { notification: dynamic ->
+                val notDisplayed = notification.isNotDisplayed()
+                val skipped = notification.isSkippedMoment()
+                
+                if (notDisplayed == true) {
+                    console.log("Google One Tap not displayed: ${notification.getNotDisplayedReason()}")
+                }
+                if (skipped == true) {
+                    console.log("Google One Tap skipped: ${notification.getSkippedReason()}")
+                }
             }
+            return true
         } catch (e: Exception) {
             console.error("Google Sign-In prompt error: ${e.message}")
+            return false
         }
     }
     

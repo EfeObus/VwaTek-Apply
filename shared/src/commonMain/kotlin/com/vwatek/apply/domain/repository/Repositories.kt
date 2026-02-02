@@ -24,6 +24,52 @@ interface AuthRepository {
     suspend fun updateProfile(user: User): Result<User>
     suspend fun resetPassword(email: String): Result<Unit>
     suspend fun isEmailAvailable(email: String): Boolean
+    
+    // Email verification methods (stub for future implementation)
+    suspend fun sendVerificationEmail(email: String): Result<Unit>
+    suspend fun verifyEmail(token: String): Result<Unit>
+    suspend fun isEmailVerified(userId: String): Boolean
+}
+
+/**
+ * Sealed class for authentication errors with user-friendly messages
+ */
+sealed class AuthError(override val message: String) : Exception(message) {
+    // Login errors
+    data object InvalidCredentials : AuthError("The email or password you entered is incorrect. Please try again.")
+    data object AccountNotFound : AuthError("No account found with this email address. Please register first.")
+    data object AccountLocked : AuthError("Your account has been temporarily locked due to too many failed login attempts. Please try again later.")
+    
+    // Registration errors
+    data object EmailAlreadyExists : AuthError("An account with this email already exists. Please sign in or use a different email.")
+    data object WeakPassword : AuthError("Password is too weak. Please use at least 8 characters with a mix of letters, numbers, and symbols.")
+    data object InvalidEmail : AuthError("Please enter a valid email address.")
+    
+    // OAuth errors
+    data object GoogleSignInCancelled : AuthError("Google sign-in was cancelled. Please try again.")
+    data object GoogleSignInFailed : AuthError("Unable to sign in with Google. Please check your internet connection and try again.")
+    data object LinkedInSignInCancelled : AuthError("LinkedIn sign-in was cancelled. Please try again.")
+    data object LinkedInSignInFailed : AuthError("Unable to sign in with LinkedIn. Please check your internet connection and try again.")
+    data object OAuthTokenExpired : AuthError("Your session has expired. Please sign in again.")
+    
+    // Session errors
+    data object SessionExpired : AuthError("Your session has expired. Please sign in again.")
+    data object NotAuthenticated : AuthError("Please sign in to continue.")
+    
+    // Email verification errors
+    data object EmailNotVerified : AuthError("Please verify your email address to continue.")
+    data object VerificationEmailFailed : AuthError("Unable to send verification email. Please try again later.")
+    data object InvalidVerificationToken : AuthError("The verification link is invalid or has expired. Please request a new one.")
+    
+    // Network errors
+    data object NetworkError : AuthError("Unable to connect. Please check your internet connection and try again.")
+    data object ServerError : AuthError("Something went wrong on our end. Please try again later.")
+    
+    // Password reset errors
+    data object PasswordResetFailed : AuthError("Unable to send password reset email. Please verify your email address and try again.")
+    
+    // Generic error
+    data class Unknown(override val message: String) : AuthError(message)
 }
 
 /**
