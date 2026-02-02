@@ -306,6 +306,115 @@ fun navigateTo(route: Route) {
 
 ### PDF Export
 
+The web version uses browser print-to-PDF functionality with custom HTML templates.
+
+```kotlin
+object PdfExport {
+    /**
+     * Export resume to PDF using browser print dialog
+     * Supports 4 professional templates
+     */
+    fun exportResumeToPdf(resume: Resume, format: ResumeFormat) {
+        val html = generateHtml(resume, format)
+        val printWindow = window.open("", "_blank")
+        printWindow?.document?.write(html)
+        printWindow?.document?.close()
+        printWindow?.print()
+    }
+    
+    /**
+     * Preview resume as HTML (returns HTML string for modal preview)
+     */
+    fun previewResume(resume: Resume, format: ResumeFormat): String {
+        return generateHtml(resume, format)
+    }
+}
+
+enum class ResumeFormat(val displayName: String) {
+    PROFESSIONAL("Professional"),  // Clean, corporate style
+    MODERN("Modern"),              // Contemporary with accent colors
+    CLASSIC("Classic"),            // Traditional, serif fonts
+    MINIMAL("Minimal")             // Simple, whitespace-focused
+}
+```
+
+**Format Styles:**
+
+| Format | Font | Layout | Best For |
+|--------|------|--------|----------|
+| Professional | Arial/Helvetica | Two-column header | Corporate, Finance, Legal |
+| Modern | System UI | Accent color sidebar | Tech, Marketing, Creative |
+| Classic | Georgia/Serif | Traditional single column | Academic, Executive |
+| Minimal | Sans-serif | Maximum whitespace | Startups, Design |
+
+### Resume Version Control
+
+Track changes and restore previous versions of resumes.
+
+```kotlin
+// Version model
+@Serializable
+data class ResumeVersion(
+    val id: String,
+    val resumeId: String,
+    val versionNumber: Int,
+    val content: String,
+    val changeDescription: String,
+    val createdAt: Instant
+) {
+    val createdAtFormatted: String
+        get() = createdAt.toString().take(19).replace("T", " ")
+}
+
+// Version control operations
+class ResumeVersionRepository {
+    fun getVersionsByResumeId(resumeId: String): Flow<List<ResumeVersion>>
+    fun getVersionById(id: String): ResumeVersion?
+    fun insertVersion(version: ResumeVersion)
+    fun deleteVersion(id: String)
+}
+
+// Use cases
+class CreateResumeVersionUseCase(private val repository: ResumeRepository) {
+    suspend operator fun invoke(
+        resumeId: String,
+        content: String,
+        changeDescription: String
+    ): ResumeVersion
+}
+
+class RestoreResumeVersionUseCase(private val repository: ResumeRepository) {
+    suspend operator fun invoke(version: ResumeVersion): Resume
+}
+```
+
+### LocalStorage Persistence
+
+Web data is persisted using browser localStorage with JSON serialization.
+
+```kotlin
+class LocalStorageResumeRepository : ResumeRepository {
+    private val json = Json { ignoreUnknownKeys = true }
+    private val storageKey = "vwatek_resumes"
+    private val versionsStorageKey = "vwatek_resume_versions"
+    
+    override fun getResumes(): Flow<List<Resume>> = flow {
+        val stored = localStorage.getItem(storageKey)
+        val resumes = stored?.let { 
+            json.decodeFromString<List<ResumeData>>(it).map { it.toResume() }
+        } ?: emptyList()
+        emit(resumes)
+    }
+    
+    private fun saveToStorage(resumes: List<Resume>) {
+        val data = resumes.map { it.toData() }
+        localStorage.setItem(storageKey, json.encodeToString(data))
+    }
+}
+```
+
+### Legacy PDF Export (jsPDF)
+
 ```kotlin
 suspend fun exportToPdf(resume: Resume): Blob {
     // Use jsPDF library for PDF generation

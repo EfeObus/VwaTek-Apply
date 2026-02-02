@@ -197,14 +197,26 @@ val dataModule = module {
 }
 
 val domainModule = module {
+    // Resume Analysis
     factory { AnalyzeResumeUseCase(get(), get()) }
     factory { OptimizeResumeUseCase(get()) }
+    factory { PerformATSAnalysisUseCase(get()) }
+    factory { RewriteSectionUseCase(get()) }
+    
+    // Version Control
+    factory { GetResumeVersionsUseCase(get()) }
+    factory { CreateResumeVersionUseCase(get()) }
+    factory { RestoreResumeVersionUseCase(get()) }
+    factory { DeleteResumeVersionUseCase(get()) }
+    
+    // Cover Letters & Interviews
     factory { GenerateCoverLetterUseCase(get()) }
     factory { MockInterviewUseCase(get()) }
 }
 
 val presentationModule = module {
     viewModel { ResumeReviewViewModel(get(), get()) }
+    viewModel { ResumeViewModel(get(), get(), get(), get()) }
     viewModel { CoverLetterViewModel(get()) }
     viewModel { InterviewPrepViewModel(get()) }
 }
@@ -270,7 +282,7 @@ class GeminiApiService(
         streamResponse: Boolean = true
     ): Flow<String> = flow {
         // Stream response for real-time UI updates
-        httpClient.preparePost("$BASE_URL/models/gemini-3-flash:streamGenerateContent") {
+        httpClient.preparePost("$BASE_URL/models/gemini-2.0-flash:streamGenerateContent") {
             parameter("key", apiKey)
             contentType(ContentType.Application.Json)
             setBody(GenerateContentRequest(prompt))
@@ -280,6 +292,21 @@ class GeminiApiService(
             }
         }
     }
+    
+    // ATS Analysis with structured output
+    suspend fun performATSAnalysis(
+        resumeContent: String,
+        jobDescription: String
+    ): ATSAnalysis
+    
+    // Section-specific rewriting
+    suspend fun rewriteResumeSection(
+        sectionType: SectionType,
+        sectionContent: String,
+        targetRole: String?,
+        targetIndustry: String?,
+        writingStyle: WritingStyle
+    ): SectionRewriteResult
 }
 ```
 
@@ -359,6 +386,73 @@ CREATE TABLE InterviewSession (
     created_at INTEGER NOT NULL,
     FOREIGN KEY (job_id) REFERENCES JobDescription(id)
 );
+
+-- Resume Version Table (Version Control)
+CREATE TABLE ResumeVersion (
+    id TEXT PRIMARY KEY NOT NULL,
+    resume_id TEXT NOT NULL,
+    version_number INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    change_description TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    FOREIGN KEY (resume_id) REFERENCES Resume(id)
+);
+```
+
+## Domain Models
+
+### Core Entities
+
+```kotlin
+// Resume with version tracking
+@Serializable
+data class Resume(
+    val id: String,
+    val name: String,
+    val content: String,
+    val industry: String? = null,
+    val targetRole: String? = null,
+    val currentVersionId: String? = null,
+    val createdAt: Instant,
+    val updatedAt: Instant
+)
+
+// Version history entry
+@Serializable
+data class ResumeVersion(
+    val id: String,
+    val resumeId: String,
+    val versionNumber: Int,
+    val content: String,
+    val changeDescription: String,
+    val createdAt: Instant
+) {
+    val createdAtFormatted: String
+        get() = createdAt.toString().take(19).replace("T", " ")
+}
+
+// ATS Analysis result
+@Serializable
+data class ATSAnalysis(
+    val overallScore: Int,
+    val formatScore: Int,
+    val keywordScore: Int,
+    val readabilityScore: Int,
+    val sections: Map<String, SectionAnalysis>,
+    val missingKeywords: MissingKeywords,
+    val formatIssues: List<String>,
+    val impactBullets: List<ImpactBullet>,
+    val grammarIssues: List<GrammarIssue>
+)
+
+// Section rewrite result
+@Serializable
+data class SectionRewriteResult(
+    val rewrittenContent: String,
+    val changes: List<String>,
+    val keywords: List<String>,
+    val tips: List<String>
+)
 ```
 
 ## Security Architecture

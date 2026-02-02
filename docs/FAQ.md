@@ -99,6 +99,79 @@ Our coaching feature helps you structure responses using this proven framework.
 
 ---
 
+## ATS Optimization
+
+### What is ATS scoring?
+
+ATS (Applicant Tracking System) scoring analyzes how well your resume will perform when scanned by automated systems that employers use. Our analysis includes:
+- **Format Score**: Structure and layout compatibility
+- **Keyword Score**: Presence of relevant terms from the job description
+- **Readability Score**: Clarity and professional tone
+
+### What does the section-by-section breakdown show?
+
+The analysis provides individual scores and feedback for:
+- **Summary**: Professional summary effectiveness
+- **Experience**: Impact of work history descriptions
+- **Skills**: Technical and soft skill coverage
+- **Education**: Qualification presentation
+
+### What is the X-Y-Z Impact Framework?
+
+The X-Y-Z framework transforms weak bullet points into impactful statements:
+- **X**: What you accomplished
+- **Y**: How it was measured (metrics)
+- **Z**: What you did to achieve it
+
+Example: "Managed team" becomes "Led 8-person engineering team (X) achieving 40% faster delivery (Y) by implementing agile sprints (Z)"
+
+### How does Grammar & Tone analysis work?
+
+Our AI identifies:
+- Grammar and spelling issues
+- Passive voice that should be active
+- Weak verbs that lack impact
+- Inconsistent professional tone
+
+Each issue includes a specific suggestion for improvement.
+
+---
+
+## Resume Management
+
+### How does section-specific rewriting work?
+
+You can select individual sections (Summary, Experience, Skills, Education) and have the AI rewrite them with:
+- Target role optimization
+- Industry-specific language
+- Your choice of writing style (Professional, Conversational, Technical, Executive)
+
+### What PDF export formats are available?
+
+Four professional templates:
+- **Professional**: Clean corporate style (best for Finance, Legal)
+- **Modern**: Contemporary with accent colors (best for Tech, Marketing)
+- **Classic**: Traditional serif fonts (best for Academic, Executive)
+- **Minimal**: Simple, whitespace-focused (best for Startups, Design)
+
+### How does version control work?
+
+Every time you save changes to a resume, a version is created with:
+- Automatic version numbering
+- Timestamp of when saved
+- Description of changes made
+
+You can preview any previous version and restore it if needed.
+
+### Can I restore a previous version of my resume?
+
+Yes. In the version history panel:
+1. Click "Versions" on any resume card
+2. Select a version to preview
+3. Click "Restore" to revert to that version
+
+---
+
 ## Technical Questions
 
 ### Why Kotlin Multiplatform?
@@ -107,7 +180,7 @@ Kotlin Multiplatform allows us to share business logic across iOS, Android, and 
 
 ### What AI model powers VwaTek Apply?
 
-VwaTek Apply uses **Gemini 3 Flash** from Google, which provides fast, high-quality responses optimized for our use cases.
+VwaTek Apply uses **Gemini 2.0 Flash** from Google, which provides fast, high-quality responses optimized for our use cases. OpenAI GPT-4o-mini is available as a fallback option.
 
 ### How is my data encrypted?
 
@@ -118,7 +191,7 @@ VwaTek Apply uses **Gemini 3 Flash** from Google, which provides fast, high-qual
 
 ### Can I use my own AI model?
 
-Currently, only Gemini 3 Flash is supported. Support for additional models may be added in future releases.
+Currently, Gemini 2.0 Flash is the primary model with OpenAI as fallback. Support for additional models may be added in future releases.
 
 ---
 

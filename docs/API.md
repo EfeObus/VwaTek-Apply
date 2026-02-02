@@ -62,7 +62,7 @@ actual class SecureStorage(private val context: Context) {
 ```kotlin
 object GeminiConfig {
     const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
-    const val MODEL = "gemini-3-flash"
+    const val MODEL = "gemini-2.0-flash"
     const val MAX_TOKENS = 8192
     const val TEMPERATURE = 0.7
 }
@@ -96,7 +96,7 @@ val httpClient = HttpClient {
 
 Analyze a resume against a job description to calculate match score and identify gaps.
 
-**Endpoint:** `POST /models/gemini-3-flash:generateContent`
+**Endpoint:** `POST /models/gemini-2.0-flash:generateContent`
 
 **Request:**
 
@@ -220,7 +220,164 @@ suspend fun optimizeResume(resume: String, jobDescription: String): OptimizedRes
 }
 ```
 
-### 3. Cover Letter Generation
+### 3. ATS Formatting Analysis
+
+Analyze resume formatting for ATS compatibility.
+
+**Request:**
+
+```kotlin
+suspend fun performATSAnalysis(
+    resumeContent: String,
+    jobDescription: String
+): ATSAnalysis {
+    val prompt = """
+        Analyze the resume for ATS (Applicant Tracking System) compatibility.
+        
+        RESUME:
+        $resumeContent
+        
+        JOB DESCRIPTION:
+        $jobDescription
+        
+        Provide comprehensive ATS analysis as JSON:
+        {
+            "overallScore": <0-100>,
+            "formatScore": <0-100>,
+            "keywordScore": <0-100>,
+            "readabilityScore": <0-100>,
+            "sections": {
+                "summary": { "score": <0-100>, "feedback": "...", "suggestions": ["..."] },
+                "experience": { "score": <0-100>, "feedback": "...", "suggestions": ["..."] },
+                "skills": { "score": <0-100>, "feedback": "...", "suggestions": ["..."] },
+                "education": { "score": <0-100>, "feedback": "...", "suggestions": ["..."] }
+            },
+            "missingKeywords": {
+                "hardSkills": ["..."],
+                "softSkills": ["..."],
+                "industryTerms": ["..."]
+            },
+            "formatIssues": ["..."],
+            "impactBullets": [
+                {
+                    "original": "...",
+                    "improved": "...",
+                    "metrics": ["..."],
+                    "confidence": <0.0-1.0>
+                }
+            ],
+            "grammarIssues": [
+                {
+                    "text": "...",
+                    "issue": "...",
+                    "suggestion": "...",
+                    "type": "GRAMMAR|PASSIVE_VOICE|WEAK_VERB|TONE"
+                }
+            ]
+        }
+    """.trimIndent()
+    
+    // ... API call implementation
+}
+```
+
+**Response Model:**
+
+```kotlin
+@Serializable
+data class ATSAnalysis(
+    val overallScore: Int,
+    val formatScore: Int,
+    val keywordScore: Int,
+    val readabilityScore: Int,
+    val sections: Map<String, SectionAnalysis>,
+    val missingKeywords: MissingKeywords,
+    val formatIssues: List<String>,
+    val impactBullets: List<ImpactBullet>,
+    val grammarIssues: List<GrammarIssue>
+)
+
+@Serializable
+data class ImpactBullet(
+    val original: String,
+    val improved: String,
+    val metrics: List<String>,
+    val confidence: Double
+)
+
+@Serializable
+data class GrammarIssue(
+    val text: String,
+    val issue: String,
+    val suggestion: String,
+    val type: GrammarIssueType
+)
+```
+
+### 4. Section-Specific Rewriting
+
+Rewrite individual resume sections with targeted improvements.
+
+**Request:**
+
+```kotlin
+suspend fun rewriteResumeSection(
+    sectionType: SectionType,
+    sectionContent: String,
+    targetRole: String?,
+    targetIndustry: String?,
+    writingStyle: WritingStyle = WritingStyle.PROFESSIONAL
+): SectionRewriteResult {
+    val prompt = """
+        Rewrite the following ${sectionType.name} section for a resume.
+        
+        CURRENT CONTENT:
+        $sectionContent
+        
+        ${targetRole?.let { "TARGET ROLE: $it" } ?: ""}
+        ${targetIndustry?.let { "TARGET INDUSTRY: $it" } ?: ""}
+        WRITING STYLE: ${writingStyle.name}
+        
+        Provide rewritten section as JSON:
+        {
+            "rewrittenContent": "...",
+            "changes": ["change description 1", "..."],
+            "keywords": ["keyword1", "..."],
+            "tips": ["improvement tip 1", "..."]
+        }
+    """.trimIndent()
+    
+    // ... API call implementation
+}
+
+enum class SectionType {
+    SUMMARY,
+    EXPERIENCE,
+    SKILLS,
+    EDUCATION
+}
+
+enum class WritingStyle {
+    PROFESSIONAL,
+    CONVERSATIONAL,
+    TECHNICAL,
+    EXECUTIVE
+}
+```
+
+**Response Model:**
+
+```kotlin
+@Serializable
+data class SectionRewriteResult(
+    val rewrittenContent: String,
+    val changes: List<String>,
+    val keywords: List<String>,
+    val tips: List<String>
+)
+```
+
+### 5. Cover Letter Generation
 
 Generate tailored cover letters based on resume and job description.
 
