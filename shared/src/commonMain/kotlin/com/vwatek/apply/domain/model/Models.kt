@@ -72,7 +72,8 @@ data class Resume(
     val fileType: String? = null,
     val originalFileData: String? = null,
     val createdAt: Instant,
-    val updatedAt: Instant
+    val updatedAt: Instant,
+    val currentVersionId: String? = null
 )
 
 @Serializable
@@ -80,6 +81,20 @@ enum class ResumeSourceType {
     MANUAL,
     UPLOADED,
     LINKEDIN
+}
+
+@Serializable
+data class ResumeVersion(
+    val id: String,
+    val resumeId: String,
+    val versionNumber: Int,
+    val content: String,
+    val changeDescription: String,
+    val createdAt: Instant
+) {
+    /** Formatted date string for UI display (avoids Instant accessibility issues in webApp) */
+    val createdAtFormatted: String
+        get() = createdAt.toString().take(19).replace("T", " ")
 }
 
 @Serializable

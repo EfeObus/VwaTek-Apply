@@ -19,6 +19,11 @@ import com.vwatek.apply.domain.usecase.PerformATSAnalysisUseCase
 import com.vwatek.apply.domain.usecase.GenerateImpactBulletsUseCase
 import com.vwatek.apply.domain.usecase.AnalyzeGrammarUseCase
 import com.vwatek.apply.domain.usecase.RewriteSectionUseCase
+import com.vwatek.apply.domain.usecase.GetResumeVersionsUseCase
+import com.vwatek.apply.domain.usecase.GetResumeVersionByIdUseCase
+import com.vwatek.apply.domain.usecase.CreateResumeVersionUseCase
+import com.vwatek.apply.domain.usecase.RestoreResumeVersionUseCase
+import com.vwatek.apply.domain.usecase.DeleteResumeVersionUseCase
 import com.vwatek.apply.domain.usecase.GetAllCoverLettersUseCase
 import com.vwatek.apply.domain.usecase.GenerateCoverLetterUseCase
 import com.vwatek.apply.domain.usecase.DeleteCoverLetterUseCase
@@ -73,6 +78,13 @@ val sharedModule = module {
     factory { GenerateImpactBulletsUseCase(get()) }
     factory { AnalyzeGrammarUseCase(get()) }
     factory { RewriteSectionUseCase(get()) }
+    
+    // Resume Version Control Use Cases
+    factory { GetResumeVersionsUseCase(get()) }
+    factory { GetResumeVersionByIdUseCase(get()) }
+    factory { CreateResumeVersionUseCase(get()) }
+    factory { RestoreResumeVersionUseCase(get(), get()) }
+    factory { DeleteResumeVersionUseCase(get()) }
     
     // Cover Letter Use Cases
     factory { GetAllCoverLettersUseCase(get()) }

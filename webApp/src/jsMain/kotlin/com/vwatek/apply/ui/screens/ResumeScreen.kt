@@ -15,6 +15,9 @@ import com.vwatek.apply.presentation.resume.ResumeIntent
 import com.vwatek.apply.presentation.resume.ResumeViewModel
 import com.vwatek.apply.ui.util.PdfExport
 import com.vwatek.apply.ui.util.ResumeFormat
+import com.vwatek.apply.domain.model.ResumeVersion
+import com.vwatek.apply.domain.usecase.GetResumeVersionsUseCase
+import com.vwatek.apply.domain.usecase.RestoreResumeVersionUseCase
 import com.vwatek.apply.util.DocumentParser
 import com.vwatek.apply.util.OAuthHelper
 import kotlinx.browser.document
@@ -30,6 +33,7 @@ import org.w3c.files.get
 @Composable
 fun ResumeScreen() {
     val viewModel = remember { GlobalContext.get().get<ResumeViewModel>() }
+    val restoreVersionUseCase = remember { GlobalContext.get().get<RestoreResumeVersionUseCase>() }
     val state by viewModel.state.collectAsState()
     val scope = rememberCoroutineScope()
     
@@ -39,8 +43,10 @@ fun ResumeScreen() {
     var showAnalyzeModal by remember { mutableStateOf(false) }
     var showATSModal by remember { mutableStateOf(false) }
     var showExportModal by remember { mutableStateOf(false) }
+    var showVersionHistoryModal by remember { mutableStateOf(false) }
     var selectedResumeForAnalysis by remember { mutableStateOf<Resume?>(null) }
     var selectedResumeForExport by remember { mutableStateOf<Resume?>(null) }
+    var selectedResumeForVersions by remember { mutableStateOf<Resume?>(null) }
     
     Div {
         // Page Header
@@ -207,6 +213,10 @@ fun ResumeScreen() {
                         onExportPdf = {
                             selectedResumeForExport = resume
                             showExportModal = true
+                        },
+                        onViewVersions = {
+                            selectedResumeForVersions = resume
+                            showVersionHistoryModal = true
                         }
                     )
                 }
@@ -289,6 +299,24 @@ fun ResumeScreen() {
             )
         }
         
+        if (showVersionHistoryModal && selectedResumeForVersions != null) {
+            VersionHistoryModal(
+                resume = selectedResumeForVersions!!,
+                onClose = { 
+                    showVersionHistoryModal = false
+                    selectedResumeForVersions = null
+                },
+                onRestore = { versionId ->
+                    scope.launch {
+                        restoreVersionUseCase(selectedResumeForVersions!!.id, versionId)
+                        viewModel.onIntent(ResumeIntent.LoadResumes)
+                        showVersionHistoryModal = false
+                        selectedResumeForVersions = null
+                    }
+                }
+            )
+        }
+        
         // ATS Analysis Results Display
         state.atsAnalysis?.let { atsAnalysis ->
             ATSAnalysisResults(
@@ -318,7 +346,8 @@ private fun ResumeCard(
     onAnalyze: () -> Unit,
     onATSAnalyze: () -> Unit,
     onDelete: () -> Unit,
-    onExportPdf: () -> Unit
+    onExportPdf: () -> Unit,
+    onViewVersions: () -> Unit
 ) {
     Div(attrs = { classes("card") }) {
         Div(attrs = { classes("card-header") }) {
@@ -372,6 +401,12 @@ private fun ResumeCard(
                 onClick { onExportPdf() }
             }) {
                 Text("📄 Export PDF")
+            }
+            Button(attrs = {
+                classes("btn", "btn-outline")
+                onClick { onViewVersions() }
+            }) {
+                Text("📜 Versions")
             }
             Button(attrs = {
                 classes("btn", "btn-outline")
@@ -1407,5 +1442,109 @@ private fun FormatOption(
         Div(attrs = { classes("format-emoji") }) { Text(emoji) }
         Div(attrs = { classes("format-name") }) { Text(name) }
         Div(attrs = { classes("format-description") }) { Text(description) }
+    }
+}
+
+@Composable
+fun VersionHistoryModal(
+    resume: Resume,
+    onClose: () -> Unit,
+    onRestore: (String) -> Unit
+) {
+    val getVersionsUseCase = remember { GlobalContext.get().get<GetResumeVersionsUseCase>() }
+    val versions by getVersionsUseCase(resume.id).collectAsState(emptyList())
+    var selectedVersionId by remember { mutableStateOf<String?>(null) }
+    var showPreview by remember { mutableStateOf(false) }
+    
+    val selectedVersion = versions.find { it.id == selectedVersionId }
+    
+    Div(attrs = { classes("modal-backdrop") }) {
+        Div(attrs = { classes("modal", "modal-lg") }) {
+            Div(attrs = { classes("modal-header") }) {
+                H3(attrs = { classes("modal-title") }) { Text("📜 Version History - ${resume.name}") }
+                Button(attrs = {
+                    classes("modal-close")
+                    onClick { onClose() }
+                }) { Text("✕") }
+            }
+            
+            Div(attrs = { classes("modal-body") }) {
+                if (versions.isEmpty()) {
+                    Div(attrs = { classes("empty-state", "p-lg") }) {
+                        Div(attrs = { classes("empty-state-icon") }) { Text("📜") }
+                        H3(attrs = { classes("mb-sm") }) { Text("No Versions Yet") }
+                        P(attrs = { classes("text-secondary") }) {
+                            Text("Edit your resume to start creating version history. Each save will create a new version you can restore later.")
+                        }
+                    }
+                } else {
+                    Div(attrs = { classes("version-list-container") }) {
+                        // Version List
+                        Div(attrs = { classes("version-list") }) {
+                            versions.forEach { version: ResumeVersion ->
+                                Div(attrs = {
+                                    classes("version-item", if (version.id == selectedVersionId) "version-item-selected" else "")
+                                    onClick { 
+                                        selectedVersionId = version.id
+                                        showPreview = true
+                                    }
+                                }) {
+                                    Div(attrs = { classes("version-number") }) {
+                                        Text("v${version.versionNumber}")
+                                    }
+                                    Div(attrs = { classes("version-info") }) {
+                                        Div(attrs = { classes("version-description", "font-medium") }) {
+                                            Text(version.changeDescription)
+                                        }
+                                        Div(attrs = { classes("version-date", "text-secondary", "text-sm") }) {
+                                            Text(version.createdAtFormatted)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Version Preview
+                        if (showPreview && selectedVersion != null) {
+                            Div(attrs = { classes("version-preview") }) {
+                                H4(attrs = { classes("mb-md") }) { 
+                                    Text("Preview - Version ${selectedVersion.versionNumber}") 
+                                }
+                                Div(attrs = { 
+                                    classes("version-content")
+                                    style {
+                                        property("max-height", "300px")
+                                        property("overflow-y", "auto")
+                                        property("background", "var(--color-surface-variant)")
+                                        property("padding", "var(--spacing-md)")
+                                        property("border-radius", "var(--radius-md)")
+                                        property("white-space", "pre-wrap")
+                                        property("font-size", "0.9rem")
+                                    }
+                                }) {
+                                    Text(selectedVersion.content.take(1000) + if (selectedVersion.content.length > 1000) "\n..." else "")
+                                }
+                                
+                                Div(attrs = { classes("flex", "gap-sm", "mt-md") }) {
+                                    Button(attrs = {
+                                        classes("btn", "btn-primary")
+                                        onClick { onRestore(selectedVersion.id) }
+                                    }) {
+                                        Text("⏪ Restore This Version")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Div(attrs = { classes("modal-footer") }) {
+                Button(attrs = {
+                    classes("btn", "btn-secondary")
+                    onClick { onClose() }
+                }) { Text("Close") }
+            }
+        }
     }
 }

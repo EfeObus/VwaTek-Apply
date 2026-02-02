@@ -2,6 +2,7 @@ package com.vwatek.apply.data.repository
 
 import com.vwatek.apply.db.VwaTekDatabase
 import com.vwatek.apply.domain.model.Resume
+import com.vwatek.apply.domain.model.ResumeVersion
 import com.vwatek.apply.domain.model.ResumeAnalysis
 import com.vwatek.apply.domain.model.CoverLetter
 import com.vwatek.apply.domain.model.CoverLetterTone
@@ -14,6 +15,7 @@ import com.vwatek.apply.domain.repository.CoverLetterRepository
 import com.vwatek.apply.domain.repository.InterviewRepository
 import com.vwatek.apply.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
@@ -68,6 +70,13 @@ class ResumeRepositoryImpl(
     override suspend fun deleteResume(id: String) {
         queries.deleteResume(id)
     }
+    
+    // Version control - stub implementations for SQLDelight (to be implemented when adding DB schema)
+    override fun getVersionsByResumeId(resumeId: String): Flow<List<ResumeVersion>> = flowOf(emptyList())
+    override suspend fun getVersionById(id: String): ResumeVersion? = null
+    override suspend fun insertVersion(version: ResumeVersion) { /* TODO: Add SQLDelight schema */ }
+    override suspend fun deleteVersion(id: String) { /* TODO: Add SQLDelight schema */ }
+    override suspend fun deleteVersionsByResumeId(resumeId: String) { /* TODO: Add SQLDelight schema */ }
 }
 
 class AnalysisRepositoryImpl(

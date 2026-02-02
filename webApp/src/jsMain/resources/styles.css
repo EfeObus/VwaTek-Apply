@@ -2088,3 +2088,72 @@ a:hover {
     border: 1px solid var(--color-primary-light);
 }
 
+/* Version History Styles */
+.version-list-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+    min-height: 300px;
+}
+
+.version-list {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.version-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.version-item:hover {
+    background: var(--color-surface-variant);
+}
+
+.version-item-selected {
+    background: var(--color-primary-lighter);
+    border-left: 3px solid var(--color-primary);
+}
+
+.version-item:last-child {
+    border-bottom: none;
+}
+
+.version-number {
+    background: var(--color-primary);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.85rem;
+    min-width: 45px;
+    text-align: center;
+}
+
+.version-info {
+    flex: 1;
+}
+
+.version-description {
+    margin-bottom: var(--spacing-xs);
+}
+
+.version-preview {
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+}
+
+.p-lg {
+    padding: var(--spacing-lg);
+}
+
+

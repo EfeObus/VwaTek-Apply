@@ -1,6 +1,7 @@
 package com.vwatek.apply.data.repository
 
 import com.vwatek.apply.domain.model.Resume
+import com.vwatek.apply.domain.model.ResumeVersion
 import com.vwatek.apply.domain.model.ResumeSourceType
 import com.vwatek.apply.domain.model.ResumeAnalysis
 import com.vwatek.apply.domain.model.CoverLetter
@@ -472,10 +473,13 @@ class LocalStorageFileUploadRepository : FileUploadRepository {
 // Resume Repository Implementation
 class LocalStorageResumeRepository : ResumeRepository {
     private val _resumes = MutableStateFlow<List<Resume>>(emptyList())
+    private val _versions = MutableStateFlow<List<ResumeVersion>>(emptyList())
     private val storageKey = "vwatek_resumes"
+    private val versionsStorageKey = "vwatek_resume_versions"
     
     init {
         loadFromStorage()
+        loadVersionsFromStorage()
     }
     
     private fun loadFromStorage() {
@@ -490,9 +494,26 @@ class LocalStorageResumeRepository : ResumeRepository {
         }
     }
     
+    private fun loadVersionsFromStorage() {
+        val stored = localStorage.getItem(versionsStorageKey)
+        if (stored != null) {
+            try {
+                val data = json.decodeFromString<List<ResumeVersionData>>(stored)
+                _versions.value = data.map { it.toResumeVersion() }
+            } catch (e: Exception) {
+                _versions.value = emptyList()
+            }
+        }
+    }
+    
     private fun saveToStorage() {
         val data = _resumes.value.map { ResumeData.fromResume(it) }
         localStorage.setItem(storageKey, json.encodeToString(data))
+    }
+    
+    private fun saveVersionsToStorage() {
+        val data = _versions.value.map { ResumeVersionData.fromResumeVersion(it) }
+        localStorage.setItem(versionsStorageKey, json.encodeToString(data))
     }
     
     override fun getAllResumes(): Flow<List<Resume>> = _resumes.asStateFlow()
@@ -515,6 +536,29 @@ class LocalStorageResumeRepository : ResumeRepository {
     override suspend fun deleteResume(id: String) {
         _resumes.value = _resumes.value.filter { it.id != id }
         saveToStorage()
+        // Also delete associated versions
+        deleteVersionsByResumeId(id)
+    }
+    
+    // Version control methods
+    override fun getVersionsByResumeId(resumeId: String): Flow<List<ResumeVersion>> = 
+        _versions.map { list -> list.filter { it.resumeId == resumeId }.sortedByDescending { it.versionNumber } }
+    
+    override suspend fun getVersionById(id: String): ResumeVersion? = _versions.value.find { it.id == id }
+    
+    override suspend fun insertVersion(version: ResumeVersion) {
+        _versions.value = _versions.value + version
+        saveVersionsToStorage()
+    }
+    
+    override suspend fun deleteVersion(id: String) {
+        _versions.value = _versions.value.filter { it.id != id }
+        saveVersionsToStorage()
+    }
+    
+    override suspend fun deleteVersionsByResumeId(resumeId: String) {
+        _versions.value = _versions.value.filter { it.resumeId != resumeId }
+        saveVersionsToStorage()
     }
 }
 
@@ -804,7 +848,8 @@ private data class ResumeData(
     val fileName: String? = null,
     val fileType: String? = null,
     val createdAt: String,
-    val updatedAt: String
+    val updatedAt: String,
+    val currentVersionId: String? = null
 ) {
     fun toResume() = Resume(
         id = id,
@@ -817,7 +862,8 @@ private data class ResumeData(
         fileType = fileType,
         originalFileData = null,
         createdAt = Instant.parse(createdAt),
-        updatedAt = Instant.parse(updatedAt)
+        updatedAt = Instant.parse(updatedAt),
+        currentVersionId = currentVersionId
     )
     companion object {
         fun fromResume(r: Resume) = ResumeData(
@@ -830,7 +876,37 @@ private data class ResumeData(
             fileName = r.fileName,
             fileType = r.fileType,
             createdAt = r.createdAt.toString(),
-            updatedAt = r.updatedAt.toString()
+            updatedAt = r.updatedAt.toString(),
+            currentVersionId = r.currentVersionId
+        )
+    }
+}
+
+@Serializable
+private data class ResumeVersionData(
+    val id: String,
+    val resumeId: String,
+    val versionNumber: Int,
+    val content: String,
+    val changeDescription: String,
+    val createdAt: String
+) {
+    fun toResumeVersion() = ResumeVersion(
+        id = id,
+        resumeId = resumeId,
+        versionNumber = versionNumber,
+        content = content,
+        changeDescription = changeDescription,
+        createdAt = Instant.parse(createdAt)
+    )
+    companion object {
+        fun fromResumeVersion(v: ResumeVersion) = ResumeVersionData(
+            id = v.id,
+            resumeId = v.resumeId,
+            versionNumber = v.versionNumber,
+            content = v.content,
+            changeDescription = v.changeDescription,
+            createdAt = v.createdAt.toString()
         )
     }
 }

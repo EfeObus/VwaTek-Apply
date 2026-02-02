@@ -1,6 +1,7 @@
 package com.vwatek.apply.domain.repository
 
 import com.vwatek.apply.domain.model.Resume
+import com.vwatek.apply.domain.model.ResumeVersion
 import com.vwatek.apply.domain.model.ResumeAnalysis
 import com.vwatek.apply.domain.model.CoverLetter
 import com.vwatek.apply.domain.model.InterviewSession
@@ -53,6 +54,13 @@ interface ResumeRepository {
     suspend fun insertResume(resume: Resume)
     suspend fun updateResume(resume: Resume)
     suspend fun deleteResume(id: String)
+    
+    // Version control methods
+    fun getVersionsByResumeId(resumeId: String): Flow<List<ResumeVersion>>
+    suspend fun getVersionById(id: String): ResumeVersion?
+    suspend fun insertVersion(version: ResumeVersion)
+    suspend fun deleteVersion(id: String)
+    suspend fun deleteVersionsByResumeId(resumeId: String)
 }
 
 interface AnalysisRepository {

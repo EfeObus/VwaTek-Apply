@@ -1,6 +1,7 @@
 package com.vwatek.apply.domain.usecase
 
 import com.vwatek.apply.domain.model.Resume
+import com.vwatek.apply.domain.model.ResumeVersion
 import com.vwatek.apply.domain.model.ResumeAnalysis
 import com.vwatek.apply.domain.model.CoverLetter
 import com.vwatek.apply.domain.model.CoverLetterTone
@@ -17,6 +18,7 @@ import com.vwatek.apply.domain.repository.AnalysisRepository
 import com.vwatek.apply.domain.repository.CoverLetterRepository
 import com.vwatek.apply.data.api.GeminiService
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -50,6 +52,96 @@ class DeleteResumeUseCase(
     private val repository: ResumeRepository
 ) {
     suspend operator fun invoke(id: String) = repository.deleteResume(id)
+}
+
+// Version Control Use Cases
+class GetResumeVersionsUseCase(
+    private val repository: ResumeRepository
+) {
+    operator fun invoke(resumeId: String): Flow<List<ResumeVersion>> = 
+        repository.getVersionsByResumeId(resumeId)
+}
+
+class GetResumeVersionByIdUseCase(
+    private val repository: ResumeRepository
+) {
+    suspend operator fun invoke(id: String): ResumeVersion? = repository.getVersionById(id)
+}
+
+@OptIn(ExperimentalUuidApi::class)
+class CreateResumeVersionUseCase(
+    private val repository: ResumeRepository
+) {
+    suspend operator fun invoke(
+        resumeId: String,
+        content: String,
+        changeDescription: String
+    ): ResumeVersion {
+        // Get current version count to determine version number
+        val existingVersions = repository.getVersionsByResumeId(resumeId).first()
+        val nextVersionNumber = (existingVersions.maxOfOrNull { it.versionNumber } ?: 0) + 1
+        
+        val version = ResumeVersion(
+            id = Uuid.random().toString(),
+            resumeId = resumeId,
+            versionNumber = nextVersionNumber,
+            content = content,
+            changeDescription = changeDescription,
+            createdAt = Clock.System.now()
+        )
+        
+        repository.insertVersion(version)
+        
+        // Update resume with current version ID
+        val resume = repository.getResumeById(resumeId)
+        if (resume != null) {
+            repository.updateResume(resume.copy(currentVersionId = version.id))
+        }
+        
+        return version
+    }
+}
+
+class RestoreResumeVersionUseCase(
+    private val repository: ResumeRepository,
+    private val createVersionUseCase: CreateResumeVersionUseCase
+) {
+    suspend operator fun invoke(
+        resumeId: String,
+        versionId: String
+    ): Result<Resume> {
+        return try {
+            val version = repository.getVersionById(versionId) 
+                ?: return Result.failure(Exception("Version not found"))
+            
+            val resume = repository.getResumeById(resumeId)
+                ?: return Result.failure(Exception("Resume not found"))
+            
+            // Create a new version with the restored content
+            createVersionUseCase(
+                resumeId = resumeId,
+                content = version.content,
+                changeDescription = "Restored from version ${version.versionNumber}"
+            )
+            
+            // Update resume with restored content
+            val updatedResume = resume.copy(
+                content = version.content,
+                updatedAt = Clock.System.now()
+            )
+            repository.updateResume(updatedResume)
+            
+            Result.success(updatedResume)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+
+class DeleteResumeVersionUseCase(
+    private val repository: ResumeRepository
+) {
+    suspend operator fun invoke(id: String) = repository.deleteVersion(id)
 }
 
 class AnalyzeResumeUseCase(
