@@ -6,6 +6,7 @@ import com.vwatek.apply.domain.model.ATSIssue
 import com.vwatek.apply.domain.model.ATSRecommendation
 import com.vwatek.apply.domain.model.IssueSeverity
 import com.vwatek.apply.domain.model.Resume
+import com.vwatek.apply.domain.usecase.SectionRewriteResult
 import com.vwatek.apply.presentation.resume.ResumeIntent
 import com.vwatek.apply.presentation.resume.ResumeViewModel
 import org.jetbrains.compose.web.attributes.*
@@ -22,6 +23,14 @@ fun ResumeOptimizerScreen() {
     var targetKeywords by remember { mutableStateOf("") }
     var showAnalysisResults by remember { mutableStateOf(false) }
     
+    // Section Rewriting State
+    var activeTab by remember { mutableStateOf("ats") } // "ats" or "rewrite"
+    var selectedSectionType by remember { mutableStateOf("SUMMARY") }
+    var sectionContent by remember { mutableStateOf("") }
+    var rewriteTargetRole by remember { mutableStateOf("") }
+    var rewriteTargetIndustry by remember { mutableStateOf("") }
+    var rewriteStyle by remember { mutableStateOf("professional") }
+    
     val selectedResume = state.resumes.find { resume -> resume.id == selectedResumeId }
     
     Div {
@@ -31,10 +40,28 @@ fun ResumeOptimizerScreen() {
                 Text("Resume Optimizer")
             }
             P(attrs = { classes("text-secondary", "m-0") }) {
-                Text("Optimize your resume for ATS systems and specific job descriptions")
+                Text("Optimize your resume for ATS systems and rewrite sections for impact")
             }
         }
         
+        // Tab Navigation
+        Div(attrs = { classes("tabs-nav", "mb-lg") }) {
+            Button(attrs = {
+                classes("tab-btn", if (activeTab == "ats") "tab-btn-active" else "")
+                onClick { activeTab = "ats" }
+            }) {
+                Text("🔍 ATS Analysis")
+            }
+            Button(attrs = {
+                classes("tab-btn", if (activeTab == "rewrite") "tab-btn-active" else "")
+                onClick { activeTab = "rewrite" }
+            }) {
+                Text("✍️ Section Rewriter")
+            }
+        }
+        
+        // Tab Content
+        if (activeTab == "ats") {
         // Main Content Grid
         Div(attrs = { classes("grid", "grid-cols-2", "gap-lg") }) {
             // Left Panel - Input Section
@@ -196,7 +223,309 @@ fun ResumeOptimizerScreen() {
                 )
             }
         }
+        } else {
+            // Section Rewriter Tab
+            Div(attrs = { classes("grid", "grid-cols-2", "gap-lg") }) {
+                // Left Panel - Input Section
+                Div(attrs = { classes("card") }) {
+                    H3(attrs = { classes("card-title", "mb-md") }) {
+                        Text("✍️ Section Rewriter")
+                    }
+                    P(attrs = { classes("text-secondary", "mb-lg") }) {
+                        Text("Rewrite any section of your resume with AI-powered suggestions for improved impact")
+                    }
+                    
+                    // Section Type Selection
+                    Div(attrs = { classes("form-group", "mb-lg") }) {
+                        Label(attrs = { classes("form-label") }) {
+                            Text("Section Type")
+                        }
+                        Select(attrs = {
+                            classes("form-input")
+                            onChange { event ->
+                                selectedSectionType = event.target.value
+                            }
+                        }) {
+                            Option(value = "SUMMARY", attrs = { if (selectedSectionType == "SUMMARY") selected() }) {
+                                Text("Professional Summary")
+                            }
+                            Option(value = "EXPERIENCE", attrs = { if (selectedSectionType == "EXPERIENCE") selected() }) {
+                                Text("Work Experience")
+                            }
+                            Option(value = "SKILLS", attrs = { if (selectedSectionType == "SKILLS") selected() }) {
+                                Text("Skills")
+                            }
+                            Option(value = "EDUCATION", attrs = { if (selectedSectionType == "EDUCATION") selected() }) {
+                                Text("Education")
+                            }
+                        }
+                    }
+                    
+                    // Section Content
+                    Div(attrs = { classes("form-group", "mb-lg") }) {
+                        Label(attrs = { classes("form-label") }) {
+                            Text("Section Content")
+                        }
+                        TextArea(value = sectionContent, attrs = {
+                            classes("form-input")
+                            attr("placeholder", getSectionPlaceholder(selectedSectionType))
+                            attr("rows", "8")
+                            onInput { event ->
+                                sectionContent = event.target.value
+                            }
+                        })
+                        P(attrs = { classes("form-helper") }) {
+                            Text("Paste or type the current content of this section")
+                        }
+                    }
+                    
+                    // Target Role (Optional)
+                    Div(attrs = { classes("form-group", "mb-lg") }) {
+                        Label(attrs = { classes("form-label") }) {
+                            Text("Target Role (Optional)")
+                        }
+                        Input(type = InputType.Text) {
+                            classes("form-input")
+                            attr("placeholder", "e.g., Senior Software Engineer")
+                            value(rewriteTargetRole)
+                            onInput { event ->
+                                rewriteTargetRole = event.target.value
+                            }
+                        }
+                    }
+                    
+                    // Target Industry (Optional)
+                    Div(attrs = { classes("form-group", "mb-lg") }) {
+                        Label(attrs = { classes("form-label") }) {
+                            Text("Target Industry (Optional)")
+                        }
+                        Input(type = InputType.Text) {
+                            classes("form-input")
+                            attr("placeholder", "e.g., FinTech, Healthcare, E-commerce")
+                            value(rewriteTargetIndustry)
+                            onInput { event ->
+                                rewriteTargetIndustry = event.target.value
+                            }
+                        }
+                    }
+                    
+                    // Writing Style
+                    Div(attrs = { classes("form-group", "mb-lg") }) {
+                        Label(attrs = { classes("form-label") }) {
+                            Text("Writing Style")
+                        }
+                        Select(attrs = {
+                            classes("form-input")
+                            onChange { event ->
+                                rewriteStyle = event.target.value
+                            }
+                        }) {
+                            Option(value = "professional", attrs = { if (rewriteStyle == "professional") selected() }) {
+                                Text("Professional - Corporate, formal tone")
+                            }
+                            Option(value = "confident", attrs = { if (rewriteStyle == "confident") selected() }) {
+                                Text("Confident - Bold, assertive language")
+                            }
+                            Option(value = "results-driven", attrs = { if (rewriteStyle == "results-driven") selected() }) {
+                                Text("Results-Driven - Focus on achievements")
+                            }
+                            Option(value = "innovative", attrs = { if (rewriteStyle == "innovative") selected() }) {
+                                Text("Innovative - Creative, forward-thinking")
+                            }
+                        }
+                    }
+                    
+                    // Rewrite Button
+                    Button(attrs = {
+                        classes("btn", "btn-primary", "btn-block")
+                        onClick {
+                            if (sectionContent.isNotBlank()) {
+                                viewModel.onIntent(ResumeIntent.RewriteSection(
+                                    sectionType = selectedSectionType,
+                                    sectionContent = sectionContent,
+                                    targetRole = rewriteTargetRole.ifBlank { null },
+                                    targetIndustry = rewriteTargetIndustry.ifBlank { null },
+                                    style = rewriteStyle
+                                ))
+                            }
+                        }
+                        if (sectionContent.isBlank() || state.isRewritingSection) {
+                            attr("disabled", "true")
+                        }
+                    }) {
+                        if (state.isRewritingSection) {
+                            Text("⏳ Rewriting...")
+                        } else {
+                            Text("✨ Rewrite Section")
+                        }
+                    }
+                }
+                
+                // Right Panel - Results
+                Div(attrs = { classes("card") }) {
+                    val result = state.sectionRewriteResult
+                    
+                    if (result == null && !state.isRewritingSection) {
+                        // Empty State
+                        Div(attrs = { classes("empty-state") }) {
+                            Div(attrs = { classes("empty-state-icon") }) {
+                                Text("✍️")
+                            }
+                            H3(attrs = { classes("mb-sm") }) {
+                                Text("Ready to Rewrite")
+                            }
+                            P(attrs = { classes("text-secondary") }) {
+                                Text("Paste your current section content and click 'Rewrite Section' to get AI-powered improvements")
+                            }
+                        }
+                    } else if (state.isRewritingSection) {
+                        // Loading State
+                        Div(attrs = { classes("loading-state") }) {
+                            Div(attrs = { classes("spinner", "mb-md") })
+                            P(attrs = { classes("text-secondary") }) {
+                                Text("Generating improved content...")
+                            }
+                        }
+                    } else if (result != null) {
+                        // Results
+                        SectionRewriteResults(result, viewModel)
+                    }
+                }
+            }
+            
+            // Section Tips
+            Div(attrs = { classes("card", "mt-xl") }) {
+                H3(attrs = { classes("card-title", "mb-md") }) {
+                    Text("💡 Section Writing Tips")
+                }
+                
+                Div(attrs = { classes("grid", "grid-cols-3", "gap-md") }) {
+                    QuickTipCard(
+                        icon = "🎯",
+                        title = "Be Specific",
+                        description = "Include specific achievements, metrics, and quantifiable results in your experience section"
+                    )
+                    QuickTipCard(
+                        icon = "📏",
+                        title = "Keep it Concise",
+                        description = "Summaries should be 3-5 lines. Each bullet point should be one impactful sentence"
+                    )
+                    QuickTipCard(
+                        icon = "🔄",
+                        title = "Use Action Verbs",
+                        description = "Start bullets with strong verbs: Led, Developed, Improved, Achieved, Spearheaded"
+                    )
+                }
+            }
+        }
     }
+}
+
+@Composable
+private fun SectionRewriteResults(result: SectionRewriteResult, viewModel: ResumeViewModel) {
+    Div(attrs = { classes("results-container") }) {
+        // Rewritten Content
+        Div(attrs = { classes("mb-lg") }) {
+            Div(attrs = { classes("flex", "justify-between", "items-center", "mb-md") }) {
+                H4(attrs = { classes("m-0") }) {
+                    Text("📝 Rewritten Content")
+                }
+                Button(attrs = {
+                    classes("btn", "btn-secondary", "btn-sm")
+                    onClick {
+                        // Copy to clipboard
+                        kotlinx.browser.window.navigator.clipboard.writeText(result.rewrittenContent)
+                    }
+                }) {
+                    Text("📋 Copy")
+                }
+            }
+            Div(attrs = { 
+                classes("rewrite-content")
+                style {
+                    property("background", "var(--bg-secondary)")
+                    property("padding", "var(--space-md)")
+                    property("border-radius", "var(--radius-md)")
+                    property("white-space", "pre-wrap")
+                    property("font-family", "inherit")
+                    property("line-height", "1.6")
+                }
+            }) {
+                Text(result.rewrittenContent)
+            }
+        }
+        
+        // Changes Made
+        if (result.changes.isNotEmpty()) {
+            Div(attrs = { classes("mb-lg") }) {
+                H4(attrs = { classes("mb-md") }) {
+                    Text("🔄 Changes Made")
+                }
+                Ul(attrs = { classes("changes-list") }) {
+                    result.changes.forEach { change: String ->
+                        Li(attrs = { classes("text-secondary", "mb-xs") }) {
+                            Text(change)
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Keywords Added
+        if (result.keywords.isNotEmpty()) {
+            Div(attrs = { classes("mb-lg") }) {
+                H4(attrs = { classes("mb-md") }) {
+                    Text("🔑 Keywords Incorporated")
+                }
+                Div(attrs = { classes("flex", "flex-wrap", "gap-sm") }) {
+                    result.keywords.forEach { keyword: String ->
+                        Span(attrs = { classes("badge", "badge-primary") }) {
+                            Text(keyword)
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Tips
+        if (result.tips.isNotEmpty()) {
+            Div {
+                H4(attrs = { classes("mb-md") }) {
+                    Text("💡 Additional Tips")
+                }
+                result.tips.forEach { tip: String ->
+                    Div(attrs = { classes("tip-item", "mb-sm") }) {
+                        Span(attrs = { classes("text-primary", "mr-sm") }) {
+                            Text("•")
+                        }
+                        Span(attrs = { classes("text-secondary") }) {
+                            Text(tip)
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Clear Button
+        Div(attrs = { classes("mt-lg") }) {
+            Button(attrs = {
+                classes("btn", "btn-secondary")
+                onClick {
+                    viewModel.onIntent(ResumeIntent.ClearSectionRewrite)
+                }
+            }) {
+                Text("🗑️ Clear Results")
+            }
+        }
+    }
+}
+
+private fun getSectionPlaceholder(sectionType: String): String = when (sectionType) {
+    "SUMMARY" -> "e.g., Experienced software engineer with 5+ years of experience in web development..."
+    "EXPERIENCE" -> "e.g., Software Engineer at Company XYZ (2020-2023)\n• Developed web applications using React and Node.js\n• Improved system performance by 30%"
+    "SKILLS" -> "e.g., Programming Languages: Python, JavaScript, TypeScript\nFrameworks: React, Node.js, Django"
+    "EDUCATION" -> "e.g., Bachelor of Science in Computer Science\nUniversity Name, 2020\nGPA: 3.8/4.0"
+    else -> "Enter section content here..."
 }
 
 @Composable

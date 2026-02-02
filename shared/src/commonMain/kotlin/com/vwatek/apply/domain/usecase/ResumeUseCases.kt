@@ -251,3 +251,42 @@ class AnalyzeGrammarUseCase(
         }
     }
 }
+
+class RewriteSectionUseCase(
+    private val geminiService: GeminiService
+) {
+    suspend operator fun invoke(
+        sectionType: String,
+        sectionContent: String,
+        targetRole: String? = null,
+        targetIndustry: String? = null,
+        style: String = "professional"
+    ): Result<SectionRewriteResult> {
+        return try {
+            val result = geminiService.rewriteResumeSection(
+                sectionType = sectionType,
+                sectionContent = sectionContent,
+                targetRole = targetRole,
+                targetIndustry = targetIndustry,
+                style = style
+            )
+            Result.success(
+                SectionRewriteResult(
+                    rewrittenContent = result.rewrittenContent,
+                    changes = result.changes,
+                    keywords = result.keywords,
+                    tips = result.tips
+                )
+            )
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+
+data class SectionRewriteResult(
+    val rewrittenContent: String,
+    val changes: List<String>,
+    val keywords: List<String>,
+    val tips: List<String>
+)

@@ -18,6 +18,7 @@ import com.vwatek.apply.domain.usecase.OptimizeResumeUseCase
 import com.vwatek.apply.domain.usecase.PerformATSAnalysisUseCase
 import com.vwatek.apply.domain.usecase.GenerateImpactBulletsUseCase
 import com.vwatek.apply.domain.usecase.AnalyzeGrammarUseCase
+import com.vwatek.apply.domain.usecase.RewriteSectionUseCase
 import com.vwatek.apply.domain.usecase.GetAllCoverLettersUseCase
 import com.vwatek.apply.domain.usecase.GenerateCoverLetterUseCase
 import com.vwatek.apply.domain.usecase.DeleteCoverLetterUseCase
@@ -71,6 +72,7 @@ val sharedModule = module {
     factory { PerformATSAnalysisUseCase(get()) }
     factory { GenerateImpactBulletsUseCase(get()) }
     factory { AnalyzeGrammarUseCase(get()) }
+    factory { RewriteSectionUseCase(get()) }
     
     // Cover Letter Use Cases
     factory { GetAllCoverLettersUseCase(get()) }
@@ -108,7 +110,7 @@ val sharedModule = module {
     factory { GetMaxFileSizeUseCase(get()) }
     
     // ViewModels
-    factory { ResumeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { ResumeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { CoverLetterViewModel(get(), get(), get()) }
     factory { InterviewViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { 

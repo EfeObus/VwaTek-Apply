@@ -337,6 +337,87 @@ class GeminiService(
         return parseGrammarResponse(response)
     }
     
+    suspend fun rewriteResumeSection(
+        sectionType: String,
+        sectionContent: String,
+        targetRole: String?,
+        targetIndustry: String?,
+        style: String = "professional"
+    ): SectionRewriteResult {
+        val prompt = buildString {
+            appendLine("You are an expert resume writer and career coach with 15+ years of experience.")
+            appendLine()
+            appendLine("Rewrite the following resume section to be more impactful and ATS-optimized.")
+            appendLine()
+            appendLine("SECTION TYPE: $sectionType")
+            if (!targetRole.isNullOrBlank()) appendLine("TARGET ROLE: $targetRole")
+            if (!targetIndustry.isNullOrBlank()) appendLine("TARGET INDUSTRY: $targetIndustry")
+            appendLine("WRITING STYLE: $style")
+            appendLine()
+            appendLine("ORIGINAL CONTENT:")
+            appendLine(sectionContent)
+            appendLine()
+            appendLine("Guidelines for rewriting:")
+            when (sectionType.uppercase()) {
+                "SUMMARY", "PROFILE", "OBJECTIVE" -> {
+                    appendLine("- Write a compelling professional summary (3-5 sentences)")
+                    appendLine("- Start with your professional title and years of experience")
+                    appendLine("- Highlight 2-3 key achievements with metrics")
+                    appendLine("- Include relevant skills and expertise areas")
+                    appendLine("- End with your career objective or value proposition")
+                }
+                "EXPERIENCE", "WORK EXPERIENCE", "EMPLOYMENT" -> {
+                    appendLine("- Use strong action verbs at the start of each bullet point")
+                    appendLine("- Follow the X-Y-Z format: Accomplished [X] as measured by [Y] by doing [Z]")
+                    appendLine("- Include specific metrics and quantifiable achievements")
+                    appendLine("- Focus on impact and results, not just duties")
+                    appendLine("- Use industry-relevant keywords")
+                }
+                "SKILLS", "TECHNICAL SKILLS" -> {
+                    appendLine("- Organize skills by category (Technical, Soft Skills, Tools, etc.)")
+                    appendLine("- Prioritize skills relevant to the target role")
+                    appendLine("- Use standard industry terminology")
+                    appendLine("- Include proficiency levels where appropriate")
+                }
+                "EDUCATION" -> {
+                    appendLine("- Include degree, institution, graduation date, and GPA if strong (3.5+)")
+                    appendLine("- Add relevant coursework, honors, or certifications")
+                    appendLine("- Include relevant academic projects or thesis topics")
+                }
+                else -> {
+                    appendLine("- Make the content more impactful and professionally worded")
+                    appendLine("- Use strong action verbs and quantifiable achievements")
+                    appendLine("- Ensure ATS compatibility with proper formatting")
+                }
+            }
+            appendLine()
+            appendLine("Respond ONLY with valid JSON:")
+            appendLine("""{
+  "rewrittenContent": "<the improved section content>",
+  "changes": ["<list of key changes made>"],
+  "keywords": ["<relevant keywords added>"],
+  "tips": ["<additional tips for this section>"]
+}""")
+        }
+        
+        val response = callGemini(prompt)
+        return parseSectionRewriteResponse(response)
+    }
+    
+    private fun parseSectionRewriteResponse(response: String): SectionRewriteResult {
+        val jsonString = extractJson(response)
+        return try {
+            json.decodeFromString<SectionRewriteResult>(jsonString)
+        } catch (e: Exception) {
+            SectionRewriteResult(
+                rewrittenContent = "",
+                changes = listOf("Unable to parse response. Please try again."),
+                keywords = emptyList(),
+                tips = emptyList()
+            )
+        }
+    }
+
     private suspend fun callGemini(prompt: String): String {
         val apiKey = settingsRepository.getSetting("gemini_api_key")
         val openAiKey = settingsRepository.getSetting("openai_api_key")
@@ -621,6 +702,14 @@ data class GrammarResult(
     val corrected: String,
     val explanation: String,
     val type: String
+)
+
+@Serializable
+data class SectionRewriteResult(
+    val rewrittenContent: String,
+    val changes: List<String> = emptyList(),
+    val keywords: List<String> = emptyList(),
+    val tips: List<String> = emptyList()
 )
 
 // OpenAI API data classes for fallback

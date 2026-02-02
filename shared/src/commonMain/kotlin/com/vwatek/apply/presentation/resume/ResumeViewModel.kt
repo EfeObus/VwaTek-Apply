@@ -14,6 +14,8 @@ import com.vwatek.apply.domain.usecase.OptimizeResumeUseCase
 import com.vwatek.apply.domain.usecase.PerformATSAnalysisUseCase
 import com.vwatek.apply.domain.usecase.GenerateImpactBulletsUseCase
 import com.vwatek.apply.domain.usecase.AnalyzeGrammarUseCase
+import com.vwatek.apply.domain.usecase.RewriteSectionUseCase
+import com.vwatek.apply.domain.usecase.SectionRewriteResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -35,7 +37,8 @@ class ResumeViewModel(
     private val optimizeResumeUseCase: OptimizeResumeUseCase,
     private val performATSAnalysisUseCase: PerformATSAnalysisUseCase,
     private val generateImpactBulletsUseCase: GenerateImpactBulletsUseCase,
-    private val analyzeGrammarUseCase: AnalyzeGrammarUseCase
+    private val analyzeGrammarUseCase: AnalyzeGrammarUseCase,
+    private val rewriteSectionUseCase: RewriteSectionUseCase
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
@@ -58,12 +61,14 @@ class ResumeViewModel(
             is ResumeIntent.PerformATSAnalysis -> performATSAnalysis(intent.resume, intent.jobDescription)
             is ResumeIntent.GenerateImpactBullets -> generateImpactBullets(intent.experiences, intent.jobContext)
             is ResumeIntent.AnalyzeGrammar -> analyzeGrammar(intent.text)
+            is ResumeIntent.RewriteSection -> rewriteSection(intent.sectionType, intent.sectionContent, intent.targetRole, intent.targetIndustry, intent.style)
             is ResumeIntent.ClearError -> clearError()
             is ResumeIntent.ClearAnalysis -> clearAnalysis()
             is ResumeIntent.ClearOptimizedContent -> clearOptimizedContent()
             is ResumeIntent.ClearATSAnalysis -> clearATSAnalysis()
             is ResumeIntent.ClearImpactBullets -> clearImpactBullets()
             is ResumeIntent.ClearGrammarIssues -> clearGrammarIssues()
+            is ResumeIntent.ClearSectionRewrite -> clearSectionRewrite()
         }
     }
     
@@ -203,6 +208,25 @@ class ResumeViewModel(
         }
     }
     
+    private fun rewriteSection(
+        sectionType: String,
+        sectionContent: String,
+        targetRole: String?,
+        targetIndustry: String?,
+        style: String
+    ) {
+        scope.launch {
+            _state.update { it.copy(isRewritingSection = true, sectionRewriteResult = null) }
+            rewriteSectionUseCase(sectionType, sectionContent, targetRole, targetIndustry, style)
+                .onSuccess { result ->
+                    _state.update { it.copy(isRewritingSection = false, sectionRewriteResult = result) }
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(isRewritingSection = false, error = e.message) }
+                }
+        }
+    }
+    
     private fun clearError() {
         _state.update { it.copy(error = null) }
     }
@@ -226,6 +250,10 @@ class ResumeViewModel(
     private fun clearGrammarIssues() {
         _state.update { it.copy(grammarIssues = emptyList()) }
     }
+    
+    private fun clearSectionRewrite() {
+        _state.update { it.copy(sectionRewriteResult = null) }
+    }
 }
 
 data class ResumeState(
@@ -235,6 +263,7 @@ data class ResumeState(
     val atsAnalysis: ATSAnalysis? = null,
     val impactBullets: List<ImpactBullet> = emptyList(),
     val grammarIssues: List<GrammarIssue> = emptyList(),
+    val sectionRewriteResult: SectionRewriteResult? = null,
     val optimizedContent: String? = null,
     val isLoading: Boolean = true,
     val isAnalyzing: Boolean = false,
@@ -242,6 +271,7 @@ data class ResumeState(
     val isATSAnalyzing: Boolean = false,
     val isGeneratingBullets: Boolean = false,
     val isAnalyzingGrammar: Boolean = false,
+    val isRewritingSection: Boolean = false,
     val error: String? = null
 )
 
@@ -256,10 +286,18 @@ sealed class ResumeIntent {
     data class PerformATSAnalysis(val resume: Resume, val jobDescription: String? = null) : ResumeIntent()
     data class GenerateImpactBullets(val experiences: List<String>, val jobContext: String) : ResumeIntent()
     data class AnalyzeGrammar(val text: String) : ResumeIntent()
+    data class RewriteSection(
+        val sectionType: String,
+        val sectionContent: String,
+        val targetRole: String? = null,
+        val targetIndustry: String? = null,
+        val style: String = "professional"
+    ) : ResumeIntent()
     data object ClearError : ResumeIntent()
     data object ClearAnalysis : ResumeIntent()
     data object ClearOptimizedContent : ResumeIntent()
     data object ClearATSAnalysis : ResumeIntent()
     data object ClearImpactBullets : ResumeIntent()
     data object ClearGrammarIssues : ResumeIntent()
+    data object ClearSectionRewrite : ResumeIntent()
 }
