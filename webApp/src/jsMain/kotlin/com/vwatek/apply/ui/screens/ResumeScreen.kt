@@ -13,6 +13,8 @@ import com.vwatek.apply.domain.model.ATSAnalysis
 import com.vwatek.apply.domain.model.IssueSeverity
 import com.vwatek.apply.presentation.resume.ResumeIntent
 import com.vwatek.apply.presentation.resume.ResumeViewModel
+import com.vwatek.apply.ui.util.PdfExport
+import com.vwatek.apply.ui.util.ResumeFormat
 import com.vwatek.apply.util.DocumentParser
 import com.vwatek.apply.util.OAuthHelper
 import kotlinx.browser.document
@@ -36,7 +38,9 @@ fun ResumeScreen() {
     var showLinkedInModal by remember { mutableStateOf(false) }
     var showAnalyzeModal by remember { mutableStateOf(false) }
     var showATSModal by remember { mutableStateOf(false) }
+    var showExportModal by remember { mutableStateOf(false) }
     var selectedResumeForAnalysis by remember { mutableStateOf<Resume?>(null) }
+    var selectedResumeForExport by remember { mutableStateOf<Resume?>(null) }
     
     Div {
         // Page Header
@@ -199,6 +203,10 @@ fun ResumeScreen() {
                         },
                         onDelete = {
                             viewModel.onIntent(ResumeIntent.DeleteResume(resume.id))
+                        },
+                        onExportPdf = {
+                            selectedResumeForExport = resume
+                            showExportModal = true
                         }
                     )
                 }
@@ -266,6 +274,21 @@ fun ResumeScreen() {
             )
         }
         
+        if (showExportModal && selectedResumeForExport != null) {
+            ExportPdfModal(
+                resume = selectedResumeForExport!!,
+                onClose = { 
+                    showExportModal = false
+                    selectedResumeForExport = null
+                },
+                onExport = { format ->
+                    PdfExport.exportResumeToPdf(selectedResumeForExport!!, format)
+                    showExportModal = false
+                    selectedResumeForExport = null
+                }
+            )
+        }
+        
         // ATS Analysis Results Display
         state.atsAnalysis?.let { atsAnalysis ->
             ATSAnalysisResults(
@@ -294,7 +317,8 @@ private fun ResumeCard(
     resume: Resume,
     onAnalyze: () -> Unit,
     onATSAnalyze: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onExportPdf: () -> Unit
 ) {
     Div(attrs = { classes("card") }) {
         Div(attrs = { classes("card-header") }) {
@@ -342,6 +366,12 @@ private fun ResumeCard(
                 onClick { onATSAnalyze() }
             }) {
                 Text("ATS Check")
+            }
+            Button(attrs = {
+                classes("btn", "btn-secondary")
+                onClick { onExportPdf() }
+            }) {
+                Text("📄 Export PDF")
             }
             Button(attrs = {
                 classes("btn", "btn-outline")
@@ -1281,5 +1311,101 @@ private fun ScoreCard(label: String, score: Int) {
                 property("opacity", "0.9")
             }
         }) { Text(label) }
+    }
+}
+
+@Composable
+private fun ExportPdfModal(
+    resume: Resume,
+    onClose: () -> Unit,
+    onExport: (ResumeFormat) -> Unit
+) {
+    var selectedFormat by remember { mutableStateOf(ResumeFormat.PROFESSIONAL) }
+    
+    Div(attrs = { classes("modal-backdrop") }) {
+        Div(attrs = { classes("modal") }) {
+            Div(attrs = { classes("modal-header") }) {
+                H3(attrs = { classes("modal-title") }) { Text("Export Resume as PDF") }
+                Button(attrs = {
+                    classes("modal-close")
+                    onClick { onClose() }
+                }) { Text("✕") }
+            }
+            
+            Div(attrs = { classes("modal-body") }) {
+                P(attrs = { classes("text-secondary", "mb-lg") }) {
+                    Text("Choose a format for your resume: \"${resume.name}\"")
+                }
+                
+                // Format Selection
+                Div(attrs = { classes("form-group", "mb-lg") }) {
+                    Label(attrs = { classes("form-label") }) { Text("Resume Format") }
+                    
+                    Div(attrs = { classes("format-grid") }) {
+                        FormatOption(
+                            name = "Professional",
+                            description = "Clean, corporate-friendly design with blue accents",
+                            emoji = "💼",
+                            isSelected = selectedFormat == ResumeFormat.PROFESSIONAL,
+                            onClick = { selectedFormat = ResumeFormat.PROFESSIONAL }
+                        )
+                        FormatOption(
+                            name = "Modern",
+                            description = "Contemporary design with purple accents",
+                            emoji = "✨",
+                            isSelected = selectedFormat == ResumeFormat.MODERN,
+                            onClick = { selectedFormat = ResumeFormat.MODERN }
+                        )
+                        FormatOption(
+                            name = "Classic",
+                            description = "Traditional serif fonts, timeless elegance",
+                            emoji = "📜",
+                            isSelected = selectedFormat == ResumeFormat.CLASSIC,
+                            onClick = { selectedFormat = ResumeFormat.CLASSIC }
+                        )
+                        FormatOption(
+                            name = "Minimal",
+                            description = "Simple, distraction-free layout",
+                            emoji = "🎯",
+                            isSelected = selectedFormat == ResumeFormat.MINIMAL,
+                            onClick = { selectedFormat = ResumeFormat.MINIMAL }
+                        )
+                    }
+                }
+                
+                Div(attrs = { classes("alert", "alert-info", "mb-lg") }) {
+                    Text("💡 Tip: After clicking 'Export', your browser's print dialog will open. Select 'Save as PDF' as the destination to download your resume.")
+                }
+            }
+            
+            Div(attrs = { classes("modal-footer") }) {
+                Button(attrs = {
+                    classes("btn", "btn-secondary")
+                    onClick { onClose() }
+                }) { Text("Cancel") }
+                Button(attrs = {
+                    classes("btn", "btn-primary")
+                    onClick { onExport(selectedFormat) }
+                }) { Text("📄 Export PDF") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FormatOption(
+    name: String,
+    description: String,
+    emoji: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Div(attrs = {
+        classes("format-option", if (isSelected) "format-option-selected" else "")
+        onClick { onClick() }
+    }) {
+        Div(attrs = { classes("format-emoji") }) { Text(emoji) }
+        Div(attrs = { classes("format-name") }) { Text(name) }
+        Div(attrs = { classes("format-description") }) { Text(description) }
     }
 }

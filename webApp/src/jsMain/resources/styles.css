@@ -2037,3 +2037,54 @@ a:hover {
     max-height: 600px;
     overflow-y: auto;
 }
+
+/* PDF Export Format Selection */
+.format-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+}
+
+.format-option {
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.format-option:hover {
+    border-color: var(--color-primary-light);
+    background: var(--color-primary-lighter);
+}
+
+.format-option-selected {
+    border-color: var(--color-primary);
+    background: var(--color-primary-lighter);
+}
+
+.format-emoji {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.format-name {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+.format-description {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+.alert-info {
+    background: var(--color-primary-lighter);
+    color: var(--color-primary-dark);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-primary-light);
+}
+
