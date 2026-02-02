@@ -1436,7 +1436,10 @@ private fun FormatOption(
     onClick: () -> Unit
 ) {
     Div(attrs = {
-        classes("format-option", if (isSelected) "format-option-selected" else "")
+        classes(buildList {
+            add("format-option")
+            if (isSelected) add("format-option-selected")
+        })
         onClick { onClick() }
     }) {
         Div(attrs = { classes("format-emoji") }) { Text(emoji) }
@@ -1483,7 +1486,10 @@ fun VersionHistoryModal(
                         Div(attrs = { classes("version-list") }) {
                             versions.forEach { version: ResumeVersion ->
                                 Div(attrs = {
-                                    classes("version-item", if (version.id == selectedVersionId) "version-item-selected" else "")
+                                    classes(buildList {
+                                        add("version-item")
+                                        if (version.id == selectedVersionId) add("version-item-selected")
+                                    })
                                     onClick { 
                                         selectedVersionId = version.id
                                         showPreview = true

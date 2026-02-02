@@ -47,16 +47,22 @@ fun ResumeOptimizerScreen() {
         // Tab Navigation
         Div(attrs = { classes("tabs-nav", "mb-lg") }) {
             Button(attrs = {
-                classes("tab-btn", if (activeTab == "ats") "tab-btn-active" else "")
+                classes(buildList {
+                    add("tab-btn")
+                    if (activeTab == "ats") add("tab-btn-active")
+                })
                 onClick { activeTab = "ats" }
             }) {
-                Text("🔍 ATS Analysis")
+                Text("ATS Analysis")
             }
             Button(attrs = {
-                classes("tab-btn", if (activeTab == "rewrite") "tab-btn-active" else "")
+                classes(buildList {
+                    add("tab-btn")
+                    if (activeTab == "rewrite") add("tab-btn-active")
+                })
                 onClick { activeTab = "rewrite" }
             }) {
-                Text("✍️ Section Rewriter")
+                Text("Section Rewriter")
             }
         }
         
