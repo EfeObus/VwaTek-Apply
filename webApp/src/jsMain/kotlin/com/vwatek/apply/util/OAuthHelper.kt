@@ -172,44 +172,55 @@ object OAuthHelper {
         // Store interval ID for cleanup
         var intervalId: Int = 0
         
-        // Poll for callback
+        // Poll for callback - use try/catch for cross-origin security
         intervalId = window.setInterval({
             try {
-                val popupUrl = popup.location.href
-                if (popupUrl.contains("code=")) {
-                    val code = extractUrlParam(popupUrl, "code")
-                    val state = extractUrlParam(popupUrl, "state")
-                    
-                    // Verify state
-                    val storedState = window.localStorage.getItem("linkedin_oauth_state")
-                    window.localStorage.removeItem("linkedin_oauth_state")
-                    
+                // Check if popup was closed manually
+                if (popup.closed == true) {
                     window.clearInterval(intervalId)
-                    popup.close()
-                    
-                    if (code != null && state == storedState) {
-                        onSuccess(code)
-                    } else if (code != null) {
-                        onError("State mismatch - potential CSRF attack")
-                    } else {
-                        onError("No authorization code received")
-                    }
-                } else if (popupUrl.contains("error=")) {
-                    val error = extractUrlParam(popupUrl, "error_description") 
-                        ?: extractUrlParam(popupUrl, "error") 
-                        ?: "Unknown error"
-                    window.clearInterval(intervalId)
-                    popup.close()
-                    onError(error)
+                    onError("Login cancelled")
+                    return@setInterval
                 }
-            } catch (e: Exception) {
-                // Cross-origin error - popup still on LinkedIn
-            }
-            
-            // Check if popup was closed manually
-            if (popup.closed == true) {
-                window.clearInterval(intervalId)
-                onError("Login cancelled")
+                
+                // Try to access popup URL - this will throw if cross-origin
+                val popupUrl: String? = try {
+                    popup.location.href
+                } catch (e: dynamic) {
+                    // Cross-origin - popup is still on LinkedIn domain
+                    null
+                }
+                
+                // Only process if we can access the URL (same origin)
+                if (popupUrl != null && popupUrl.contains(window.location.origin)) {
+                    if (popupUrl.contains("code=")) {
+                        val code = extractUrlParam(popupUrl, "code")
+                        val state = extractUrlParam(popupUrl, "state")
+                        
+                        // Verify state
+                        val storedState = window.localStorage.getItem("linkedin_oauth_state")
+                        window.localStorage.removeItem("linkedin_oauth_state")
+                        
+                        window.clearInterval(intervalId)
+                        popup.close()
+                        
+                        if (code != null && state == storedState) {
+                            onSuccess(code)
+                        } else if (code != null) {
+                            onError("State mismatch - potential CSRF attack")
+                        } else {
+                            onError("No authorization code received")
+                        }
+                    } else if (popupUrl.contains("error=")) {
+                        val error = extractUrlParam(popupUrl, "error_description") 
+                            ?: extractUrlParam(popupUrl, "error") 
+                            ?: "Unknown error"
+                        window.clearInterval(intervalId)
+                        popup.close()
+                        onError(error)
+                    }
+                }
+            } catch (e: dynamic) {
+                // Silently ignore cross-origin access errors
             }
         }, 500)
     }
