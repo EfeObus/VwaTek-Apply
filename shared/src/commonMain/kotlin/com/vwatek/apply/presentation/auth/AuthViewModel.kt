@@ -49,7 +49,7 @@ sealed class AuthIntent {
     data class SwitchView(val view: AuthView) : AuthIntent()
     
     // Email Auth
-    data class Login(val email: String, val password: String) : AuthIntent()
+    data class Login(val email: String, val password: String, val rememberMe: Boolean = true) : AuthIntent()
     data class Register(
         val email: String,
         val password: String,
@@ -138,7 +138,7 @@ class AuthViewModel(
     fun onIntent(intent: AuthIntent) {
         when (intent) {
             is AuthIntent.SwitchView -> switchView(intent.view)
-            is AuthIntent.Login -> login(intent.email, intent.password)
+            is AuthIntent.Login -> login(intent.email, intent.password, intent.rememberMe)
             is AuthIntent.Register -> register(intent)
             is AuthIntent.ResetPassword -> resetUserPassword(intent.email)
             is AuthIntent.LoginWithGoogle -> loginGoogle(intent.idToken)
@@ -163,10 +163,15 @@ class AuthViewModel(
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             
-            // Create or login user with Google info
-            loginWithGoogle(intent.email) // Pass email as token since we get user info directly
+            // Create or login user with Google info - pass all user details
+            loginWithGoogle(
+                idToken = intent.email, // Use email as identifier
+                email = intent.email,
+                firstName = intent.firstName,
+                lastName = intent.lastName,
+                profilePicture = intent.profilePicture
+            )
                 .onSuccess { user ->
-                    // Update user with Google profile info if needed
                     _state.value = _state.value.copy(
                         isLoading = false,
                         isAuthenticated = true,
@@ -214,11 +219,11 @@ class AuthViewModel(
         )
     }
     
-    private fun login(email: String, password: String) {
+    private fun login(email: String, password: String, rememberMe: Boolean = true) {
         scope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             
-            loginWithEmail(email, password)
+            loginWithEmail(email, password, rememberMe)
                 .onSuccess { user ->
                     _state.value = _state.value.copy(
                         isLoading = false,

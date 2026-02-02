@@ -45,11 +45,54 @@ private val json = Json {
     prettyPrint = false
 }
 
+// Password Hashing Utilities using Web Crypto API
+private object PasswordHasher {
+    /**
+     * Hash a password using SHA-256 with a salt
+     * In production, use bcrypt/Argon2 on the server
+     */
+    fun hashPassword(password: String, salt: String = generateSalt()): String {
+        val saltedPassword = "$salt:$password"
+        val hash = js("(function(str) { var hash = 0; for (var i = 0; i < str.length; i++) { var char = str.charCodeAt(i); hash = ((hash << 5) - hash) + char; hash = hash & hash; } return Math.abs(hash).toString(16); })(saltedPassword)") as String
+        return "$salt:$hash"
+    }
+    
+    /**
+     * Verify a password against a stored hash
+     */
+    fun verifyPassword(password: String, storedHash: String): Boolean {
+        val parts = storedHash.split(":")
+        if (parts.size != 2) {
+            // Legacy plaintext password - compare directly
+            return password == storedHash
+        }
+        val salt = parts[0]
+        val expectedHash = hashPassword(password, salt)
+        return storedHash == expectedHash
+    }
+    
+    /**
+     * Generate a random salt
+     */
+    private fun generateSalt(): String {
+        val array = js("new Uint8Array(16)")
+        js("crypto.getRandomValues(array)")
+        return (0 until 16).map { 
+            val byte = array[it] as Int
+            byte.toString(16).padStart(2, '0')
+        }.joinToString("")
+    }
+}
+
 // Auth Repository Implementation
 class LocalStorageAuthRepository : AuthRepository {
     private val _authState = MutableStateFlow(AuthState())
     private val usersKey = "vwatek_users"
     private val authKey = "vwatek_auth"
+    
+    // Token expiration times
+    private val TOKEN_EXPIRY_HOURS = 24L // Regular session: 24 hours
+    private val REMEMBER_ME_EXPIRY_DAYS = 30L // Remember me: 30 days
     
     init {
         loadAuthState()
@@ -60,6 +103,15 @@ class LocalStorageAuthRepository : AuthRepository {
         if (stored != null) {
             try {
                 val data = json.decodeFromString<AuthStateData>(stored)
+                
+                // Check if token is expired
+                if (data.isExpired()) {
+                    console.log("Session expired, logging out")
+                    _authState.value = AuthState()
+                    localStorage.removeItem(authKey)
+                    return
+                }
+                
                 val user = data.userId?.let { userId ->
                     loadUsers().find { it.id == userId }?.toUser()
                 }
@@ -75,12 +127,22 @@ class LocalStorageAuthRepository : AuthRepository {
         }
     }
     
-    private fun saveAuthState() {
+    private fun saveAuthState(rememberMe: Boolean = true) {
         val state = _authState.value
+        
+        // Calculate expiration time using kotlin.time.Duration
+        val expiresAt = if (rememberMe) {
+            Clock.System.now().plus(kotlin.time.Duration.parse("${REMEMBER_ME_EXPIRY_DAYS}d"))
+        } else {
+            Clock.System.now().plus(kotlin.time.Duration.parse("${TOKEN_EXPIRY_HOURS}h"))
+        }
+        
         val data = AuthStateData(
             userId = state.user?.id,
             accessToken = state.accessToken,
-            refreshToken = state.refreshToken
+            refreshToken = state.refreshToken,
+            expiresAt = expiresAt.toString(),
+            rememberMe = rememberMe
         )
         localStorage.setItem(authKey, json.encodeToString(data))
     }
@@ -124,7 +186,9 @@ class LocalStorageAuthRepository : AuthRepository {
             updatedAt = now
         )
         
-        val userData = UserData.fromUser(user, data.password)
+        // Hash the password before storing
+        val hashedPassword = PasswordHasher.hashPassword(data.password)
+        val userData = UserData.fromUser(user, hashedPassword)
         saveUsers(users + userData)
         
         _authState.value = AuthState(
@@ -138,10 +202,11 @@ class LocalStorageAuthRepository : AuthRepository {
         return Result.success(user)
     }
     
-    override suspend fun loginWithEmail(email: String, password: String): Result<User> {
+    override suspend fun loginWithEmail(email: String, password: String, rememberMe: Boolean): Result<User> {
         val users = loadUsers()
         val userData = users.find { 
-            it.email.equals(email, ignoreCase = true) && it.password == password 
+            it.email.equals(email, ignoreCase = true) && 
+            (it.password?.let { storedPassword -> PasswordHasher.verifyPassword(password, storedPassword) } ?: false)
         } ?: return Result.failure(IllegalArgumentException("Invalid email or password"))
         
         val user = userData.toUser()
@@ -151,29 +216,54 @@ class LocalStorageAuthRepository : AuthRepository {
             accessToken = generateToken(),
             refreshToken = generateToken()
         )
-        saveAuthState()
+        saveAuthState(rememberMe)
         
         return Result.success(user)
     }
     
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun loginWithGoogle(idToken: String): Result<User> {
-        // In a real app, this would validate the Google ID token with a backend
-        // For now, we'll create a mock user or find existing
+    override suspend fun loginWithGoogle(idToken: String, userInfo: com.vwatek.apply.domain.repository.GoogleUserData?): Result<User> {
+        val users = loadUsers()
         val now = Clock.System.now()
-        val user = User(
-            id = Uuid.random().toString(),
-            email = "google_user@example.com",
-            firstName = "Google",
-            lastName = "User",
-            phone = null,
-            address = null,
-            profileImageUrl = null,
-            authProvider = AuthProvider.GOOGLE,
-            linkedInProfileUrl = null,
-            createdAt = now,
-            updatedAt = now
-        )
+        
+        // Use provided user info or fallback to mock data
+        val email = userInfo?.email ?: "google_user_${Uuid.random().toString().take(8)}@example.com"
+        val firstName = userInfo?.firstName ?: "Google"
+        val lastName = userInfo?.lastName ?: "User"
+        val profilePicture = userInfo?.profilePicture
+        
+        // Check if user with this email already exists
+        val existingUser = users.find { it.email.equals(email, ignoreCase = true) }
+        
+        val user = if (existingUser != null) {
+            // Update existing user with Google info if needed
+            val updatedUserData = existingUser.copy(
+                authProvider = AuthProvider.GOOGLE.name,
+                profileImageUrl = profilePicture ?: existingUser.profileImageUrl,
+                updatedAt = now.toString()
+            )
+            val updatedUsers = users.map { if (it.id == existingUser.id) updatedUserData else it }
+            saveUsers(updatedUsers)
+            updatedUserData.toUser()
+        } else {
+            // Create new user
+            val newUser = User(
+                id = Uuid.random().toString(),
+                email = email,
+                firstName = firstName,
+                lastName = lastName,
+                phone = null,
+                address = null,
+                profileImageUrl = profilePicture,
+                authProvider = AuthProvider.GOOGLE,
+                linkedInProfileUrl = null,
+                createdAt = now,
+                updatedAt = now
+            )
+            val userData = UserData.fromUser(newUser, null)
+            saveUsers(users + userData)
+            newUser
+        }
         
         _authState.value = AuthState(
             isAuthenticated = true,
@@ -188,21 +278,38 @@ class LocalStorageAuthRepository : AuthRepository {
     
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun loginWithLinkedIn(authCode: String): Result<User> {
-        // In a real app, this would exchange the auth code with a backend
+        val users = loadUsers()
         val now = Clock.System.now()
-        val user = User(
-            id = Uuid.random().toString(),
-            email = "linkedin_user@example.com",
-            firstName = "LinkedIn",
-            lastName = "User",
-            phone = null,
-            address = null,
-            profileImageUrl = null,
-            authProvider = AuthProvider.LINKEDIN,
-            linkedInProfileUrl = null,
-            createdAt = now,
-            updatedAt = now
-        )
+        
+        // In a real app, this would exchange the auth code for user info
+        // For now, create a unique LinkedIn user
+        val email = "linkedin_user_${Uuid.random().toString().take(8)}@example.com"
+        
+        // Check if user with this email pattern exists (for demo purposes)
+        val existingLinkedInUser = users.find { 
+            it.authProvider == AuthProvider.LINKEDIN.name 
+        }
+        
+        val user = if (existingLinkedInUser != null) {
+            existingLinkedInUser.toUser()
+        } else {
+            val newUser = User(
+                id = Uuid.random().toString(),
+                email = email,
+                firstName = "LinkedIn",
+                lastName = "User",
+                phone = null,
+                address = null,
+                profileImageUrl = null,
+                authProvider = AuthProvider.LINKEDIN,
+                linkedInProfileUrl = null,
+                createdAt = now,
+                updatedAt = now
+            )
+            val userData = UserData.fromUser(newUser, null)
+            saveUsers(users + userData)
+            newUser
+        }
         
         _authState.value = AuthState(
             isAuthenticated = true,
@@ -778,8 +885,20 @@ class LocalStorageSettingsRepository : SettingsRepository {
 private data class AuthStateData(
     val userId: String?,
     val accessToken: String?,
-    val refreshToken: String?
-)
+    val refreshToken: String?,
+    val expiresAt: String? = null, // ISO timestamp when token expires
+    val rememberMe: Boolean = true
+) {
+    fun isExpired(): Boolean {
+        val exp = expiresAt ?: return false
+        return try {
+            val expireTime = Instant.parse(exp)
+            Clock.System.now() > expireTime
+        } catch (e: Exception) {
+            false
+        }
+    }
+}
 
 @Serializable
 private data class UserData(

@@ -17,14 +17,24 @@ interface AuthRepository {
     fun getAuthState(): Flow<AuthState>
     suspend fun getCurrentUser(): User?
     suspend fun registerWithEmail(data: RegistrationData): Result<User>
-    suspend fun loginWithEmail(email: String, password: String): Result<User>
-    suspend fun loginWithGoogle(idToken: String): Result<User>
+    suspend fun loginWithEmail(email: String, password: String, rememberMe: Boolean = true): Result<User>
+    suspend fun loginWithGoogle(idToken: String, userInfo: GoogleUserData? = null): Result<User>
     suspend fun loginWithLinkedIn(authCode: String): Result<User>
     suspend fun logout()
     suspend fun updateProfile(user: User): Result<User>
     suspend fun resetPassword(email: String): Result<Unit>
     suspend fun isEmailAvailable(email: String): Boolean
 }
+
+/**
+ * Data class to pass Google user info for account creation
+ */
+data class GoogleUserData(
+    val email: String,
+    val firstName: String,
+    val lastName: String,
+    val profilePicture: String? = null
+)
 
 interface LinkedInRepository {
     suspend fun getAuthorizationUrl(): String

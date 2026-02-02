@@ -55,7 +55,7 @@ fun AuthScreen(
         // Initialize Google Sign-In
         try {
             OAuthHelper.initializeGoogleSignIn(
-                clientId = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com", // Replace with actual Google Client ID
+                clientId = "21443684777-b3fbd6nd22ggk7shckddina56lm4rq7a.apps.googleusercontent.com",
                 onSuccess = { userInfo ->
                     isGoogleLoading = false
                     // Create user from Google info
@@ -123,8 +123,8 @@ fun AuthScreen(
                     error = state.error ?: googleError ?: linkedInError,
                     isGoogleLoading = isGoogleLoading,
                     isLinkedInLoading = isLinkedInLoading,
-                    onLogin = { email, password ->
-                        viewModel.onIntent(AuthIntent.Login(email, password))
+                    onLogin = { email, password, rememberMe ->
+                        viewModel.onIntent(AuthIntent.Login(email, password, rememberMe))
                     },
                     onSwitchToRegister = {
                         viewModel.onIntent(AuthIntent.SwitchView(AuthView.REGISTER))
@@ -204,7 +204,7 @@ private fun LoginForm(
     error: String?,
     isGoogleLoading: Boolean,
     isLinkedInLoading: Boolean,
-    onLogin: (email: String, password: String) -> Unit,
+    onLogin: (email: String, password: String, rememberMe: Boolean) -> Unit,
     onSwitchToRegister: () -> Unit,
     onSwitchToForgotPassword: () -> Unit,
     onGoogleLogin: () -> Unit,
@@ -213,6 +213,7 @@ private fun LoginForm(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var rememberMe by remember { mutableStateOf(true) }
     
     H2(attrs = { classes("text-center", "mb-lg") }) { Text("Sign In") }
     
@@ -281,7 +282,7 @@ private fun LoginForm(
         onSubmit { 
             it.preventDefault()
             if (email.isNotBlank() && password.isNotBlank()) {
-                onLogin(email, password)
+                onLogin(email, password, rememberMe)
             }
         }
     }) {
@@ -309,7 +310,10 @@ private fun LoginForm(
         
         Div(attrs = { classes("flex", "justify-between", "items-center", "mb-lg") }) {
             Label(attrs = { classes("flex", "items-center", "gap-sm") }) {
-                Input(InputType.Checkbox) { }
+                Input(InputType.Checkbox) {
+                    checked(rememberMe)
+                    onInput { rememberMe = it.value }
+                }
                 Text("Remember me")
             }
             A(attrs = {

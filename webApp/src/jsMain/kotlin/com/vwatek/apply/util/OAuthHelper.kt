@@ -14,7 +14,22 @@ object OAuthHelper {
     
     // OAuth Configuration
     private const val LINKEDIN_CLIENT_ID = "86zpbbqqqa32et"
-    private const val GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID" // User needs to set this
+    private const val GOOGLE_CLIENT_ID = "21443684777-b3fbd6nd22ggk7shckddina56lm4rq7a.apps.googleusercontent.com"
+    
+    // LinkedIn redirect URI - IMPORTANT: This exact URI must be registered in LinkedIn Developer Console
+    // For local development: http://localhost:8081/linkedin-callback
+    // For production: https://yourdomain.com/linkedin-callback
+    private fun getLinkedInRedirectUri(): String {
+        return "${window.location.origin}/linkedin-callback"
+    }
+    
+    /**
+     * Get the LinkedIn redirect URI for configuration
+     * Call this to see what URI needs to be added to LinkedIn Developer Console
+     */
+    fun getRequiredLinkedInRedirectUri(): String {
+        return getLinkedInRedirectUri()
+    }
     
     /**
      * Initialize Google Sign-In
@@ -127,9 +142,13 @@ object OAuthHelper {
      */
     fun getLinkedInAuthUrl(
         clientId: String = LINKEDIN_CLIENT_ID,
-        redirectUri: String = "${window.location.origin}/linkedin-callback",
+        redirectUri: String = getLinkedInRedirectUri(),
         state: String = generateRandomState()
     ): String {
+        // Log the redirect URI for debugging
+        console.log("LinkedIn redirect URI: $redirectUri")
+        console.log("Make sure this exact URI is registered in LinkedIn Developer Console")
+        
         // Store state for verification
         window.localStorage.setItem("linkedin_oauth_state", state)
         

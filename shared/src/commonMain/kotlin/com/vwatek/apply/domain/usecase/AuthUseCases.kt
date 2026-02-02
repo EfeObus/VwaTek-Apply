@@ -9,6 +9,7 @@ import com.vwatek.apply.domain.model.ResumeSourceType
 import com.vwatek.apply.domain.model.User
 import com.vwatek.apply.domain.model.FileUploadResult
 import com.vwatek.apply.domain.repository.AuthRepository
+import com.vwatek.apply.domain.repository.GoogleUserData
 import com.vwatek.apply.domain.repository.LinkedInRepository
 import com.vwatek.apply.domain.repository.FileUploadRepository
 import com.vwatek.apply.domain.repository.ResumeRepository
@@ -83,23 +84,39 @@ class RegisterWithEmailUseCase(private val authRepository: AuthRepository) {
 }
 
 class LoginWithEmailUseCase(private val authRepository: AuthRepository) {
-    suspend operator fun invoke(email: String, password: String): Result<User> {
+    suspend operator fun invoke(email: String, password: String, rememberMe: Boolean = true): Result<User> {
         if (email.isBlank()) {
             return Result.failure(IllegalArgumentException("Email is required"))
         }
         if (password.isBlank()) {
             return Result.failure(IllegalArgumentException("Password is required"))
         }
-        return authRepository.loginWithEmail(email.lowercase().trim(), password)
+        return authRepository.loginWithEmail(email.lowercase().trim(), password, rememberMe)
     }
 }
 
 class LoginWithGoogleUseCase(private val authRepository: AuthRepository) {
-    suspend operator fun invoke(idToken: String): Result<User> {
-        if (idToken.isBlank()) {
+    suspend operator fun invoke(
+        idToken: String,
+        email: String? = null,
+        firstName: String? = null,
+        lastName: String? = null,
+        profilePicture: String? = null
+    ): Result<User> {
+        if (idToken.isBlank() && email.isNullOrBlank()) {
             return Result.failure(IllegalArgumentException("Google authentication failed"))
         }
-        return authRepository.loginWithGoogle(idToken)
+        
+        val userInfo = if (!email.isNullOrBlank()) {
+            GoogleUserData(
+                email = email,
+                firstName = firstName ?: "",
+                lastName = lastName ?: "",
+                profilePicture = profilePicture
+            )
+        } else null
+        
+        return authRepository.loginWithGoogle(idToken, userInfo)
     }
 }
 
