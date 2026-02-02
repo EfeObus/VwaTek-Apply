@@ -8,8 +8,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.vwatek.apply.domain.model.CoverLetter
 import com.vwatek.apply.domain.model.CoverLetterTone
+import com.vwatek.apply.domain.model.Resume
 import com.vwatek.apply.presentation.coverletter.CoverLetterIntent
 import com.vwatek.apply.presentation.coverletter.CoverLetterViewModel
+import com.vwatek.apply.presentation.resume.ResumeViewModel
 import org.jetbrains.compose.web.attributes.*
 import org.jetbrains.compose.web.dom.*
 import org.koin.core.context.GlobalContext
@@ -17,7 +19,9 @@ import org.koin.core.context.GlobalContext
 @Composable
 fun CoverLetterScreen() {
     val viewModel = remember { GlobalContext.get().get<CoverLetterViewModel>() }
+    val resumeViewModel = remember { GlobalContext.get().get<ResumeViewModel>() }
     val state by viewModel.state.collectAsState()
+    val resumeState by resumeViewModel.state.collectAsState()
     
     var showGenerateModal by remember { mutableStateOf(false) }
     var selectedCoverLetter by remember { mutableStateOf<CoverLetter?>(null) }
@@ -134,6 +138,7 @@ fun CoverLetterScreen() {
         if (showGenerateModal) {
             GenerateCoverLetterModal(
                 isGenerating = state.isGenerating,
+                resumes = resumeState.resumes,
                 onClose = { showGenerateModal = false },
                 onGenerate = { resume, jobTitle, company, jobDesc, tone ->
                     viewModel.onIntent(CoverLetterIntent.GenerateCoverLetter(
@@ -230,14 +235,17 @@ private fun CoverLetterCard(
 @Composable
 private fun GenerateCoverLetterModal(
     isGenerating: Boolean,
+    resumes: List<Resume>,
     onClose: () -> Unit,
     onGenerate: (resume: String, jobTitle: String, company: String, jobDesc: String, tone: CoverLetterTone) -> Unit
 ) {
-    var resumeContent by remember { mutableStateOf("") }
+    var selectedResumeId by remember { mutableStateOf<String?>(null) }
     var jobTitle by remember { mutableStateOf("") }
     var companyName by remember { mutableStateOf("") }
     var jobDescription by remember { mutableStateOf("") }
     var selectedTone by remember { mutableStateOf(CoverLetterTone.PROFESSIONAL) }
+    
+    val selectedResume = resumes.find { it.id == selectedResumeId }
     
     Div(attrs = { classes("modal-backdrop") }) {
         Div(attrs = { 
@@ -299,13 +307,54 @@ private fun GenerateCoverLetterModal(
                 }
                 
                 Div(attrs = { classes("form-group") }) {
-                    Label(attrs = { classes("form-label") }) { Text("Your Resume") }
-                    TextArea {
-                        classes("form-textarea")
-                        placeholder("Paste your resume content...")
-                        value(resumeContent)
-                        onInput { resumeContent = it.value }
-                        style { property("min-height", "120px") }
+                    Label(attrs = { classes("form-label") }) { Text("Select Resume") }
+                    if (resumes.isEmpty()) {
+                        Div(attrs = { 
+                            classes("form-helper")
+                            style { 
+                                property("padding", "var(--spacing-md)")
+                                property("background-color", "var(--color-surface-variant)")
+                                property("border-radius", "var(--radius-md)")
+                                property("text-align", "center")
+                            }
+                        }) {
+                            Text("No resumes uploaded yet. Please upload a resume on the Resume page first.")
+                        }
+                    } else {
+                        Select(attrs = {
+                            classes("form-select")
+                            onChange { event ->
+                                val value = event.target.value
+                                selectedResumeId = if (value.isEmpty()) null else value
+                            }
+                        }) {
+                            Option(value = "") {
+                                Text("-- Select a resume --")
+                            }
+                            resumes.forEach { resume ->
+                                Option(
+                                    value = resume.id,
+                                    attrs = {
+                                        if (resume.id == selectedResumeId) selected()
+                                    }
+                                ) {
+                                    Text(resume.name)
+                                }
+                            }
+                        }
+                        selectedResume?.let { resume ->
+                            Div(attrs = { 
+                                classes("mt-sm")
+                                style { 
+                                    property("padding", "var(--spacing-sm)")
+                                    property("background-color", "var(--color-surface-variant)")
+                                    property("border-radius", "var(--radius-sm)")
+                                    property("font-size", "0.85rem")
+                                }
+                            }) {
+                                Text("✓ ${resume.name} selected")
+                            }
+                        }
                     }
                 }
                 
@@ -330,11 +379,13 @@ private fun GenerateCoverLetterModal(
                 }
                 Button(attrs = {
                     classes("btn", "btn-primary")
-                    if (isGenerating || resumeContent.isBlank() || jobTitle.isBlank() || companyName.isBlank() || jobDescription.isBlank()) {
+                    if (isGenerating || selectedResume == null || jobTitle.isBlank() || companyName.isBlank() || jobDescription.isBlank()) {
                         attr("disabled", "true")
                     }
                     onClick { 
-                        onGenerate(resumeContent, jobTitle, companyName, jobDescription, selectedTone)
+                        selectedResume?.let { resume ->
+                            onGenerate(resume.content, jobTitle, companyName, jobDescription, selectedTone)
+                        }
                     }
                 }) {
                     if (isGenerating) {

@@ -9,8 +9,10 @@ import androidx.compose.runtime.setValue
 import com.vwatek.apply.domain.model.InterviewSession
 import com.vwatek.apply.domain.model.InterviewQuestion
 import com.vwatek.apply.domain.model.InterviewStatus
+import com.vwatek.apply.domain.model.Resume
 import com.vwatek.apply.presentation.interview.InterviewIntent
 import com.vwatek.apply.presentation.interview.InterviewViewModel
+import com.vwatek.apply.presentation.resume.ResumeViewModel
 import org.jetbrains.compose.web.attributes.*
 import org.jetbrains.compose.web.dom.*
 import org.koin.core.context.GlobalContext
@@ -18,7 +20,9 @@ import org.koin.core.context.GlobalContext
 @Composable
 fun InterviewScreen() {
     val viewModel = remember { GlobalContext.get().get<InterviewViewModel>() }
+    val resumeViewModel = remember { GlobalContext.get().get<ResumeViewModel>() }
     val state by viewModel.state.collectAsState()
+    val resumeState by resumeViewModel.state.collectAsState()
     
     var showStartModal by remember { mutableStateOf(false) }
     var showStarModal by remember { mutableStateOf(false) }
@@ -163,6 +167,7 @@ fun InterviewScreen() {
         if (showStartModal) {
             StartInterviewModal(
                 isStarting = state.isStartingSession,
+                resumes = resumeState.resumes,
                 onClose = { showStartModal = false },
                 onStart = { resume, jobTitle, jobDesc ->
                     viewModel.onIntent(InterviewIntent.StartSession(resume, jobTitle, jobDesc))
@@ -422,12 +427,15 @@ private fun ActiveInterviewView(
 @Composable
 private fun StartInterviewModal(
     isStarting: Boolean,
+    resumes: List<Resume>,
     onClose: () -> Unit,
     onStart: (resume: String?, jobTitle: String, jobDesc: String) -> Unit
 ) {
-    var resumeContent by remember { mutableStateOf("") }
+    var selectedResumeId by remember { mutableStateOf<String?>(null) }
     var jobTitle by remember { mutableStateOf("") }
     var jobDescription by remember { mutableStateOf("") }
+    
+    val selectedResume = resumes.find { it.id == selectedResumeId }
     
     Div(attrs = { classes("modal-backdrop") }) {
         Div(attrs = { classes("modal") }) {
@@ -464,16 +472,57 @@ private fun StartInterviewModal(
                 }
                 
                 Div(attrs = { classes("form-group") }) {
-                    Label(attrs = { classes("form-label") }) { Text("Your Resume (Optional)") }
-                    TextArea {
-                        classes("form-textarea")
-                        placeholder("Paste your resume to get personalized questions...")
-                        value(resumeContent)
-                        onInput { resumeContent = it.value }
-                        style { property("min-height", "100px") }
+                    Label(attrs = { classes("form-label") }) { Text("Select Resume (Optional)") }
+                    if (resumes.isEmpty()) {
+                        Div(attrs = { 
+                            classes("form-helper")
+                            style { 
+                                property("padding", "var(--spacing-md)")
+                                property("background-color", "var(--color-surface-variant)")
+                                property("border-radius", "var(--radius-md)")
+                                property("text-align", "center")
+                            }
+                        }) {
+                            Text("No resumes uploaded yet. You can still start without one.")
+                        }
+                    } else {
+                        Select(attrs = {
+                            classes("form-select")
+                            onChange { event ->
+                                val value = event.target.value
+                                selectedResumeId = if (value.isEmpty()) null else value
+                            }
+                        }) {
+                            Option(value = "") {
+                                Text("-- None (generic questions) --")
+                            }
+                            resumes.forEach { resume ->
+                                Option(
+                                    value = resume.id,
+                                    attrs = {
+                                        if (resume.id == selectedResumeId) selected()
+                                    }
+                                ) {
+                                    Text(resume.name)
+                                }
+                            }
+                        }
+                        selectedResume?.let { resume ->
+                            Div(attrs = { 
+                                classes("mt-sm")
+                                style { 
+                                    property("padding", "var(--spacing-sm)")
+                                    property("background-color", "var(--color-surface-variant)")
+                                    property("border-radius", "var(--radius-sm)")
+                                    property("font-size", "0.85rem")
+                                }
+                            }) {
+                                Text("✓ ${resume.name} - Questions will be tailored to your experience")
+                            }
+                        }
                     }
                     P(attrs = { classes("form-helper") }) {
-                        Text("Adding your resume helps generate more relevant questions.")
+                        Text("Selecting a resume helps generate more relevant questions.")
                     }
                 }
             }
@@ -492,7 +541,7 @@ private fun StartInterviewModal(
                     }
                     onClick { 
                         onStart(
-                            resumeContent.ifBlank { null },
+                            selectedResume?.content,
                             jobTitle,
                             jobDescription
                         )
