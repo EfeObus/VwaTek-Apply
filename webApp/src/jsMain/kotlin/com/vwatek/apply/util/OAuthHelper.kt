@@ -147,6 +147,7 @@ object OAuthHelper {
     
     /**
      * Open LinkedIn OAuth in popup window
+     * Uses a safer approach that doesn't throw cross-origin errors
      */
     fun openLinkedInPopup(
         onSuccess: (code: String) -> Unit,
@@ -171,57 +172,82 @@ object OAuthHelper {
         
         // Store interval ID for cleanup
         var intervalId: Int = 0
+        var checkCount = 0
+        val maxChecks = 600 // 5 minutes max (500ms * 600)
         
-        // Poll for callback - use try/catch for cross-origin security
+        // Poll for callback - using safe checks only
         intervalId = window.setInterval({
-            try {
-                // Check if popup was closed manually
-                if (popup.closed == true) {
-                    window.clearInterval(intervalId)
-                    onError("Login cancelled")
-                    return@setInterval
-                }
-                
-                // Try to access popup URL - this will throw if cross-origin
-                val popupUrl: String? = try {
-                    popup.location.href
+            checkCount++
+            
+            // Timeout after max checks
+            if (checkCount > maxChecks) {
+                window.clearInterval(intervalId)
+                try { popup.close() } catch (e: dynamic) {}
+                onError("Login timed out")
+                return@setInterval
+            }
+            
+            // First check if popup was closed
+            val isClosed = try {
+                popup.closed == true
+            } catch (e: dynamic) {
+                true // Assume closed if we can't check
+            }
+            
+            if (isClosed) {
+                window.clearInterval(intervalId)
+                onError("Login cancelled")
+                return@setInterval
+            }
+            
+            // Safely try to read the URL only when same-origin
+            val popupOrigin = try {
+                js("popup.location.origin") as? String
+            } catch (e: dynamic) {
+                null // Cross-origin, can't access
+            }
+            
+            // Only proceed if we successfully got origin AND it matches ours
+            if (popupOrigin != null && popupOrigin == window.location.origin) {
+                val popupHref = try {
+                    js("popup.location.href") as? String
                 } catch (e: dynamic) {
-                    // Cross-origin - popup is still on LinkedIn domain
                     null
                 }
                 
-                // Only process if we can access the URL (same origin)
-                if (popupUrl != null && popupUrl.contains(window.location.origin)) {
-                    if (popupUrl.contains("code=")) {
-                        val code = extractUrlParam(popupUrl, "code")
-                        val state = extractUrlParam(popupUrl, "state")
-                        
-                        // Verify state
-                        val storedState = window.localStorage.getItem("linkedin_oauth_state")
-                        window.localStorage.removeItem("linkedin_oauth_state")
-                        
-                        window.clearInterval(intervalId)
-                        popup.close()
-                        
-                        if (code != null && state == storedState) {
-                            onSuccess(code)
-                        } else if (code != null) {
-                            onError("State mismatch - potential CSRF attack")
-                        } else {
-                            onError("No authorization code received")
+                if (popupHref != null) {
+                    when {
+                        popupHref.contains("code=") -> {
+                            val code = extractUrlParam(popupHref, "code")
+                            val state = extractUrlParam(popupHref, "state")
+                            
+                            // Verify state
+                            val storedState = window.localStorage.getItem("linkedin_oauth_state")
+                            window.localStorage.removeItem("linkedin_oauth_state")
+                            
+                            window.clearInterval(intervalId)
+                            try { popup.close() } catch (e: dynamic) {}
+                            
+                            if (code != null && state == storedState) {
+                                onSuccess(code)
+                            } else if (code != null) {
+                                onError("State mismatch - potential CSRF attack")
+                            } else {
+                                onError("No authorization code received")
+                            }
                         }
-                    } else if (popupUrl.contains("error=")) {
-                        val error = extractUrlParam(popupUrl, "error_description") 
-                            ?: extractUrlParam(popupUrl, "error") 
-                            ?: "Unknown error"
-                        window.clearInterval(intervalId)
-                        popup.close()
-                        onError(error)
+                        popupHref.contains("error=") -> {
+                            val error = extractUrlParam(popupHref, "error_description") 
+                                ?: extractUrlParam(popupHref, "error") 
+                                ?: "Unknown error"
+                            window.clearInterval(intervalId)
+                            try { popup.close() } catch (e: dynamic) {}
+                            onError(error)
+                        }
                     }
                 }
-            } catch (e: dynamic) {
-                // Silently ignore cross-origin access errors
             }
+            // If cross-origin (popupOrigin is null), silently continue polling
         }, 500)
     }
     
