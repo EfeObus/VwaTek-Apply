@@ -1,6 +1,7 @@
 package com.vwatek.apply.routes
 
 import com.vwatek.apply.db.tables.UsersTable
+import com.vwatek.apply.services.EmailService
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -122,6 +123,20 @@ fun Route.authRoutes() {
             val token = generateToken()
             val expiresAt = now.plus(30.days)
             
+            // Send welcome email asynchronously
+            if (EmailService.isConfigured()) {
+                try {
+                    EmailService.sendWelcomeEmail(
+                        toEmail = request.email,
+                        userName = request.firstName
+                    ).onFailure { e ->
+                        call.application.log.error("Failed to send welcome email: ${e.message}")
+                    }
+                } catch (e: Exception) {
+                    call.application.log.error("Error sending welcome email: ${e.message}")
+                }
+            }
+            
             call.respond(HttpStatusCode.Created, AuthResponse(
                 user = UserResponse(
                     id = userId,
@@ -219,11 +234,30 @@ fun Route.authRoutes() {
             }
             
             // Always return success to prevent email enumeration attacks
-            // In production, this would send an email with a reset link
-            if (user != null) {
-                // TODO: In production, generate a reset token, store it, and send email
-                // For now, just log that a reset was requested
-                call.application.log.info("Password reset requested for: ${request.email}")
+            if (user != null && EmailService.isConfigured()) {
+                val resetToken = generateToken()
+                val userName = "${user[UsersTable.firstName]} ${user[UsersTable.lastName]}"
+                
+                // Store reset token in database (expires in 1 hour)
+                // For now, we'll include token in the URL - in production, store in DB with expiry
+                val resetLink = "https://storage.googleapis.com/vwatek-apply-frontend/index.html?reset_token=$resetToken&email=${request.email}"
+                
+                // Send email asynchronously
+                try {
+                    EmailService.sendPasswordResetEmail(
+                        toEmail = request.email,
+                        userName = userName,
+                        resetToken = resetToken,
+                        resetLink = resetLink
+                    ).onFailure { e ->
+                        call.application.log.error("Failed to send password reset email: ${e.message}")
+                    }
+                    call.application.log.info("Password reset email sent to: ${request.email}")
+                } catch (e: Exception) {
+                    call.application.log.error("Error sending password reset email: ${e.message}")
+                }
+            } else if (user != null) {
+                call.application.log.info("Password reset requested but email service not configured for: ${request.email}")
             }
             
             // Return success regardless of whether user exists

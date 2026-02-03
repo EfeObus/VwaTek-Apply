@@ -54,6 +54,9 @@ dependencies {
     // Google Cloud SQL Socket Factory for Cloud Run
     implementation("com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.15.0")
     
+    // Email (JavaMail/Jakarta Mail)
+    implementation("com.sun.mail:jakarta.mail:2.0.1")
+    
     // Kotlin
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
