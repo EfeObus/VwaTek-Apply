@@ -17,5 +17,6 @@ rootProject.name = "VwaTekApply"
 
 include(":shared")
 include(":webApp")
+include(":backend")
 // Android and iOS apps will be added later
 // include(":androidApp")
