@@ -2,27 +2,29 @@
 FROM gradle:8.5-jdk17 AS build
 WORKDIR /app
 
-# Copy gradle files first for caching
-COPY ../gradle ../gradle
-COPY ../gradlew ../gradlew
-COPY ../build.gradle.kts ../build.gradle.kts
-COPY ../settings.gradle.kts ../settings.gradle.kts
-COPY ../gradle/libs.versions.toml ../gradle/libs.versions.toml
+# Copy gradle wrapper and config (context is project root)
+COPY gradle gradle
+COPY gradlew gradlew
+COPY build.gradle.kts build.gradle.kts
+COPY settings.gradle.kts settings.gradle.kts
+
+# Copy shared module (needed for backend dependencies)
+COPY shared/build.gradle.kts shared/build.gradle.kts
+COPY shared/src shared/src
 
 # Copy backend module
-COPY build.gradle.kts .
-COPY src src
+COPY backend/build.gradle.kts backend/build.gradle.kts
+COPY backend/src backend/src
 
-# Build the application
-WORKDIR /app/..
-RUN ./gradlew :backend:build -x test --no-daemon
+# Build the backend application
+RUN chmod +x gradlew && ./gradlew :backend:build -x test --no-daemon
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copy the built jar
-COPY --from=build /app/../backend/build/libs/*.jar app.jar
+COPY --from=build /app/backend/build/libs/*.jar app.jar
 
 # Cloud Run uses PORT environment variable
 ENV PORT=8080
