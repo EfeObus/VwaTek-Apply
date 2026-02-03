@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlinJvm)
     alias(libs.plugins.kotlinSerialization)
     application
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "com.vwatek.apply"
@@ -9,6 +10,19 @@ version = "1.0.0"
 
 application {
     mainClass.set("com.vwatek.apply.ApplicationKt")
+}
+
+// Shadow JAR configuration for fat JAR
+tasks.shadowJar {
+    archiveBaseName.set("backend")
+    archiveClassifier.set("all")
+    archiveVersion.set("")
+    mergeServiceFiles()
+    manifest {
+        attributes(
+            "Main-Class" to "com.vwatek.apply.ApplicationKt"
+        )
+    }
 }
 
 dependencies {
