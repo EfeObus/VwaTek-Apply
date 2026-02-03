@@ -6,15 +6,17 @@ WORKDIR /app
 COPY gradle gradle
 COPY gradlew gradlew
 COPY build.gradle.kts build.gradle.kts
-COPY settings.gradle.kts settings.gradle.kts
-
-# Copy shared module (needed for backend dependencies)
-COPY shared/build.gradle.kts shared/build.gradle.kts
-COPY shared/src shared/src
+COPY gradle.properties gradle.properties
 
 # Copy backend module
 COPY backend/build.gradle.kts backend/build.gradle.kts
 COPY backend/src backend/src
+
+# Create a backend-only settings.gradle.kts (exclude shared/webApp to avoid KMP issues)
+RUN echo 'pluginManagement { repositories { google(); gradlePluginPortal(); mavenCentral() } }\n\
+dependencyResolutionManagement { repositories { google(); mavenCentral() } }\n\
+rootProject.name = "VwaTekApply"\n\
+include(":backend")' > settings.gradle.kts
 
 # Build the backend application
 RUN chmod +x gradlew && ./gradlew :backend:build -x test --no-daemon

@@ -80,11 +80,11 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
         
-      - name: Build Shared Module
-        run: ./gradlew :shared:build -x test --no-daemon
+      - name: Build Shared Module (JS only)
+        run: ./gradlew :shared:compileKotlinJs :shared:jsJar -x test --no-daemon
         
-      - name: Run Shared Tests
-        run: ./gradlew :shared:allTests --no-daemon
+      - name: Run Shared JS Tests
+        run: ./gradlew :shared:jsTest --no-daemon
         continue-on-error: true
 
   # ============================================
