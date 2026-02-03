@@ -1,9 +1,9 @@
 package com.vwatek.apply.di
 
-import com.vwatek.apply.data.repository.LocalStorageResumeRepository
-import com.vwatek.apply.data.repository.LocalStorageAnalysisRepository
-import com.vwatek.apply.data.repository.LocalStorageCoverLetterRepository
-import com.vwatek.apply.data.repository.LocalStorageInterviewRepository
+import com.vwatek.apply.data.repository.ApiResumeRepository
+import com.vwatek.apply.data.repository.ApiAnalysisRepository
+import com.vwatek.apply.data.repository.ApiCoverLetterRepository
+import com.vwatek.apply.data.repository.ApiInterviewRepository
 import com.vwatek.apply.data.repository.LocalStorageSettingsRepository
 import com.vwatek.apply.data.repository.ApiAuthRepository
 import com.vwatek.apply.data.repository.LocalStorageLinkedInRepository
@@ -28,16 +28,19 @@ import org.koin.core.module.Module
 import org.koin.dsl.module
 
 actual fun platformModule(): Module = module {
-    // Use LocalStorage-based repositories for web platform
-    // Auth is API-based to connect to backend, others use localStorage for now
-    single<ResumeRepository> { LocalStorageResumeRepository() }
-    single<AnalysisRepository> { LocalStorageAnalysisRepository() }
-    single<CoverLetterRepository> { LocalStorageCoverLetterRepository() }
-    single<InterviewRepository> { LocalStorageInterviewRepository() }
+    // API-based repositories - All user data syncs to Cloud SQL database
+    single<ResumeRepository> { ApiResumeRepository() }
+    single<AnalysisRepository> { ApiAnalysisRepository() }
+    single<CoverLetterRepository> { ApiCoverLetterRepository() }
+    single<InterviewRepository> { ApiInterviewRepository() }
+    
+    // Settings stay local (user preferences don't need cloud sync)
     single<SettingsRepository> { LocalStorageSettingsRepository() }
     
-    // Authentication - Use API-based repository to connect to backend
+    // Authentication - API-based repository connects to backend
     single<AuthRepository> { ApiAuthRepository() }
+    
+    // LinkedIn and File Upload - local for now
     single<LinkedInRepository> { LocalStorageLinkedInRepository() }
     single<FileUploadRepository> { LocalStorageFileUploadRepository() }
     
