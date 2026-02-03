@@ -1,0 +1,224 @@
+# VwaTek Apply - Continuous Deployment Pipeline
+# Deploys to Google Cloud on push to main
+
+name: CD - Deploy to Google Cloud
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  PROJECT_ID: vwatek-apply
+  REGION: us-central1
+  BACKEND_SERVICE: vwatek-backend
+  FRONTEND_BUCKET: vwatek-apply-web
+  JAVA_VERSION: '17'
+
+jobs:
+  # ============================================
+  # Build & Push Backend Container
+  # ============================================
+  build-backend:
+    name: Build Backend Container
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+          
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        
+      - name: Build Backend JAR
+        run: ./gradlew :backend:build -x test --no-daemon
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker gcr.io
+        
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: gcr.io/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+            
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # ============================================
+  # Deploy Backend to Cloud Run
+  # ============================================
+  deploy-backend:
+    name: Deploy Backend to Cloud Run
+    runs-on: ubuntu-latest
+    needs: build-backend
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.BACKEND_SERVICE }}
+          region: ${{ env.REGION }}
+          image: gcr.io/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }}
+          flags: |
+            --add-cloudsql-instances=${{ env.PROJECT_ID }}:${{ env.REGION }}:vwatekapply
+            --allow-unauthenticated
+            --min-instances=0
+            --max-instances=10
+            --memory=1Gi
+            --cpu=2
+            --port=8080
+          env_vars: |
+            CLOUD_SQL_DATABASE=Vwatek_Apply
+            ENVIRONMENT=production
+          secrets: |
+            CLOUD_SQL_USER=db-username:latest
+            CLOUD_SQL_PASSWORD=db-password:latest
+            GEMINI_API_KEY=gemini-api-key:latest
+            
+      - name: Show Backend URL
+        run: echo "Backend deployed to ${{ steps.deploy.outputs.url }}"
+        
+      - name: Health Check
+        run: |
+          sleep 30
+          curl -f "${{ steps.deploy.outputs.url }}/health" || exit 1
+
+  # ============================================
+  # Build & Deploy Frontend
+  # ============================================
+  deploy-frontend:
+    name: Deploy Frontend to Cloud Storage
+    runs-on: ubuntu-latest
+    needs: deploy-backend
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+          
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        
+      - name: Build Frontend (Production)
+        run: ./gradlew :webApp:jsBrowserDistribution --no-daemon
+        env:
+          API_BASE_URL: ${{ needs.deploy-backend.outputs.url }}
+          
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          
+      - name: Deploy to Cloud Storage
+        run: |
+          # Sync files to bucket
+          gsutil -m rsync -r -d webApp/build/dist/js/productionExecutable/ gs://${{ env.FRONTEND_BUCKET }}/
+          
+          # Set cache headers
+          gsutil -m setmeta -h "Cache-Control:public, max-age=3600" gs://${{ env.FRONTEND_BUCKET }}/**/*.js
+          gsutil -m setmeta -h "Cache-Control:public, max-age=86400" gs://${{ env.FRONTEND_BUCKET }}/**/*.css
+          gsutil -m setmeta -h "Cache-Control:no-cache" gs://${{ env.FRONTEND_BUCKET }}/index.html
+          
+      - name: Show Frontend URL
+        run: echo "Frontend deployed to https://storage.googleapis.com/${{ env.FRONTEND_BUCKET }}/index.html"
+
+  # ============================================
+  # Post-Deployment Verification
+  # ============================================
+  verify:
+    name: Post-Deployment Verification
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    
+    steps:
+      - name: Verify Backend Health
+        run: |
+          BACKEND_URL="https://${{ env.BACKEND_SERVICE }}-${{ env.PROJECT_ID }}.run.app"
+          response=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/health")
+          if [ "$response" != "200" ]; then
+            echo "Backend health check failed with status $response"
+            exit 1
+          fi
+          echo "Backend is healthy!"
+          
+      - name: Verify Frontend Accessibility
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" "https://storage.googleapis.com/${{ env.FRONTEND_BUCKET }}/index.html")
+          if [ "$response" != "200" ]; then
+            echo "Frontend check failed with status $response"
+            exit 1
+          fi
+          echo "Frontend is accessible!"
+          
+      - name: Notify Success
+        if: success()
+        run: echo "✅ Deployment successful!"
+        
+      - name: Notify Failure
+        if: failure()
+        run: echo "❌ Deployment failed!"

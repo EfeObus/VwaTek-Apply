@@ -1,0 +1,8 @@
+# Terraform Variables
+# Copy to terraform.tfvars and fill in values
+
+project_id     = "vwatek-apply"
+region         = "us-central1"
+zone           = "us-central1-a"
+db_password    = "" # Your Cloud SQL password
+gemini_api_key = "" # Your Gemini API key

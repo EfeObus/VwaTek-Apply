@@ -107,3 +107,8 @@ coverage/
 # Documentation build
 docs/_build/
 site/
+
+# GCP Service Account Keys (NEVER COMMIT)
+gcp-sa-key.json
+*.json.key
+service-account*.json
