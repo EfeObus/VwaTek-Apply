@@ -85,7 +85,8 @@ object DatabaseConfig {
                 port = CLOUD_SQL_PORT,
                 database = CLOUD_SQL_DATABASE,
                 user = CLOUD_SQL_USER,
-                password = CLOUD_SQL_PASSWORD
+                password = CLOUD_SQL_PASSWORD,
+                useSSL = true  // Cloud SQL requires SSL
             )
             
             dataSource = HikariDataSource(config)
@@ -143,10 +144,17 @@ object DatabaseConfig {
         port: Int,
         database: String,
         user: String,
-        password: String
+        password: String,
+        useSSL: Boolean = false
     ): HikariConfig {
+        val sslParams = if (useSSL) {
+            "useSSL=true&requireSSL=true&sslMode=REQUIRED"
+        } else {
+            "useSSL=false"
+        }
+        
         return HikariConfig().apply {
-            jdbcUrl = "jdbc:mysql://$host:$port/$database?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+            jdbcUrl = "jdbc:mysql://$host:$port/$database?$sslParams&allowPublicKeyRetrieval=true&serverTimezone=UTC"
             driverClassName = "com.mysql.cj.jdbc.Driver"
             username = user
             this.password = password
