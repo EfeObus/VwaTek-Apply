@@ -5,7 +5,7 @@ import com.vwatek.apply.data.repository.LocalStorageAnalysisRepository
 import com.vwatek.apply.data.repository.LocalStorageCoverLetterRepository
 import com.vwatek.apply.data.repository.LocalStorageInterviewRepository
 import com.vwatek.apply.data.repository.LocalStorageSettingsRepository
-import com.vwatek.apply.data.repository.LocalStorageAuthRepository
+import com.vwatek.apply.data.repository.ApiAuthRepository
 import com.vwatek.apply.data.repository.LocalStorageLinkedInRepository
 import com.vwatek.apply.data.repository.LocalStorageFileUploadRepository
 import com.vwatek.apply.domain.repository.ResumeRepository
@@ -35,8 +35,8 @@ actual fun platformModule(): Module = module {
     single<InterviewRepository> { LocalStorageInterviewRepository() }
     single<SettingsRepository> { LocalStorageSettingsRepository() }
     
-    // Authentication and import repositories
-    single<AuthRepository> { LocalStorageAuthRepository() }
+    // Authentication - Use API-based repository to connect to backend
+    single<AuthRepository> { ApiAuthRepository() }
     single<LinkedInRepository> { LocalStorageLinkedInRepository() }
     single<FileUploadRepository> { LocalStorageFileUploadRepository() }
     
