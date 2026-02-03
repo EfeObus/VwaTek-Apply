@@ -5,8 +5,8 @@ import app.cash.sqldelight.driver.worker.WebWorkerDriver
 import com.vwatek.apply.db.VwaTekDatabase
 import org.w3c.dom.Worker
 
-actual class DatabaseDriverFactory {
-    actual suspend fun createDriver(): SqlDriver {
+class JsDatabaseDriverFactory : DatabaseDriverFactory {
+    override suspend fun createDriver(): SqlDriver {
         return WebWorkerDriver(
             Worker(
                 js("""new URL("@aspect-build/aspect-worker/dist/worker.min.js", import.meta.url)""")
@@ -18,3 +18,7 @@ actual class DatabaseDriverFactory {
 }
 
 private suspend fun <T> T.await(): T = this
+
+actual fun createDatabaseDriverFactory(): DatabaseDriverFactory {
+    return JsDatabaseDriverFactory()
+}

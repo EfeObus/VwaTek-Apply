@@ -4,11 +4,15 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import com.vwatek.apply.db.VwaTekDatabase
 
-actual class DatabaseDriverFactory {
-    actual suspend fun createDriver(): SqlDriver {
+class IosDatabaseDriverFactory : DatabaseDriverFactory {
+    override suspend fun createDriver(): SqlDriver {
         return NativeSqliteDriver(
             schema = VwaTekDatabase.Schema,
             name = "vwatek_apply.db"
         )
     }
+}
+
+actual fun createDatabaseDriverFactory(): DatabaseDriverFactory {
+    return IosDatabaseDriverFactory()
 }
