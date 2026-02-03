@@ -39,8 +39,8 @@ class ApiAuthRepository : AuthRepository {
             val hostname = window.location.hostname
             return when {
                 hostname == "localhost" || hostname == "127.0.0.1" -> "http://localhost:8090"
-                hostname.contains("storage.googleapis.com") -> "https://vwatek-backend-i6ex2rjk3a-uc.a.run.app"
-                else -> "https://vwatek-backend-i6ex2rjk3a-uc.a.run.app"
+                hostname.contains("storage.googleapis.com") -> "https://vwatek-backend-21443684777.us-central1.run.app"
+                else -> "https://vwatek-backend-21443684777.us-central1.run.app"
             }
         }
     
