@@ -6,6 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.vwatek.apply.presentation.auth.AuthIntent
+import com.vwatek.apply.presentation.auth.AuthView
 import com.vwatek.apply.presentation.auth.AuthViewModel
 import com.vwatek.apply.ui.components.Sidebar
 import com.vwatek.apply.ui.screens.DashboardScreen
@@ -51,7 +53,13 @@ fun App() {
                 onClose = { isSidebarOpen = false },
                 isAuthenticated = authState.isAuthenticated,
                 userName = authState.user?.let { "${it.firstName} ${it.lastName}" },
-                onAuthClick = { currentScreen = Screen.AUTH }
+                onAuthClick = { 
+                    // If authenticated, switch to profile view; otherwise show login
+                    if (authState.isAuthenticated) {
+                        authViewModel.onIntent(AuthIntent.SwitchView(AuthView.PROFILE))
+                    }
+                    currentScreen = Screen.AUTH 
+                }
             )
         }
         

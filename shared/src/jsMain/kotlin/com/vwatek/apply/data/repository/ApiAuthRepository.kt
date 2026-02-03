@@ -210,14 +210,102 @@ class ApiAuthRepository : AuthRepository {
     }
     
     override suspend fun loginWithGoogle(idToken: String, userInfo: GoogleUserData?): Result<User> {
-        // TODO: Implement backend Google OAuth endpoint
-        // For now, use the local storage fallback
-        return Result.failure(AuthError.GoogleSignInFailed)
+        return try {
+            console.log("Google Sign-In for: ${userInfo?.email}")
+            
+            if (userInfo == null) {
+                return Result.failure(AuthError.GoogleSignInFailed)
+            }
+            
+            val requestBody = json.encodeToString(GoogleAuthRequest(
+                email = userInfo.email,
+                firstName = userInfo.firstName,
+                lastName = userInfo.lastName,
+                profilePicture = userInfo.profilePicture
+            ))
+            
+            val response = fetch(
+                "$apiBaseUrl/api/v1/auth/google",
+                RequestInit(
+                    method = "POST",
+                    headers = json("Content-Type" to "application/json"),
+                    body = requestBody
+                )
+            ).await()
+            
+            if (response.ok) {
+                val responseText = response.text().await()
+                val authResponse = json.decodeFromString<AuthApiResponse>(responseText)
+                
+                val user = authResponse.user.toUser()
+                
+                _authState.value = AuthState(
+                    isAuthenticated = true,
+                    user = user,
+                    accessToken = authResponse.token
+                )
+                
+                cacheSession(user, authResponse.token, authResponse.expiresAt)
+                
+                console.log("Google Sign-In successful for: ${user.email}")
+                Result.success(user)
+            } else {
+                val errorText = response.text().await()
+                console.error("Google Sign-In failed: $errorText")
+                Result.failure(AuthError.GoogleSignInFailed)
+            }
+        } catch (e: Exception) {
+            console.error("Google Sign-In error: ${e.message}")
+            Result.failure(AuthError.GoogleSignInFailed)
+        }
     }
     
     override suspend fun loginWithLinkedIn(authCode: String): Result<User> {
-        // TODO: Implement backend LinkedIn OAuth endpoint
-        return Result.failure(AuthError.LinkedInSignInFailed)
+        return try {
+            console.log("LinkedIn Sign-In with auth code")
+            
+            // Get the redirect URI that was used for the auth flow
+            val redirectUri = "${window.location.origin}/linkedin-callback"
+            
+            val requestBody = json.encodeToString(LinkedInAuthRequest(
+                code = authCode,
+                redirectUri = redirectUri
+            ))
+            
+            val response = fetch(
+                "$apiBaseUrl/api/v1/auth/linkedin",
+                RequestInit(
+                    method = "POST",
+                    headers = json("Content-Type" to "application/json"),
+                    body = requestBody
+                )
+            ).await()
+            
+            if (response.ok) {
+                val responseText = response.text().await()
+                val authResponse = json.decodeFromString<AuthApiResponse>(responseText)
+                
+                val user = authResponse.user.toUser()
+                
+                _authState.value = AuthState(
+                    isAuthenticated = true,
+                    user = user,
+                    accessToken = authResponse.token
+                )
+                
+                cacheSession(user, authResponse.token, authResponse.expiresAt)
+                
+                console.log("LinkedIn Sign-In successful for: ${user.email}")
+                Result.success(user)
+            } else {
+                val errorText = response.text().await()
+                console.error("LinkedIn Sign-In failed: $errorText")
+                Result.failure(AuthError.LinkedInSignInFailed)
+            }
+        } catch (e: Exception) {
+            console.error("LinkedIn Sign-In error: ${e.message}")
+            Result.failure(AuthError.LinkedInSignInFailed)
+        }
     }
     
     override suspend fun logout() {
@@ -315,6 +403,20 @@ private data class CachedSession(
     val user: User,
     val token: String,
     val expiresAt: String
+)
+
+@Serializable
+private data class GoogleAuthRequest(
+    val email: String,
+    val firstName: String,
+    val lastName: String,
+    val profilePicture: String? = null
+)
+
+@Serializable
+private data class LinkedInAuthRequest(
+    val code: String,
+    val redirectUri: String
 )
 
 // Helper function for fetch

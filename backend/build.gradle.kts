@@ -38,6 +38,11 @@ dependencies {
     implementation(libs.ktor.server.call.logging)
     implementation(libs.logback.classic)
     
+    // Ktor Client (for LinkedIn OAuth)
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    
     // Database
     implementation(libs.hikari)
     implementation(libs.mysql.connector)
