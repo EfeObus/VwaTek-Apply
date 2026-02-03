@@ -31,8 +31,20 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
         
-      - name: Build WebApp (Production)
-        run: ./gradlew :webApp:jsBrowserDistribution --no-daemon
+      - name: Clean npm/yarn cache
+        run: |
+          rm -rf build/js/node_modules
+          rm -rf build/js/yarn.lock
+          rm -rf ~/.gradle/yarn
+          rm -rf ~/.gradle/nodejs
+          
+      - name: Build WebApp (Production) with retry
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: ./gradlew :webApp:jsBrowserDistribution --no-daemon
         
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2

@@ -13,3 +13,11 @@ allprojects {
     group = "com.vwatek.apply"
     version = "1.0.0"
 }
+
+// Configure Kotlin/JS to use npm instead of yarn for more reliability
+plugins.withType<org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin> {
+    rootProject.the<org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension>().apply {
+        yarnLockMismatchReport = org.jetbrains.kotlin.gradle.targets.js.yarn.YarnLockMismatchReport.WARNING
+        yarnLockAutoReplace = true
+    }
+}

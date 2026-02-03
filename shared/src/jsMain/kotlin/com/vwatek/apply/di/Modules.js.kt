@@ -29,6 +29,7 @@ import org.koin.dsl.module
 
 actual fun platformModule(): Module = module {
     // Use LocalStorage-based repositories for web platform
+    // Auth is API-based to connect to backend, others use localStorage for now
     single<ResumeRepository> { LocalStorageResumeRepository() }
     single<AnalysisRepository> { LocalStorageAnalysisRepository() }
     single<CoverLetterRepository> { LocalStorageCoverLetterRepository() }

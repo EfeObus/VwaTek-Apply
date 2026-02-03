@@ -109,11 +109,26 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
         
+      - name: Clean npm/yarn cache
+        run: |
+          rm -rf build/js/node_modules
+          rm -rf build/js/yarn.lock
+          
       - name: Build WebApp (Development)
-        run: ./gradlew :webApp:jsBrowserDevelopmentWebpack --no-daemon
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: ./gradlew :webApp:jsBrowserDevelopmentWebpack --no-daemon
         
       - name: Build WebApp (Production)
-        run: ./gradlew :webApp:jsBrowserDistribution --no-daemon
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          retry_wait_seconds: 30
+          command: ./gradlew :webApp:jsBrowserDistribution --no-daemon
         
       - name: Upload WebApp Artifacts
         uses: actions/upload-artifact@v4
