@@ -19,9 +19,10 @@ on:
 
 env:
   PROJECT_ID: vwatek-apply
+  PROJECT_NUMBER: '21443684777'
   REGION: us-central1
   BACKEND_SERVICE: vwatek-backend
-  FRONTEND_BUCKET: vwatek-apply-web
+  FRONTEND_BUCKET: vwatek-apply-frontend
   JAVA_VERSION: '17'
 
 jobs:
@@ -203,8 +204,9 @@ jobs:
     steps:
       - name: Verify Backend Health
         run: |
-          BACKEND_URL="https://${{ env.BACKEND_SERVICE }}-${{ env.PROJECT_ID }}.run.app"
-          response=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/health")
+          BACKEND_URL="https://${{ env.BACKEND_SERVICE }}-${{ env.PROJECT_NUMBER }}.${{ env.REGION }}.run.app"
+          echo "Checking backend at: $BACKEND_URL"
+          response=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/health" --max-time 30)
           if [ "$response" != "200" ]; then
             echo "Backend health check failed with status $response"
             exit 1
