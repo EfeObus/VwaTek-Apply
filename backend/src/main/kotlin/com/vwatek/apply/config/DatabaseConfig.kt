@@ -54,14 +54,14 @@ object DatabaseConfig {
     // Google Cloud SQL MySQL Configuration
     private val CLOUD_SQL_HOST by lazy { getConfig("CLOUD_SQL_HOST", "34.134.196.247") }
     private val CLOUD_SQL_PORT by lazy { getConfig("CLOUD_SQL_PORT", "3306").toInt() }
-    private val CLOUD_SQL_DATABASE by lazy { getConfig("CLOUD_SQL_DATABASE", "vwatekapply") }
+    private val CLOUD_SQL_DATABASE by lazy { getConfig("CLOUD_SQL_DATABASE", "Vwatek_Apply") }
     private val CLOUD_SQL_USER by lazy { getConfig("CLOUD_SQL_USER", "root") }
     private val CLOUD_SQL_PASSWORD by lazy { getConfig("CLOUD_SQL_PASSWORD", "") }
     
     // Local MySQL fallback configuration
     private val LOCAL_HOST by lazy { getConfig("LOCAL_MYSQL_HOST", "localhost") }
     private val LOCAL_PORT by lazy { getConfig("LOCAL_MYSQL_PORT", "3306").toInt() }
-    private val LOCAL_DATABASE by lazy { getConfig("LOCAL_MYSQL_DATABASE", "vwatekapply") }
+    private val LOCAL_DATABASE by lazy { getConfig("LOCAL_MYSQL_DATABASE", "Vwatek_Apply") }
     private val LOCAL_USER by lazy { getConfig("LOCAL_MYSQL_USER", "root") }
     private val LOCAL_PASSWORD by lazy { getConfig("LOCAL_MYSQL_PASSWORD", "") }
     

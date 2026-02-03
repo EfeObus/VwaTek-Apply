@@ -1,0 +1,48 @@
+# .gcloudignore - Files to exclude from Cloud Build uploads
+
+# Include gitignore rules
+#!include:.gitignore
+
+# Gradle build outputs (but keep wrapper)
+.gradle/
+build/
+**/build/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Node modules
+node_modules/
+kotlin-js-store/
+
+# iOS
+iosApp/
+
+# Android
+androidApp/
+
+# Large SDK folders (already installed in container)
+google-cloud-sdk/
+
+# Test files
+**/test/
+**/commonTest/
+
+# Secrets
+secrets.properties
+*.keystore
+*.jks
+gcp-sa-key.json
+
+# OS files
+.DS_Store
+*.log
+
+# Keep gradle wrapper explicitly
+!gradle/
+!gradle/wrapper/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!gradlew
