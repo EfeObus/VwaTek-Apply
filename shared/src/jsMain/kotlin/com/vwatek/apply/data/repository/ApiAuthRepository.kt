@@ -320,8 +320,32 @@ class ApiAuthRepository : AuthRepository {
     }
     
     override suspend fun resetPassword(email: String): Result<Unit> {
-        // TODO: Implement backend password reset endpoint
-        return Result.failure(Exception("Not implemented"))
+        return try {
+            console.log("Requesting password reset for: $email")
+            
+            val requestBody = json.encodeToString(ResetPasswordRequest(email = email))
+            
+            val response = fetch(
+                "$apiBaseUrl/api/v1/auth/reset-password",
+                RequestInit(
+                    method = "POST",
+                    headers = json("Content-Type" to "application/json"),
+                    body = requestBody
+                )
+            ).await()
+            
+            if (response.ok) {
+                console.log("Password reset request successful")
+                Result.success(Unit)
+            } else {
+                val errorText = response.text().await()
+                console.error("Password reset failed: $errorText")
+                Result.failure(Exception("Password reset request failed"))
+            }
+        } catch (e: Exception) {
+            console.error("Password reset error: ${e.message}")
+            Result.failure(AuthError.NetworkError)
+        }
     }
     
     override suspend fun isEmailAvailable(email: String): Boolean {
@@ -417,6 +441,11 @@ private data class GoogleAuthRequest(
 private data class LinkedInAuthRequest(
     val code: String,
     val redirectUri: String
+)
+
+@Serializable
+private data class ResetPasswordRequest(
+    val email: String
 )
 
 // Helper function for fetch

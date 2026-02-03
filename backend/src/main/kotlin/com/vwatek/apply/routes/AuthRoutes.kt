@@ -72,6 +72,11 @@ data class GoogleAuthRequest(
     val profilePicture: String? = null
 )
 
+@Serializable
+data class ResetPasswordRequest(
+    val email: String
+)
+
 fun Route.authRoutes() {
     route("/auth") {
         // Register
@@ -201,6 +206,30 @@ fun Route.authRoutes() {
                 authProvider = user[UsersTable.authProvider],
                 emailVerified = user[UsersTable.emailVerified],
                 createdAt = user[UsersTable.createdAt].toString()
+            ))
+        }
+        
+        // Reset Password
+        post("/reset-password") {
+            val request = call.receive<ResetPasswordRequest>()
+            
+            // Check if user exists
+            val user = transaction {
+                UsersTable.select { UsersTable.email eq request.email.lowercase() }.firstOrNull()
+            }
+            
+            // Always return success to prevent email enumeration attacks
+            // In production, this would send an email with a reset link
+            if (user != null) {
+                // TODO: In production, generate a reset token, store it, and send email
+                // For now, just log that a reset was requested
+                call.application.log.info("Password reset requested for: ${request.email}")
+            }
+            
+            // Return success regardless of whether user exists
+            call.respond(mapOf(
+                "message" to "If an account exists with this email, you will receive password reset instructions shortly.",
+                "success" to true
             ))
         }
         

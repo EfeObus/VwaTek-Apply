@@ -20,7 +20,8 @@ import org.koin.core.context.GlobalContext
 @Composable
 fun AuthScreen(
     onNavigateBack: () -> Unit,
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    onLogoutSuccess: () -> Unit = {}
 ) {
     val viewModel = remember { GlobalContext.get().get<AuthViewModel>() }
     val state by viewModel.state.collectAsState()
@@ -190,7 +191,10 @@ fun AuthScreen(
                 
                 AuthView.PROFILE -> ProfileView(
                     user = state.user,
-                    onLogout = { viewModel.onIntent(AuthIntent.Logout) },
+                    onLogout = { 
+                        viewModel.onIntent(AuthIntent.Logout)
+                        onLogoutSuccess()
+                    },
                     onNavigateBack = onNavigateBack
                 )
             }

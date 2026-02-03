@@ -95,7 +95,8 @@ fun App() {
                 Screen.SETTINGS -> SettingsScreen()
                 Screen.AUTH -> AuthScreen(
                     onNavigateBack = { currentScreen = Screen.DASHBOARD },
-                    onLoginSuccess = { currentScreen = Screen.DASHBOARD }
+                    onLoginSuccess = { currentScreen = Screen.DASHBOARD },
+                    onLogoutSuccess = { currentScreen = Screen.DASHBOARD }
                 )
             }
         }
