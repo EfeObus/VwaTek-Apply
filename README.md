@@ -22,13 +22,6 @@
 
 VwaTek Apply is a high-performance job application assistant built with **Kotlin Multiplatform**, delivering a native experience for **iOS, Android, and Web**. Powered by **Gemini 2.0 Flash**, it doesn't just write for you—it analyzes, optimizes, and coaches you through every stage of the hiring pipeline, from the initial "Apply" button to the final interview.
 
-## Ground Rules
-
-| Rule | Description |
-|------|-------------|
-| **No Emojis** | Emojis are not permitted in the application UI or codebase |
-| **Clipart Allowed** | Vector icons and clipart graphics may be used for visual elements |
-
 ## Core Features
 
 ### 1. Resume Review & ATS Optimization

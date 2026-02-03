@@ -32,6 +32,9 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.datetime)
     
+    // Google Cloud SQL Socket Factory for Cloud Run
+    implementation("com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.15.0")
+    
     // Kotlin
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)

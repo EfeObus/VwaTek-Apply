@@ -45,6 +45,12 @@ object DatabaseConfig {
         return System.getenv(key) ?: secrets.getProperty(key, default)
     }
     
+    // Cloud Run detection - check for K_SERVICE env var which Cloud Run sets
+    private val isRunningOnCloudRun by lazy { System.getenv("K_SERVICE") != null }
+    
+    // Cloud SQL Instance Connection Name (format: project:region:instance)
+    private val CLOUD_SQL_INSTANCE by lazy { getConfig("CLOUD_SQL_INSTANCE", "vwatek-apply:us-central1:vwatekapply") }
+    
     // Google Cloud SQL MySQL Configuration
     private val CLOUD_SQL_HOST by lazy { getConfig("CLOUD_SQL_HOST", "34.134.196.247") }
     private val CLOUD_SQL_PORT by lazy { getConfig("CLOUD_SQL_PORT", "3306").toInt() }
@@ -78,34 +84,72 @@ object DatabaseConfig {
     
     private fun tryConnectCloudSQL(): Boolean {
         return try {
-            logger.info("Attempting to connect to Google Cloud SQL at $CLOUD_SQL_HOST:$CLOUD_SQL_PORT...")
-            
-            val config = createHikariConfig(
-                host = CLOUD_SQL_HOST,
-                port = CLOUD_SQL_PORT,
-                database = CLOUD_SQL_DATABASE,
-                user = CLOUD_SQL_USER,
-                password = CLOUD_SQL_PASSWORD,
-                useSSL = true  // Cloud SQL requires SSL
-            )
-            
-            dataSource = HikariDataSource(config)
-            Database.connect(dataSource!!)
-            
-            // Test connection
-            transaction {
-                exec("SELECT 1")
+            if (isRunningOnCloudRun) {
+                logger.info("Running on Cloud Run - connecting via Unix socket to $CLOUD_SQL_INSTANCE...")
+                connectViaUnixSocket()
+            } else {
+                logger.info("Attempting to connect to Google Cloud SQL at $CLOUD_SQL_HOST:$CLOUD_SQL_PORT...")
+                connectViaTcp()
             }
-            
-            isCloudConnected = true
-            logger.info("✅ Successfully connected to Google Cloud SQL!")
-            true
         } catch (e: Exception) {
             logger.error("❌ Cloud SQL connection failed: ${e.message}")
             dataSource?.close()
             dataSource = null
             false
         }
+    }
+    
+    private fun connectViaUnixSocket(): Boolean {
+        val socketPath = "/cloudsql/$CLOUD_SQL_INSTANCE"
+        logger.info("Using socket path: $socketPath")
+        
+        val config = HikariConfig().apply {
+            jdbcUrl = "jdbc:mysql:///$CLOUD_SQL_DATABASE?cloudSqlInstance=$CLOUD_SQL_INSTANCE&socketFactory=com.google.cloud.sql.mysql.SocketFactory&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+            driverClassName = "com.mysql.cj.jdbc.Driver"
+            username = CLOUD_SQL_USER
+            password = CLOUD_SQL_PASSWORD
+            maximumPoolSize = 10
+            minimumIdle = 2
+            idleTimeout = 30000
+            connectionTimeout = 30000  // Longer timeout for Cloud SQL
+            maxLifetime = 1800000
+            connectionTestQuery = "SELECT 1"
+        }
+        
+        dataSource = HikariDataSource(config)
+        Database.connect(dataSource!!)
+        
+        // Test connection
+        transaction {
+            exec("SELECT 1")
+        }
+        
+        isCloudConnected = true
+        logger.info("✅ Successfully connected to Google Cloud SQL via Unix socket!")
+        return true
+    }
+    
+    private fun connectViaTcp(): Boolean {
+        val config = createHikariConfig(
+            host = CLOUD_SQL_HOST,
+            port = CLOUD_SQL_PORT,
+            database = CLOUD_SQL_DATABASE,
+            user = CLOUD_SQL_USER,
+            password = CLOUD_SQL_PASSWORD,
+            useSSL = true  // Cloud SQL requires SSL for TCP
+        )
+        
+        dataSource = HikariDataSource(config)
+        Database.connect(dataSource!!)
+        
+        // Test connection
+        transaction {
+            exec("SELECT 1")
+        }
+        
+        isCloudConnected = true
+        logger.info("✅ Successfully connected to Google Cloud SQL via TCP!")
+        return true
     }
     
     private fun tryConnectLocalMySQL(): Boolean {
