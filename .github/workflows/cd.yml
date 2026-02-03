@@ -33,10 +33,15 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image_tag: ${{ steps.meta.outputs.tags }}
+      short_sha: ${{ steps.vars.outputs.short_sha }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        
+      - name: Set short SHA
+        id: vars
+        run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
         
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v4
@@ -112,7 +117,7 @@ jobs:
         with:
           service: ${{ env.BACKEND_SERVICE }}
           region: ${{ env.REGION }}
-          image: gcr.io/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ github.sha }}
+          image: gcr.io/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE }}:${{ needs.build-backend.outputs.short_sha }}
           flags: |
             --add-cloudsql-instances=${{ env.PROJECT_ID }}:${{ env.REGION }}:vwatekapply
             --allow-unauthenticated
