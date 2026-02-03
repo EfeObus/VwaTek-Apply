@@ -16,11 +16,22 @@ fun Application.configureCORS() {
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.AccessControlAllowOrigin)
+        allowHeader("X-User-Id")
         
-        // Allow requests from web frontend
-        anyHost() // In production, restrict this to specific domains
+        // Allow requests from web frontends
+        allowHost("storage.googleapis.com", schemes = listOf("https"))
+        allowHost("vwatek-apply-frontend.storage.googleapis.com", schemes = listOf("https"))
+        allowHost("localhost:8080", schemes = listOf("http"))
+        allowHost("127.0.0.1:8080", schemes = listOf("http"))
+        
+        // For development - allow any host (comment out in strict production)
+        anyHost()
         
         allowCredentials = true
         allowNonSimpleContentTypes = true
+        
+        // Expose headers for the frontend
+        exposeHeader(HttpHeaders.Authorization)
+        exposeHeader(HttpHeaders.ContentType)
     }
 }
