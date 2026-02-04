@@ -1,15 +1,23 @@
 import SwiftUI
+import shared
 
 struct InterviewView: View {
-    @State private var isInterviewActive = false
+    @StateObject private var viewModel = InterviewViewModelWrapper()
     @State private var showSetupSheet = false
+    @State private var showError = false
     
     var body: some View {
         NavigationStack {
-            if isInterviewActive {
-                ActiveInterviewView(onEndInterview: {
-                    isInterviewActive = false
-                })
+            if viewModel.currentSession != nil {
+                ActiveInterviewView(
+                    viewModel: viewModel,
+                    onEndInterview: {
+                        if let sessionId = viewModel.currentSession?.id {
+                            viewModel.completeSession(sessionId: sessionId)
+                        }
+                        viewModel.selectSession(id: nil)
+                    }
+                )
             } else {
                 InterviewSetupView(onStartInterview: {
                     showSetupSheet = true
@@ -17,10 +25,27 @@ struct InterviewView: View {
             }
         }
         .sheet(isPresented: $showSetupSheet) {
-            InterviewSetupSheet(onStart: { position, company, type in
-                showSetupSheet = false
-                isInterviewActive = true
-            })
+            InterviewSetupSheet(
+                viewModel: viewModel,
+                onStart: { position, company, type in
+                    showSetupSheet = false
+                    viewModel.startSession(
+                        resumeContent: nil,
+                        jobTitle: position,
+                        jobDescription: "Position at \(company) - \(type) interview"
+                    )
+                }
+            )
+        }
+        .alert("Error", isPresented: $showError) {
+            Button("OK") {
+                viewModel.clearError()
+            }
+        } message: {
+            Text(viewModel.error ?? "An unknown error occurred")
+        }
+        .onChange(of: viewModel.error) { error in
+            showError = error != nil
         }
     }
 }
@@ -193,13 +218,10 @@ struct InterviewTipCard: View {
 }
 
 struct ActiveInterviewView: View {
+    @ObservedObject var viewModel: InterviewViewModelWrapper
     var onEndInterview: () -> Void
     
-    @State private var currentQuestion = "Tell me about yourself and why you're interested in this position."
     @State private var answer = ""
-    @State private var questionNumber = 1
-    @State private var totalQuestions = 5
-    @State private var isSubmitting = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -209,7 +231,7 @@ struct ActiveInterviewView: View {
                     Text("Mock Interview")
                         .font(.headline)
                     
-                    Text("Question \(questionNumber) of \(totalQuestions)")
+                    Text("Question \(viewModel.currentQuestionIndex + 1) of \(viewModel.totalQuestions)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -225,7 +247,7 @@ struct ActiveInterviewView: View {
             .background(Color.blue.opacity(0.1))
             
             // Progress
-            ProgressView(value: Double(questionNumber), total: Double(totalQuestions))
+            ProgressView(value: Double(viewModel.currentQuestionIndex + 1), total: Double(max(viewModel.totalQuestions, 1)))
                 .tint(.blue)
             
             ScrollView {
@@ -242,7 +264,7 @@ struct ActiveInterviewView: View {
                                 .foregroundColor(.blue)
                         }
                         
-                        Text(currentQuestion)
+                        Text(viewModel.currentQuestion?.question ?? "Loading question...")
                             .font(.body)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -275,7 +297,7 @@ struct ActiveInterviewView: View {
                         
                         Button(action: submitAnswer) {
                             HStack {
-                                if isSubmitting {
+                                if viewModel.isSubmittingAnswer {
                                     ProgressView()
                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                 }
@@ -288,7 +310,29 @@ struct ActiveInterviewView: View {
                             .foregroundColor(.white)
                             .cornerRadius(10)
                         }
-                        .disabled(answer.isEmpty || isSubmitting)
+                        .disabled(answer.isEmpty || viewModel.isSubmittingAnswer)
+                    }
+                    
+                    // Show feedback if available
+                    if let feedback = viewModel.lastFeedback {
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "sparkles")
+                                    .foregroundColor(.purple)
+                                
+                                Text("AI Feedback")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.purple)
+                            }
+                            
+                            Text(feedback)
+                                .font(.body)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding()
+                        .background(Color.purple.opacity(0.1))
+                        .cornerRadius(12)
                     }
                 }
                 .padding()
@@ -298,17 +342,19 @@ struct ActiveInterviewView: View {
     }
     
     private func submitAnswer() {
-        isSubmitting = true
+        guard let question = viewModel.currentQuestion else { return }
         
-        // Simulate submission
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            isSubmitting = false
-            if questionNumber < totalQuestions {
-                questionNumber += 1
-                currentQuestion = "Can you describe a challenging project you worked on and how you handled it?"
+        viewModel.submitAnswer(
+            question: question,
+            answer: answer,
+            jobTitle: viewModel.currentSession?.jobTitle ?? "Job"
+        )
+        
+        // Move to next question after submission
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if viewModel.currentQuestionIndex < viewModel.totalQuestions - 1 {
+                viewModel.setCurrentQuestion(index: viewModel.currentQuestionIndex + 1)
                 answer = ""
-            } else {
-                onEndInterview()
             }
         }
     }
@@ -316,6 +362,7 @@ struct ActiveInterviewView: View {
 
 struct InterviewSetupSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var viewModel: InterviewViewModelWrapper
     @State private var position = ""
     @State private var company = ""
     @State private var selectedType = "behavioral"
@@ -345,6 +392,16 @@ struct InterviewSetupSheet: View {
                     .pickerStyle(.inline)
                     .labelsHidden()
                 }
+                
+                if viewModel.isStartingSession {
+                    Section {
+                        HStack {
+                            ProgressView()
+                            Text("Starting interview session...")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
             }
             .navigationTitle("Setup Interview")
             .navigationBarTitleDisplayMode(.inline)
@@ -359,7 +416,7 @@ struct InterviewSetupSheet: View {
                     Button("Start") {
                         onStart(position, company, selectedType)
                     }
-                    .disabled(position.isEmpty || company.isEmpty)
+                    .disabled(position.isEmpty || company.isEmpty || viewModel.isStartingSession)
                 }
             }
         }
@@ -367,5 +424,7 @@ struct InterviewSetupSheet: View {
 }
 
 #Preview {
-    InterviewView()
+    // Note: Preview won't work without Koin initialization
+    // InterviewView()
+    Text("Interview Preview - Run on device/simulator")
 }

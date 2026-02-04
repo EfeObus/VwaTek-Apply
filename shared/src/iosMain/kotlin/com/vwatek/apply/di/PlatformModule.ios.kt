@@ -72,7 +72,7 @@ actual fun platformModule(): Module = module {
     single<SettingsRepository> { SettingsRepositoryImpl(get()) }
     
     // Auth, LinkedIn, and FileUpload repositories
-    single<AuthRepository> { IosAuthRepository(get()) }
+    single<AuthRepository> { IosAuthRepository() }
     single<LinkedInRepository> { IosLinkedInRepository() }
     single<FileUploadRepository> { IosFileUploadRepository() }
 }

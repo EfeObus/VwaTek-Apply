@@ -1,9 +1,11 @@
 import SwiftUI
+import shared
 
 struct ProfileView: View {
     @ObservedObject var viewModel: AuthViewModelWrapper
     @State private var showLogoutAlert = false
     @State private var showEditSheet = false
+    @State private var showApiSettingsSheet = false
     
     var body: some View {
         NavigationStack {
@@ -116,6 +118,25 @@ struct ProfileView: View {
                         .cornerRadius(12)
                     }
                     
+                    // AI Configuration section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("AI Configuration")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        VStack(spacing: 0) {
+                            ProfileListItem(
+                                icon: "key.fill",
+                                title: "API Keys",
+                                subtitle: "Configure optional custom API keys"
+                            ) {
+                                showApiSettingsSheet = true
+                            }
+                        }
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(12)
+                    }
+                    
                     // Support section
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Support")
@@ -185,6 +206,9 @@ struct ProfileView: View {
                         showEditSheet = false
                     }
                 )
+            }
+            .sheet(isPresented: $showApiSettingsSheet) {
+                ApiSettingsSheet()
             }
         }
     }
@@ -265,6 +289,112 @@ struct EditProfileSheet: View {
                     .disabled(firstName.isEmpty)
                 }
             }
+        }
+    }
+}
+
+struct ApiSettingsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var geminiApiKey = ""
+    @State private var openAiApiKey = ""
+    @State private var isSaving = false
+    @State private var showSuccessMessage = false
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    HStack(spacing: 12) {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundColor(.blue)
+                        
+                        Text("Leave blank to use the app's centralized API. Only enter your own keys if you want to use a personal account.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 4)
+                }
+                
+                Section {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Gemini API Key")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        SecureField("Enter Gemini API key (optional)", text: $geminiApiKey)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("OpenAI API Key")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        SecureField("Enter OpenAI API key (optional)", text: $openAiApiKey)
+                    }
+                } header: {
+                    Text("API Keys")
+                } footer: {
+                    Text("Get your API keys from Google AI Studio or OpenAI Platform")
+                }
+                
+                if showSuccessMessage {
+                    Section {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text("Settings saved successfully")
+                                .foregroundColor(.green)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("API Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveSettings()
+                    }
+                    .disabled(isSaving)
+                }
+            }
+            .onAppear {
+                loadSettings()
+            }
+        }
+    }
+    
+    private func loadSettings() {
+        // Load settings from shared Koin SettingsRepository
+        // For now, we'll use UserDefaults as a simple storage
+        geminiApiKey = UserDefaults.standard.string(forKey: "gemini_api_key") ?? ""
+        openAiApiKey = UserDefaults.standard.string(forKey: "openai_api_key") ?? ""
+    }
+    
+    private func saveSettings() {
+        isSaving = true
+        
+        // Save to UserDefaults
+        // Note: In a production app, you would save to the shared Koin SettingsRepository
+        UserDefaults.standard.set(geminiApiKey, forKey: "gemini_api_key")
+        UserDefaults.standard.set(openAiApiKey, forKey: "openai_api_key")
+        
+        // Show success message
+        withAnimation {
+            showSuccessMessage = true
+        }
+        
+        isSaving = false
+        
+        // Auto-dismiss after a short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            dismiss()
         }
     }
 }

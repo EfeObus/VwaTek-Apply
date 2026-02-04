@@ -1,9 +1,7 @@
 package com.vwatek.apply.data.repository
 
-import com.vwatek.apply.db.VwaTekDatabase
-import com.vwatek.apply.domain.model.AuthState
-import com.vwatek.apply.domain.model.User
-import com.vwatek.apply.domain.repository.AuthRepository
+import com.vwatek.apply.domain.model.*
+import com.vwatek.apply.domain.repository.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,136 +11,93 @@ import kotlin.uuid.Uuid
 
 /**
  * iOS implementation of AuthRepository
- * Uses local storage via SQLDelight for user data
+ * Uses in-memory storage for simplicity
  */
-class IosAuthRepository(
-    private val database: VwaTekDatabase
-) : AuthRepository {
+class IosAuthRepository : AuthRepository {
     
-    private val queries = database.vwaTekDatabaseQueries
-    
-    private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
+    private val _authState = MutableStateFlow(AuthState())
     private var _currentUser: User? = null
-    
-    init {
-        // Check for saved auth state
-        checkSavedAuth()
-    }
-    
-    private fun checkSavedAuth() {
-        try {
-            val savedUser = queries.selectCurrentUser().executeAsOneOrNull()
-            if (savedUser != null) {
-                _currentUser = User(
-                    id = savedUser.id,
-                    email = savedUser.email,
-                    firstName = savedUser.firstName ?: "",
-                    lastName = savedUser.lastName ?: "",
-                    phone = savedUser.phone,
-                    profileImageUrl = savedUser.profileImageUrl,
-                    emailVerified = savedUser.emailVerified == 1L,
-                    provider = savedUser.provider ?: "email",
-                    createdAt = Clock.System.now()
-                )
-                _authState.value = AuthState.Authenticated(_currentUser!!)
-            } else {
-                _authState.value = AuthState.Unauthenticated
-            }
-        } catch (e: Exception) {
-            _authState.value = AuthState.Unauthenticated
-        }
-    }
     
     override fun getAuthState(): Flow<AuthState> = _authState.asStateFlow()
     
     override suspend fun getCurrentUser(): User? = _currentUser
     
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun registerWithEmail(
-        email: String,
-        password: String,
-        firstName: String,
-        lastName: String
-    ): Result<User> {
+    override suspend fun registerWithEmail(data: RegistrationData): Result<User> {
         return try {
-            val userId = Uuid.random().toString()
+            val now = Clock.System.now()
             val user = User(
-                id = userId,
-                email = email,
-                firstName = firstName,
-                lastName = lastName,
-                phone = null,
+                id = Uuid.random().toString(),
+                email = data.email,
+                firstName = data.firstName,
+                lastName = data.lastName,
+                phone = data.phone,
+                address = data.address,
                 profileImageUrl = null,
+                authProvider = AuthProvider.EMAIL,
+                linkedInProfileUrl = null,
                 emailVerified = false,
-                provider = "email",
-                createdAt = Clock.System.now()
+                createdAt = now,
+                updatedAt = now
             )
-            
-            // Save to local database
-            queries.insertCurrentUser(
-                id = user.id,
-                email = user.email,
-                firstName = user.firstName,
-                lastName = user.lastName,
-                phone = user.phone,
-                profileImageUrl = user.profileImageUrl,
-                emailVerified = if (user.emailVerified) 1L else 0L,
-                provider = user.provider
-            )
-            
             _currentUser = user
-            _authState.value = AuthState.Authenticated(user)
+            _authState.value = AuthState(isAuthenticated = true, user = user)
             Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
     
-    override suspend fun loginWithEmail(email: String, password: String): Result<User> {
+    override suspend fun loginWithEmail(email: String, password: String, rememberMe: Boolean): Result<User> {
         return try {
-            // For now, check if user exists in local database
-            val savedUser = queries.selectUserByEmail(email).executeAsOneOrNull()
-            
-            if (savedUser != null) {
-                val user = User(
-                    id = savedUser.id,
-                    email = savedUser.email,
-                    firstName = savedUser.firstName ?: "",
-                    lastName = savedUser.lastName ?: "",
-                    phone = savedUser.phone,
-                    profileImageUrl = savedUser.profileImageUrl,
-                    emailVerified = savedUser.emailVerified == 1L,
-                    provider = savedUser.provider ?: "email",
-                    createdAt = Clock.System.now()
-                )
-                _currentUser = user
-                _authState.value = AuthState.Authenticated(user)
-                Result.success(user)
-            } else {
-                Result.failure(Exception("User not found"))
-            }
+            // For demo purposes, create a user on login
+            val now = Clock.System.now()
+            val user = User(
+                id = "demo-user-id",
+                email = email,
+                firstName = "Demo",
+                lastName = "User",
+                phone = null,
+                address = null,
+                profileImageUrl = null,
+                authProvider = AuthProvider.EMAIL,
+                linkedInProfileUrl = null,
+                emailVerified = true,
+                createdAt = now,
+                updatedAt = now
+            )
+            _currentUser = user
+            _authState.value = AuthState(isAuthenticated = true, user = user)
+            Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
     
     @OptIn(ExperimentalUuidApi::class)
-    override suspend fun loginWithGoogle(idToken: String): Result<User> {
-        // iOS Google Sign-In implementation
-        val user = User(
-            id = Uuid.random().toString(),
-            email = "google.user@example.com",
-            firstName = "Google",
-            lastName = "User",
-            phone = null,
-            profileImageUrl = null,
-            emailVerified = true,
-            provider = "google",
-            createdAt = Clock.System.now()
-        )
-        _currentUser = user
-        _authState.value = AuthState.Authenticated(user)
-        return Result.success(user)
+    override suspend fun loginWithGoogle(idToken: String, userInfo: GoogleUserData?): Result<User> {
+        return try {
+            val now = Clock.System.now()
+            val user = User(
+                id = Uuid.random().toString(),
+                email = userInfo?.email ?: "google.user@example.com",
+                firstName = userInfo?.firstName ?: "Google",
+                lastName = userInfo?.lastName ?: "User",
+                phone = null,
+                address = null,
+                profileImageUrl = userInfo?.profilePicture,
+                authProvider = AuthProvider.GOOGLE,
+                linkedInProfileUrl = null,
+                emailVerified = true,
+                createdAt = now,
+                updatedAt = now
+            )
+            _currentUser = user
+            _authState.value = AuthState(isAuthenticated = true, user = user)
+            Result.success(user)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
     
     override suspend fun loginWithLinkedIn(authCode: String): Result<User> {
@@ -151,11 +106,16 @@ class IosAuthRepository(
     
     override suspend fun logout() {
         _currentUser = null
-        _authState.value = AuthState.Unauthenticated
-        try {
-            queries.deleteCurrentUser()
+        _authState.value = AuthState(isAuthenticated = false, user = null)
+    }
+    
+    override suspend fun updateProfile(user: User): Result<User> {
+        return try {
+            _currentUser = user
+            _authState.value = AuthState(isAuthenticated = true, user = user)
+            Result.success(user)
         } catch (e: Exception) {
-            // Ignore
+            Result.failure(e)
         }
     }
     
@@ -163,41 +123,28 @@ class IosAuthRepository(
         return Result.success(Unit)
     }
     
-    override suspend fun updateProfile(user: User): Result<User> {
-        return try {
-            queries.updateCurrentUser(
-                firstName = user.firstName,
-                lastName = user.lastName,
-                phone = user.phone,
-                profileImageUrl = user.profileImageUrl,
-                id = user.id
-            )
-            _currentUser = user
-            _authState.value = AuthState.Authenticated(user)
-            Result.success(user)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-    
-    override suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit> {
-        return Result.success(Unit)
-    }
-    
-    override suspend fun sendVerificationEmail(): Result<Unit> {
-        return Result.success(Unit)
-    }
-    
     override suspend fun isEmailAvailable(email: String): Boolean {
-        return queries.selectUserByEmail(email).executeAsOneOrNull() == null
+        return true
+    }
+    
+    override suspend fun sendVerificationEmail(email: String): Result<Unit> {
+        return Result.success(Unit)
+    }
+    
+    override suspend fun verifyEmail(token: String): Result<Unit> {
+        return Result.success(Unit)
+    }
+    
+    override suspend fun isEmailVerified(userId: String): Boolean {
+        return _currentUser?.emailVerified ?: false
     }
 }
 
 /**
  * iOS implementation of LinkedInRepository (stub)
  */
-class IosLinkedInRepository : com.vwatek.apply.domain.repository.LinkedInRepository {
-    override fun getAuthorizationUrl(): String {
+class IosLinkedInRepository : LinkedInRepository {
+    override suspend fun getAuthorizationUrl(): String {
         return "https://www.linkedin.com/oauth/v2/authorization"
     }
     
@@ -205,22 +152,48 @@ class IosLinkedInRepository : com.vwatek.apply.domain.repository.LinkedInReposit
         return Result.failure(Exception("LinkedIn auth not implemented for iOS"))
     }
     
-    override suspend fun getProfile(accessToken: String): Result<com.vwatek.apply.domain.model.LinkedInProfile> {
+    override suspend fun getProfile(accessToken: String): Result<LinkedInProfile> {
         return Result.failure(Exception("LinkedIn profile not implemented for iOS"))
+    }
+    
+    @OptIn(ExperimentalUuidApi::class)
+    override suspend fun importProfileAsResume(profile: LinkedInProfile): Resume {
+        val now = Clock.System.now()
+        return Resume(
+            id = Uuid.random().toString(),
+            userId = null,
+            name = "LinkedIn Resume",
+            content = "Imported from LinkedIn",
+            industry = null,
+            sourceType = ResumeSourceType.LINKEDIN,
+            fileName = null,
+            fileType = null,
+            originalFileData = null,
+            createdAt = now,
+            updatedAt = now,
+            currentVersionId = null
+        )
     }
 }
 
 /**
  * iOS implementation of FileUploadRepository
  */
-class IosFileUploadRepository : com.vwatek.apply.domain.repository.FileUploadRepository {
+class IosFileUploadRepository : FileUploadRepository {
     override suspend fun uploadResume(
         fileData: ByteArray,
         fileName: String,
         fileType: String
-    ): Result<String> {
-        // Return a mock URL for now
-        return Result.success("file://${fileName}")
+    ): Result<FileUploadResult> {
+        return Result.success(
+            FileUploadResult(
+                success = true,
+                fileName = fileName,
+                fileType = fileType,
+                extractedContent = null,
+                errorMessage = null
+            )
+        )
     }
     
     override suspend fun extractTextFromFile(
@@ -233,7 +206,6 @@ class IosFileUploadRepository : com.vwatek.apply.domain.repository.FileUploadRep
                 Result.success(fileData.decodeToString())
             } else {
                 // For PDF/DOCX, we'd need native iOS libraries
-                // For now, try to extract text or return placeholder
                 val text = try {
                     fileData.decodeToString()
                 } catch (e: Exception) {
@@ -251,6 +223,6 @@ class IosFileUploadRepository : com.vwatek.apply.domain.repository.FileUploadRep
     }
     
     override fun getMaxFileSizeBytes(): Long {
-        return 10 * 1024 * 1024 // 10MB
+        return 10 * 1024 * 1024 // 10 MB
     }
 }
