@@ -44,6 +44,7 @@ class ResumeRepositoryImpl(
     override suspend fun insertResume(resume: Resume) {
         queries.insertResume(
             id = resume.id,
+            userId = resume.userId,
             name = resume.name,
             content = resume.content,
             industry = resume.industry,
@@ -63,8 +64,11 @@ class ResumeRepositoryImpl(
     }
     
     override suspend fun getResumesByUserId(userId: String): List<Resume> {
-        // For SQLDelight implementation, return all resumes (no user filtering in current schema)
-        return queries.selectAllResumes().executeAsList().map { it.toDomain() }
+        return queries.selectResumesByUserId(userId).executeAsList().map { it.toDomain() }
+    }
+    
+    suspend fun updateResumeUserId(resumeId: String, userId: String) {
+        queries.updateResumeUserId(userId = userId, id = resumeId)
     }
     
     override suspend fun deleteResume(id: String) {
@@ -232,7 +236,7 @@ class SettingsRepositoryImpl(
 private fun com.vwatek.apply.db.Resume.toDomain(): Resume {
     return Resume(
         id = id,
-        userId = null, // Not stored in current DB schema
+        userId = userId,
         name = name,
         content = content,
         industry = industry,

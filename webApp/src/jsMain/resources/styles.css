@@ -1600,63 +1600,337 @@ a:hover {
         margin-left: 260px;
         padding: var(--spacing-xl);
     }
+    
+    .grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grid-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 @media (max-width: 768px) {
+    /* Sidebar transforms into a drawer */
     .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
         transform: translateX(-100%);
         width: 280px;
         box-shadow: var(--shadow-xl);
+        z-index: 1000;
+        transition: transform var(--transition-normal);
     }
     
     .sidebar.open {
         transform: translateX(0);
     }
     
+    /* Overlay when sidebar is open */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+    
+    .sidebar-overlay.open {
+        display: block;
+    }
+    
     .main-content {
         margin-left: 0;
         padding: var(--spacing-md);
+        width: 100%;
     }
     
     .mobile-header {
         display: flex;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: var(--spacing-md);
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-md);
+    }
+    
+    .mobile-header .logo {
+        font-size: var(--font-size-lg);
     }
     
     .grid-2,
     .grid-3,
     .grid-4 {
         grid-template-columns: 1fr;
+        gap: var(--spacing-md);
     }
     
     .modal {
         max-width: 100%;
         max-height: 100%;
         border-radius: 0;
+        margin: 0;
+    }
+    
+    .modal-content {
+        padding: var(--spacing-md);
+        max-height: 90vh;
     }
     
     .auth-card {
         padding: var(--spacing-lg);
         border-radius: var(--radius-xl);
+        margin: var(--spacing-md);
     }
     
     h1 { font-size: var(--font-size-2xl); }
     h2 { font-size: var(--font-size-xl); }
+    h3 { font-size: var(--font-size-lg); }
+    
+    /* Hero Section Mobile */
+    .hero-section {
+        padding: var(--spacing-xl) var(--spacing-md);
+    }
+    
+    .hero-section h1 {
+        font-size: var(--font-size-2xl);
+        line-height: 1.3;
+    }
+    
+    .hero-section p {
+        font-size: var(--font-size-md);
+    }
+    
+    /* Stats Grid Mobile */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+    
+    .stat-card {
+        padding: var(--spacing-md);
+    }
+    
+    /* Cards Mobile */
+    .card {
+        padding: var(--spacing-md);
+    }
+    
+    .card-header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: flex-start;
+    }
+    
+    /* Form Elements Mobile */
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+    
+    /* Button Adjustments Mobile */
+    .btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-sm);
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    /* Tables Mobile */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        min-width: 600px;
+    }
+    
+    /* Navigation Items Mobile */
+    .nav-item {
+        padding: var(--spacing-md);
+        font-size: var(--font-size-md);
+    }
+    
+    /* Page Header Mobile */
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+    
+    .page-header .btn-group {
+        width: 100%;
+    }
+    
+    /* Resume Builder Mobile */
+    .resume-preview {
+        display: none;
+    }
+    
+    .resume-editor {
+        width: 100%;
+    }
+    
+    /* Interview Session Mobile */
+    .interview-container {
+        flex-direction: column;
+    }
+    
+    .interview-video {
+        width: 100%;
+        height: 200px;
+    }
+    
+    /* Tab Navigation Mobile */
+    .tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: var(--spacing-xs);
+    }
+    
+    .tab {
+        white-space: nowrap;
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: var(--font-size-sm);
+    }
+    
+    /* Profile Section Mobile */
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-avatar {
+        margin: 0 auto var(--spacing-md);
+    }
+    
+    /* Toast Messages Mobile */
+    .toast {
+        left: var(--spacing-sm);
+        right: var(--spacing-sm);
+        bottom: var(--spacing-md);
+    }
+    
+    /* Dropdowns Mobile */
+    .dropdown-menu {
+        position: fixed;
+        left: var(--spacing-sm) !important;
+        right: var(--spacing-sm) !important;
+        bottom: var(--spacing-md);
+        top: auto !important;
+        max-height: 60vh;
+        overflow-y: auto;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    }
 }
 
 @media (max-width: 480px) {
+    /* Extra Small Screens */
+    .main-content {
+        padding: var(--spacing-sm);
+    }
+    
     .btn-lg {
         padding: var(--spacing-sm) var(--spacing-md);
         font-size: var(--font-size-sm);
     }
     
     .card {
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-md);
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    h1 { font-size: var(--font-size-xl); }
+    h2 { font-size: var(--font-size-lg); }
+    h3 { font-size: var(--font-size-md); }
+    
+    /* Hero Extra Small */
+    .hero-section {
+        padding: var(--spacing-lg) var(--spacing-sm);
+    }
+    
+    .hero-section h1 {
+        font-size: var(--font-size-xl);
+    }
+    
+    /* Auth Forms Extra Small */
+    .auth-card {
+        padding: var(--spacing-md);
+        margin: var(--spacing-sm);
+    }
+    
+    /* Input Fields Extra Small */
+    input,
+    textarea,
+    select {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Modal Extra Small */
+    .modal-header {
         padding: var(--spacing-md);
     }
     
+    .modal-body {
+        padding: var(--spacing-md);
+    }
+    
+    .modal-footer {
+        padding: var(--spacing-md);
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    /* Chips/Tags Extra Small */
+    .chip,
+    .tag {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: var(--font-size-xs);
+    }
+    
+    /* Quick Actions */
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Toast Extra Small */
     .toast {
-        left: var(--spacing-md);
-        right: var(--spacing-md);
-        bottom: var(--spacing-md);
+        left: var(--spacing-xs);
+        right: var(--spacing-xs);
+        bottom: var(--spacing-sm);
+        padding: var(--spacing-sm);
     }
 }
 

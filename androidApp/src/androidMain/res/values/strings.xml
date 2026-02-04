@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">VwaTek Apply</string>
+    <string name="app_description">AI-Powered Job Application Assistant</string>
+    
+    <!-- Auth strings -->
+    <string name="login">Log In</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_with_linkedin">Sign in with LinkedIn</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="already_have_account">Already have an account?</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_resume">Resume</string>
+    <string name="nav_cover_letter">Cover Letter</string>
+    <string name="nav_interview">Interview</string>
+    <string name="nav_profile">Profile</string>
+    
+    <!-- Resume -->
+    <string name="create_resume">Create Resume</string>
+    <string name="upload_resume">Upload Resume</string>
+    <string name="optimize_resume">Optimize with AI</string>
+    
+    <!-- Cover Letter -->
+    <string name="generate_cover_letter">Generate Cover Letter</string>
+    <string name="job_description">Job Description</string>
+    <string name="company_name">Company Name</string>
+    
+    <!-- Interview -->
+    <string name="start_mock_interview">Start Mock Interview</string>
+    <string name="interview_tips">Interview Tips</string>
+    
+    <!-- Common -->
+    <string name="loading">Loading…</string>
+    <string name="error">Error</string>
+    <string name="retry">Retry</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="share">Share</string>
+    <string name="download">Download</string>
+    <string name="logout">Log Out</string>
+</resources>

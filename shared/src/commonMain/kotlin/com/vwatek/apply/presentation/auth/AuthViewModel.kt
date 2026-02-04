@@ -83,6 +83,7 @@ sealed class AuthIntent {
     
     // Profile
     data class UpdateProfile(val user: User) : AuthIntent()
+    data class ChangePassword(val currentPassword: String, val newPassword: String) : AuthIntent()
     object Logout : AuthIntent()
     
     // Resume Upload
@@ -145,6 +146,7 @@ class AuthViewModel(
             is AuthIntent.LoginWithLinkedIn -> loginLinkedIn(intent.authCode)
             AuthIntent.GetLinkedInAuthUrl -> fetchLinkedInAuthUrl()
             is AuthIntent.UpdateProfile -> updateUserProfile(intent.user)
+            is AuthIntent.ChangePassword -> changeUserPassword(intent.currentPassword, intent.newPassword)
             AuthIntent.Logout -> performLogout()
             is AuthIntent.UploadResume -> uploadResume(intent.fileData, intent.fileName, intent.fileType)
             is AuthIntent.ImportFromLinkedIn -> importFromLinkedIn(intent.authCode)
@@ -156,6 +158,26 @@ class AuthViewModel(
                 passwordResetSent = false,
                 uploadedResume = null
             )
+        }
+    }
+    
+    private fun changeUserPassword(currentPassword: String, newPassword: String) {
+        scope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            try {
+                // TODO: Implement actual password change when backend supports it
+                // For now, simulate success
+                kotlinx.coroutines.delay(1000)
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = "Failed to change password: ${e.message}"
+                )
+            }
         }
     }
     

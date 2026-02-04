@@ -1,6 +1,7 @@
 -- Resume table
 CREATE TABLE Resume (
     id TEXT NOT NULL PRIMARY KEY,
+    userId TEXT,
     name TEXT NOT NULL,
     content TEXT NOT NULL,
     industry TEXT,
@@ -71,12 +72,18 @@ SELECT * FROM Resume ORDER BY updatedAt DESC;
 selectResumeById:
 SELECT * FROM Resume WHERE id = ?;
 
+selectResumesByUserId:
+SELECT * FROM Resume WHERE userId = ? ORDER BY updatedAt DESC;
+
 insertResume:
-INSERT INTO Resume (id, name, content, industry, createdAt, updatedAt)
-VALUES (?, ?, ?, ?, ?, ?);
+INSERT INTO Resume (id, userId, name, content, industry, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
 
 updateResume:
 UPDATE Resume SET name = ?, content = ?, industry = ?, updatedAt = ? WHERE id = ?;
+
+updateResumeUserId:
+UPDATE Resume SET userId = ? WHERE id = ?;
 
 deleteResume:
 DELETE FROM Resume WHERE id = ?;

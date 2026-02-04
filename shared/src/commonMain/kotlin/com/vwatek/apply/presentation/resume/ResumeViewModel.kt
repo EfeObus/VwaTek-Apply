@@ -45,6 +45,8 @@ class ResumeViewModel(
     private val _state = MutableStateFlow(ResumeState())
     val state: StateFlow<ResumeState> = _state.asStateFlow()
     
+    private var currentUserId: String? = null
+    
     init {
         loadResumes()
     }
@@ -52,6 +54,8 @@ class ResumeViewModel(
     fun onIntent(intent: ResumeIntent) {
         when (intent) {
             is ResumeIntent.LoadResumes -> loadResumes()
+            is ResumeIntent.SetCurrentUserId -> setCurrentUserId(intent.userId)
+            is ResumeIntent.LoadResumesForUser -> loadResumesForUser(intent.userId)
             is ResumeIntent.SelectResume -> selectResume(intent.id)
             is ResumeIntent.CreateResume -> createResume(intent.name, intent.content, intent.industry)
             is ResumeIntent.UpdateResume -> updateResume(intent.resume)
@@ -69,6 +73,26 @@ class ResumeViewModel(
             is ResumeIntent.ClearImpactBullets -> clearImpactBullets()
             is ResumeIntent.ClearGrammarIssues -> clearGrammarIssues()
             is ResumeIntent.ClearSectionRewrite -> clearSectionRewrite()
+        }
+    }
+    
+    private fun setCurrentUserId(userId: String?) {
+        currentUserId = userId
+        // Reload resumes when user changes
+        loadResumes()
+    }
+    
+    private fun loadResumesForUser(userId: String) {
+        scope.launch {
+            _state.update { it.copy(isLoading = true) }
+            try {
+                // This would call a use case to get resumes by userId
+                // For now, we reload all resumes and the view can filter
+                currentUserId = userId
+                loadResumes()
+            } catch (e: Exception) {
+                _state.update { it.copy(error = e.message, isLoading = false) }
+            }
         }
     }
     
@@ -99,6 +123,7 @@ class ResumeViewModel(
                 val now = Clock.System.now()
                 val resume = Resume(
                     id = Uuid.random().toString(),
+                    userId = currentUserId, // Associate with current user
                     name = name,
                     content = content,
                     industry = industry,
@@ -277,6 +302,8 @@ data class ResumeState(
 
 sealed class ResumeIntent {
     data object LoadResumes : ResumeIntent()
+    data class SetCurrentUserId(val userId: String?) : ResumeIntent()
+    data class LoadResumesForUser(val userId: String) : ResumeIntent()
     data class SelectResume(val id: String?) : ResumeIntent()
     data class CreateResume(val name: String, val content: String, val industry: String?) : ResumeIntent()
     data class UpdateResume(val resume: Resume) : ResumeIntent()

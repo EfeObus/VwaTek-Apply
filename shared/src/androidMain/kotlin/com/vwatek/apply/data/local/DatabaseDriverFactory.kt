@@ -10,7 +10,17 @@ class AndroidDatabaseDriverFactory(private val context: Context) : DatabaseDrive
         return AndroidSqliteDriver(
             schema = VwaTekDatabase.Schema,
             context = context,
-            name = "vwatek_apply.db"
+            name = "vwatek_apply.db",
+            callback = object : AndroidSqliteDriver.Callback(VwaTekDatabase.Schema) {
+                override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                    // Migrate existing databases that don't have userId column
+                    try {
+                        db.execSQL("ALTER TABLE Resume ADD COLUMN userId TEXT")
+                    } catch (e: Exception) {
+                        // Column already exists, ignore
+                    }
+                }
+            }
         )
     }
 }

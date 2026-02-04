@@ -113,3 +113,5 @@ gcp-sa-key.json
 *.json.key
 service-account*.json
 google-cloud-sdk/
+.kotlin/
+build/
