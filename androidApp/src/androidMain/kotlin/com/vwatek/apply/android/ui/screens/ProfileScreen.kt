@@ -16,9 +16,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vwatek.apply.domain.model.User
+import com.vwatek.apply.domain.repository.SettingsRepository
 import com.vwatek.apply.presentation.auth.AuthIntent
 import com.vwatek.apply.presentation.auth.AuthViewModel
 import com.vwatek.apply.presentation.auth.AuthViewState
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +30,9 @@ fun ProfileScreen(
     authState: AuthViewState
 ) {
     val context = LocalContext.current
+    val settingsRepository: SettingsRepository = koinInject()
+    val scope = rememberCoroutineScope()
+    
     var showLogoutDialog by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(false) }
     var showChangePasswordDialog by remember { mutableStateOf(false) }
@@ -34,6 +40,7 @@ fun ProfileScreen(
     var showAppearanceDialog by remember { mutableStateOf(false) }
     var showHelpDialog by remember { mutableStateOf(false) }
     var showFeedbackDialog by remember { mutableStateOf(false) }
+    var showApiSettingsDialog by remember { mutableStateOf(false) }
     
     Column(
         modifier = Modifier
@@ -131,6 +138,26 @@ fun ProfileScreen(
                     title = "Change Password",
                     subtitle = "Update your security credentials",
                     onClick = { showChangePasswordDialog = true }
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // AI Settings section
+        Text(
+            text = "AI Configuration",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column {
+                ProfileListItem(
+                    icon = Icons.Default.Build,
+                    title = "API Keys",
+                    subtitle = "Configure Gemini and OpenAI API keys",
+                    onClick = { showApiSettingsDialog = true }
                 )
             }
         }
@@ -308,6 +335,15 @@ fun ProfileScreen(
                 context.startActivity(Intent.createChooser(intent, "Send Feedback"))
                 showFeedbackDialog = false
             }
+        )
+    }
+    
+    // API Settings Dialog
+    if (showApiSettingsDialog) {
+        ApiSettingsDialog(
+            settingsRepository = settingsRepository,
+            scope = scope,
+            onDismiss = { showApiSettingsDialog = false }
         )
     }
 }
@@ -751,6 +787,140 @@ private fun FeedbackDialog(
                 enabled = feedback.isNotBlank()
             ) {
                 Text("Send Feedback")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ApiSettingsDialog(
+    settingsRepository: SettingsRepository,
+    scope: kotlinx.coroutines.CoroutineScope,
+    onDismiss: () -> Unit
+) {
+    var geminiApiKey by remember { mutableStateOf("") }
+    var openAiApiKey by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
+    var isSaving by remember { mutableStateOf(false) }
+    var showGeminiKey by remember { mutableStateOf(false) }
+    var showOpenAiKey by remember { mutableStateOf(false) }
+    
+    // Load existing keys
+    LaunchedEffect(Unit) {
+        val existingGeminiKey = settingsRepository.getSetting("gemini_api_key")
+        val existingOpenAiKey = settingsRepository.getSetting("openai_api_key")
+        if (existingGeminiKey != null) geminiApiKey = existingGeminiKey
+        if (existingOpenAiKey != null) openAiApiKey = existingOpenAiKey
+        isLoading = false
+    }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Default.Build, contentDescription = null) },
+        title = { Text("AI API Keys") },
+        text = {
+            if (isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "Configure your AI API keys. The app uses centralized keys by default, but you can add your own for priority access.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    OutlinedTextField(
+                        value = geminiApiKey,
+                        onValueChange = { geminiApiKey = it },
+                        label = { Text("Gemini API Key") },
+                        placeholder = { Text("Enter your Gemini API key (optional)") },
+                        singleLine = true,
+                        visualTransformation = if (showGeminiKey) 
+                            androidx.compose.ui.text.input.VisualTransformation.None 
+                        else 
+                            androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { showGeminiKey = !showGeminiKey }) {
+                                Icon(
+                                    if (showGeminiKey) Icons.Default.Close else Icons.Default.Lock,
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    OutlinedTextField(
+                        value = openAiApiKey,
+                        onValueChange = { openAiApiKey = it },
+                        label = { Text("OpenAI API Key (Fallback)") },
+                        placeholder = { Text("Enter your OpenAI API key (optional)") },
+                        singleLine = true,
+                        visualTransformation = if (showOpenAiKey) 
+                            androidx.compose.ui.text.input.VisualTransformation.None 
+                        else 
+                            androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { showOpenAiKey = !showOpenAiKey }) {
+                                Icon(
+                                    if (showOpenAiKey) Icons.Default.Close else Icons.Default.Lock,
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    
+                    Text(
+                        text = "💡 Leave blank to use the app's centralized API.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    isSaving = true
+                    scope.launch {
+                        if (geminiApiKey.isNotBlank()) {
+                            settingsRepository.setSetting("gemini_api_key", geminiApiKey)
+                        } else {
+                            settingsRepository.deleteSetting("gemini_api_key")
+                        }
+                        if (openAiApiKey.isNotBlank()) {
+                            settingsRepository.setSetting("openai_api_key", openAiApiKey)
+                        } else {
+                            settingsRepository.deleteSetting("openai_api_key")
+                        }
+                        isSaving = false
+                        onDismiss()
+                    }
+                },
+                enabled = !isLoading && !isSaving
+            ) {
+                if (isSaving) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Save")
+                }
             }
         },
         dismissButton = {

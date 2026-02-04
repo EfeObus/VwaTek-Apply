@@ -33,14 +33,22 @@ gcloud config set project $PROJECT_ID
 deploy_backend() {
     echo -e "\n${YELLOW}Deploying Backend to Cloud Run...${NC}"
     
-    cd backend
-    
-    # Build and push container
+    # Build from project root using the root Dockerfile (which points to backend)
     echo "Building container image..."
-    gcloud builds submit --tag gcr.io/$PROJECT_ID/$BACKEND_SERVICE
+    gcloud builds submit --tag gcr.io/$PROJECT_ID/$BACKEND_SERVICE .
     
     # Deploy to Cloud Run
     echo "Deploying to Cloud Run..."
+    
+    # Check if openai-api-key secret exists
+    OPENAI_SECRET=""
+    if gcloud secrets describe openai-api-key --project=$PROJECT_ID &>/dev/null; then
+        OPENAI_SECRET=",OPENAI_API_KEY=openai-api-key:latest"
+        echo "OpenAI API key secret found, will include in deployment"
+    else
+        echo -e "${YELLOW}Warning: openai-api-key secret not found, deploying with Gemini only${NC}"
+    fi
+    
     gcloud run deploy $BACKEND_SERVICE \
         --image gcr.io/$PROJECT_ID/$BACKEND_SERVICE \
         --platform managed \
@@ -48,7 +56,7 @@ deploy_backend() {
         --allow-unauthenticated \
         --add-cloudsql-instances vwatek-apply:us-central1:vwatekapply \
         --set-env-vars "CLOUD_SQL_DATABASE=Vwatek_Apply" \
-        --set-secrets "CLOUD_SQL_USER=db-username:latest,CLOUD_SQL_PASSWORD=db-password:latest" \
+        --set-secrets "CLOUD_SQL_USER=db-username:latest,CLOUD_SQL_PASSWORD=db-password:latest,GEMINI_API_KEY=gemini-api-key:latest${OPENAI_SECRET}" \
         --min-instances 0 \
         --max-instances 10 \
         --memory 1Gi \
@@ -57,8 +65,6 @@ deploy_backend() {
     # Get the service URL
     BACKEND_URL=$(gcloud run services describe $BACKEND_SERVICE --region $REGION --format 'value(status.url)')
     echo -e "${GREEN}Backend deployed at: $BACKEND_URL${NC}"
-    
-    cd ..
 }
 
 deploy_frontend() {
@@ -102,6 +108,12 @@ setup_secrets() {
     echo -e "${YELLOW}Please set the database password secret manually:${NC}"
     echo "gcloud secrets create db-password --data-file=-"
     echo "Then type your password and press Ctrl+D"
+    
+    echo -e "\n${YELLOW}Setting up AI API keys...${NC}"
+    echo "Create the following secrets for AI features:"
+    echo "  gcloud secrets create gemini-api-key --data-file=-"
+    echo "  gcloud secrets create openai-api-key --data-file=-"
+    echo "Then type your API key and press Ctrl+D"
 }
 
 setup_cloud_sql() {

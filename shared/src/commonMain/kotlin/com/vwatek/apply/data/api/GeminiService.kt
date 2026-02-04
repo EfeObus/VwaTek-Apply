@@ -25,7 +25,10 @@ class GeminiService(
     private val httpClient: HttpClient,
     private val settingsRepository: SettingsRepository
 ) {
-    private val baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    private val geminiBaseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    
+    // Backend API URL - this uses your centralized API keys
+    private val backendUrl = "https://vwatek-backend-21443684777.us-central1.run.app/api/v1"
     
     private val json = Json {
         ignoreUnknownKeys = true
@@ -34,6 +37,27 @@ class GeminiService(
     
     @OptIn(ExperimentalUuidApi::class)
     suspend fun analyzeResume(resumeContent: String, jobDescription: String): ResumeAnalysis {
+        // Try backend API first (uses centralized API keys)
+        try {
+            val response: BackendAnalyzeResponse = httpClient.post("$backendUrl/ai/analyze-resume") {
+                contentType(ContentType.Application.Json)
+                setBody(BackendAnalyzeRequest(resumeContent = resumeContent, jobDescription = jobDescription))
+            }.body()
+            
+            return ResumeAnalysis(
+                id = Uuid.random().toString(),
+                resumeId = "",
+                jobDescription = jobDescription,
+                matchScore = response.matchScore,
+                missingKeywords = response.missingKeywords,
+                recommendations = response.recommendations,
+                createdAt = Clock.System.now()
+            )
+        } catch (e: Exception) {
+            println("Backend analyze failed: ${e.message}, trying local...")
+        }
+        
+        // Fallback to local API call
         val prompt = buildString {
             appendLine("You are an expert ATS (Applicant Tracking System) analyzer and career coach.")
             appendLine()
@@ -67,6 +91,19 @@ class GeminiService(
     }
     
     suspend fun optimizeResume(resumeContent: String, jobDescription: String): String {
+        // Try backend API first (uses centralized API keys)
+        try {
+            val response: BackendOptimizeResponse = httpClient.post("$backendUrl/ai/optimize-resume") {
+                contentType(ContentType.Application.Json)
+                setBody(BackendOptimizeRequest(resumeContent = resumeContent, jobDescription = jobDescription))
+            }.body()
+            
+            return response.optimizedContent
+        } catch (e: Exception) {
+            println("Backend optimize failed: ${e.message}, trying local...")
+        }
+        
+        // Fallback to local API call
         val prompt = buildString {
             appendLine("You are an expert resume writer and ATS optimization specialist.")
             appendLine()
@@ -96,6 +133,33 @@ class GeminiService(
         jobDescription: String,
         tone: CoverLetterTone
     ): CoverLetter {
+        // Try backend API first (uses centralized API keys)
+        try {
+            val response: BackendCoverLetterResponse = httpClient.post("$backendUrl/ai/generate-cover-letter") {
+                contentType(ContentType.Application.Json)
+                setBody(BackendCoverLetterRequest(
+                    resumeContent = resumeContent,
+                    jobTitle = jobTitle,
+                    companyName = companyName,
+                    jobDescription = jobDescription,
+                    tone = tone.name
+                ))
+            }.body()
+            
+            return CoverLetter(
+                id = Uuid.random().toString(),
+                resumeId = null,
+                jobTitle = jobTitle,
+                companyName = companyName,
+                content = response.content,
+                tone = tone,
+                createdAt = Clock.System.now()
+            )
+        } catch (e: Exception) {
+            println("Backend cover letter failed: ${e.message}, trying local...")
+        }
+        
+        // Fallback to local API call
         val toneDescription = when (tone) {
             CoverLetterTone.PROFESSIONAL -> "professional and polished"
             CoverLetterTone.ENTHUSIASTIC -> "enthusiastic and energetic"
@@ -144,30 +208,49 @@ class GeminiService(
         jobTitle: String,
         jobDescription: String
     ): InterviewSession {
-        val prompt = buildString {
-            appendLine("You are a tough but fair technical recruiter conducting a job interview.")
-            appendLine()
-            appendLine("Generate 5 challenging interview questions for the following position.")
-            appendLine("Include a mix of:")
-            appendLine("- Behavioral questions (STAR format)")
-            appendLine("- Technical/skill-based questions")
-            appendLine("- Situational questions")
-            appendLine()
-            appendLine("JOB TITLE: $jobTitle")
-            appendLine()
-            appendLine("JOB DESCRIPTION:")
-            appendLine(jobDescription)
-            if (resumeContent != null) {
-                appendLine()
-                appendLine("CANDIDATE RESUME:")
-                appendLine(resumeContent)
-            }
-            appendLine()
-            appendLine("Respond with only the questions, numbered 1-5, one per line.")
-        }
+        var questions: List<String>
         
-        val response = callGemini(prompt)
-        val questions = parseInterviewQuestions(response)
+        // Try backend API first (uses centralized API keys)
+        try {
+            val response: BackendInterviewQuestionsResponse = httpClient.post("$backendUrl/ai/generate-interview-questions") {
+                contentType(ContentType.Application.Json)
+                setBody(BackendInterviewQuestionsRequest(
+                    resumeContent = resumeContent,
+                    jobTitle = jobTitle,
+                    jobDescription = jobDescription
+                ))
+            }.body()
+            
+            questions = response.questions
+        } catch (e: Exception) {
+            println("Backend interview questions failed: ${e.message}, trying local...")
+            
+            // Fallback to local API call
+            val prompt = buildString {
+                appendLine("You are a tough but fair technical recruiter conducting a job interview.")
+                appendLine()
+                appendLine("Generate 5 challenging interview questions for the following position.")
+                appendLine("Include a mix of:")
+                appendLine("- Behavioral questions (STAR format)")
+                appendLine("- Technical/skill-based questions")
+                appendLine("- Situational questions")
+                appendLine()
+                appendLine("JOB TITLE: $jobTitle")
+                appendLine()
+                appendLine("JOB DESCRIPTION:")
+                appendLine(jobDescription)
+                if (resumeContent != null) {
+                    appendLine()
+                    appendLine("CANDIDATE RESUME:")
+                    appendLine(resumeContent)
+                }
+                appendLine()
+                appendLine("Respond with only the questions, numbered 1-5, one per line.")
+            }
+            
+            val response = callGemini(prompt)
+            questions = parseInterviewQuestions(response)
+        }
         
         val sessionId = Uuid.random().toString()
         val now = Clock.System.now()
@@ -201,6 +284,23 @@ class GeminiService(
         answer: String,
         jobTitle: String
     ): String {
+        // Try backend API first (uses centralized API keys)
+        try {
+            val response: BackendInterviewFeedbackResponse = httpClient.post("$backendUrl/ai/interview-feedback") {
+                contentType(ContentType.Application.Json)
+                setBody(BackendInterviewFeedbackRequest(
+                    question = question,
+                    answer = answer,
+                    jobTitle = jobTitle
+                ))
+            }.body()
+            
+            return response.feedback
+        } catch (e: Exception) {
+            println("Backend interview feedback failed: ${e.message}, trying local...")
+        }
+        
+        // Fallback to local API call
         val prompt = buildString {
             appendLine("You are an expert interview coach.")
             appendLine()
@@ -419,6 +519,7 @@ class GeminiService(
     }
 
     private suspend fun callGemini(prompt: String): String {
+        // Fallback to local API keys if backend fails
         val apiKey = settingsRepository.getSetting("gemini_api_key")
         val openAiKey = settingsRepository.getSetting("openai_api_key")
         
@@ -441,7 +542,7 @@ class GeminiService(
             return callOpenAiApi(prompt, openAiKey)
         }
         
-        throw IllegalStateException("No AI API key configured. Please add your Gemini or OpenAI API key in Settings.")
+        throw IllegalStateException("AI service unavailable. Please try again later.")
     }
     
     private suspend fun callGeminiApi(prompt: String, apiKey: String): String {
@@ -453,7 +554,7 @@ class GeminiService(
             )
         )
         
-        val response: GeminiResponse = httpClient.post("$baseUrl?key=$apiKey") {
+        val response: GeminiResponse = httpClient.post("$geminiBaseUrl?key=$apiKey") {
             contentType(ContentType.Application.Json)
             setBody(requestBody)
         }.body()
@@ -734,4 +835,67 @@ private data class OpenAiResponse(
 @Serializable
 private data class OpenAiChoice(
     val message: OpenAiMessage? = null
+)
+
+// Backend API request/response models
+@Serializable
+private data class BackendAnalyzeRequest(
+    val resumeContent: String,
+    val jobDescription: String
+)
+
+@Serializable
+private data class BackendAnalyzeResponse(
+    val matchScore: Int,
+    val missingKeywords: List<String>,
+    val recommendations: List<String>
+)
+
+@Serializable
+private data class BackendOptimizeRequest(
+    val resumeContent: String,
+    val jobDescription: String
+)
+
+@Serializable
+private data class BackendOptimizeResponse(
+    val optimizedContent: String
+)
+
+@Serializable
+private data class BackendCoverLetterRequest(
+    val resumeContent: String,
+    val jobTitle: String,
+    val companyName: String,
+    val jobDescription: String,
+    val tone: String = "PROFESSIONAL"
+)
+
+@Serializable
+private data class BackendCoverLetterResponse(
+    val content: String
+)
+
+@Serializable
+private data class BackendInterviewQuestionsRequest(
+    val resumeContent: String? = null,
+    val jobTitle: String,
+    val jobDescription: String
+)
+
+@Serializable
+private data class BackendInterviewQuestionsResponse(
+    val questions: List<String>
+)
+
+@Serializable
+private data class BackendInterviewFeedbackRequest(
+    val question: String,
+    val answer: String,
+    val jobTitle: String
+)
+
+@Serializable
+private data class BackendInterviewFeedbackResponse(
+    val feedback: String
 )

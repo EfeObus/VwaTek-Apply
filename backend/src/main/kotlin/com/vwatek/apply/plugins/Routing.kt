@@ -2,10 +2,16 @@ package com.vwatek.apply.plugins
 
 import com.vwatek.apply.config.DatabaseConfig
 import com.vwatek.apply.routes.*
+import com.vwatek.apply.services.AIService
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 @Serializable
 data class HealthResponse(
@@ -75,10 +81,22 @@ fun Application.configureRouting() {
         
         // API routes
         route("/api/v1") {
+            // Create HTTP client for AI service
+            val httpClient = HttpClient(CIO) {
+                install(ContentNegotiation) {
+                    json(Json {
+                        ignoreUnknownKeys = true
+                        isLenient = true
+                    })
+                }
+            }
+            val aiService = AIService(httpClient)
+            
             authRoutes()
             resumeRoutes()
             coverLetterRoutes()
             interviewRoutes()
+            aiRoutes(aiService)
         }
     }
 }

@@ -25,8 +25,18 @@ fun OptimizerScreen(
     
     var selectedResume by remember { mutableStateOf<Resume?>(null) }
     var jobDescription by remember { mutableStateOf("") }
-    var isAnalyzing by remember { mutableStateOf(false) }
-    var analysisResult by remember { mutableStateOf<String?>(null) }
+    
+    // Show error snackbar when error occurs
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(state.error) {
+        state.error?.let { error ->
+            snackbarHostState.showSnackbar(
+                message = error,
+                duration = SnackbarDuration.Long
+            )
+            viewModel.onIntent(ResumeIntent.ClearError)
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -38,7 +48,8 @@ fun OptimizerScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -156,14 +167,13 @@ fun OptimizerScreen(
                 Button(
                     onClick = {
                         if (selectedResume != null && jobDescription.isNotBlank()) {
-                            isAnalyzing = true
                             viewModel.onIntent(ResumeIntent.AnalyzeResume(selectedResume!!, jobDescription))
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = selectedResume != null && jobDescription.isNotBlank() && !isAnalyzing
+                    enabled = selectedResume != null && jobDescription.isNotBlank() && !state.isAnalyzing
                 ) {
-                    if (isAnalyzing) {
+                    if (state.isAnalyzing) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             color = MaterialTheme.colorScheme.onPrimary
@@ -172,95 +182,93 @@ fun OptimizerScreen(
                     }
                     Icon(Icons.Default.Star, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(if (isAnalyzing) "Analyzing..." else "Analyze & Optimize")
+                    Text(if (state.isAnalyzing) "Analyzing..." else "Analyze & Optimize")
                 }
             }
             
             // Analysis Result
-            state.selectedResume?.let { resume ->
-                state.analysis?.let { analysis ->
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                            )
+            state.analysis?.let { analysis ->
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp)
+                            Text(
+                                text = "Analysis Results",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            // Match Score
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
+                                Text("Match Score")
                                 Text(
-                                    text = "Analysis Results",
-                                    style = MaterialTheme.typography.titleMedium
+                                    text = "${analysis.matchScore}%",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = when {
+                                        analysis.matchScore >= 80 -> MaterialTheme.colorScheme.primary
+                                        analysis.matchScore >= 60 -> MaterialTheme.colorScheme.tertiary
+                                        else -> MaterialTheme.colorScheme.error
+                                    }
                                 )
-                                
-                                Spacer(modifier = Modifier.height(16.dp))
-                                
-                                // Match Score
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            // Missing Keywords
+                            if (analysis.missingKeywords.isNotEmpty()) {
+                                Text(
+                                    text = "Missing Keywords",
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                FlowRow(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Text("Match Score")
-                                    Text(
-                                        text = "${analysis.matchScore}%",
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        color = when {
-                                            analysis.matchScore >= 80 -> MaterialTheme.colorScheme.primary
-                                            analysis.matchScore >= 60 -> MaterialTheme.colorScheme.tertiary
-                                            else -> MaterialTheme.colorScheme.error
-                                        }
-                                    )
-                                }
-                                
-                                Spacer(modifier = Modifier.height(16.dp))
-                                
-                                // Missing Keywords
-                                if (analysis.missingKeywords.isNotEmpty()) {
-                                    Text(
-                                        text = "Missing Keywords",
-                                        style = MaterialTheme.typography.labelLarge
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    FlowRow(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        analysis.missingKeywords.forEach { keyword ->
-                                            AssistChip(
-                                                onClick = { },
-                                                label = { Text(keyword) }
-                                            )
-                                        }
+                                    analysis.missingKeywords.forEach { keyword ->
+                                        AssistChip(
+                                            onClick = { },
+                                            label = { Text(keyword) }
+                                        )
                                     }
                                 }
-                                
-                                Spacer(modifier = Modifier.height(16.dp))
-                                
-                                // Recommendations
-                                if (analysis.recommendations.isNotEmpty()) {
-                                    Text(
-                                        text = "Recommendations",
-                                        style = MaterialTheme.typography.labelLarge
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    analysis.recommendations.forEach { rec ->
-                                        Row(
-                                            modifier = Modifier.padding(vertical = 4.dp)
-                                        ) {
-                                            Icon(
-                                                Icons.Default.Check,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(16.dp),
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = rec,
-                                                style = MaterialTheme.typography.bodySmall
-                                            )
-                                        }
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            // Recommendations
+                            if (analysis.recommendations.isNotEmpty()) {
+                                Text(
+                                    text = "Recommendations",
+                                    style = MaterialTheme.typography.labelLarge
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                analysis.recommendations.forEach { rec ->
+                                    Row(
+                                        modifier = Modifier.padding(vertical = 4.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = rec,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
                                     }
                                 }
                             }
