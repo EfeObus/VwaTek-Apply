@@ -122,7 +122,7 @@ val sharedModule = module {
     factory { GetMaxFileSizeUseCase(get()) }
     
     // ViewModels
-    factory { ResumeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    factory { ResumeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { CoverLetterViewModel(get(), get(), get()) }
     factory { InterviewViewModel(get(), get(), get(), get(), get(), get(), get()) }
     factory { 

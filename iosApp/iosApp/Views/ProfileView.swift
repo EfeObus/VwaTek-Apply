@@ -19,14 +19,14 @@ struct ProfileView: View {
                                 .fill(Color.blue)
                                 .frame(width: 100, height: 100)
                             
-                            Text(initials)
+                            Text(viewModel.initials)
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
                         }
                         
                         VStack(spacing: 4) {
-                            Text(viewModel.userName)
+                            Text(viewModel.fullName)
                                 .font(.title2)
                                 .fontWeight(.bold)
                             
@@ -201,23 +201,14 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showEditSheet) {
                 EditProfileSheet(
-                    firstName: viewModel.userName,
-                    onSave: { _, _ in
-                        showEditSheet = false
-                    }
+                    viewModel: viewModel,
+                    onDismiss: { showEditSheet = false }
                 )
             }
             .sheet(isPresented: $showApiSettingsSheet) {
                 ApiSettingsSheet()
             }
         }
-    }
-    
-    private var initials: String {
-        let components = viewModel.userName.split(separator: " ")
-        let firstInitial = components.first?.first.map(String.init) ?? ""
-        let lastInitial = components.count > 1 ? components.last?.first.map(String.init) ?? "" : ""
-        return (firstInitial + lastInitial).uppercased()
     }
 }
 
@@ -257,11 +248,13 @@ struct ProfileListItem: View {
 
 struct EditProfileSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @State var firstName: String
-    @State private var lastName = ""
-    @State private var phone = ""
+    @ObservedObject var viewModel: AuthViewModelWrapper
+    var onDismiss: () -> Void
     
-    var onSave: (String, String) -> Void
+    @State private var firstName: String = ""
+    @State private var lastName: String = ""
+    @State private var phone: String = ""
+    @State private var isSaving: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -272,22 +265,48 @@ struct EditProfileSheet: View {
                     TextField("Phone", text: $phone)
                         .keyboardType(.phonePad)
                 }
+                
+                Section {
+                    HStack {
+                        Text("Email")
+                        Spacer()
+                        Text(viewModel.userEmail)
+                            .foregroundColor(.secondary)
+                    }
+                } footer: {
+                    Text("Email cannot be changed")
+                }
             }
             .navigationTitle("Edit Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
-                        dismiss()
+                        onDismiss()
                     }
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        onSave(firstName, lastName)
+                        isSaving = true
+                        viewModel.updateProfile(
+                            firstName: firstName,
+                            lastName: lastName,
+                            phone: phone.isEmpty ? nil : phone
+                        )
+                        // Give time for state to update
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            isSaving = false
+                            onDismiss()
+                        }
                     }
-                    .disabled(firstName.isEmpty)
+                    .disabled(firstName.isEmpty || isSaving)
                 }
+            }
+            .onAppear {
+                firstName = viewModel.userName
+                lastName = viewModel.userLastName
+                phone = viewModel.userPhone
             }
         }
     }
@@ -372,18 +391,25 @@ struct ApiSettingsSheet: View {
     
     private func loadSettings() {
         // Load settings from shared Koin SettingsRepository
-        // For now, we'll use UserDefaults as a simple storage
-        geminiApiKey = UserDefaults.standard.string(forKey: "gemini_api_key") ?? ""
-        openAiApiKey = UserDefaults.standard.string(forKey: "openai_api_key") ?? ""
+        geminiApiKey = SettingsHelper.shared.getSetting(key: "gemini_api_key") ?? ""
+        openAiApiKey = SettingsHelper.shared.getSetting(key: "openai_api_key") ?? ""
     }
     
     private func saveSettings() {
         isSaving = true
         
-        // Save to UserDefaults
-        // Note: In a production app, you would save to the shared Koin SettingsRepository
-        UserDefaults.standard.set(geminiApiKey, forKey: "gemini_api_key")
-        UserDefaults.standard.set(openAiApiKey, forKey: "openai_api_key")
+        // Save to shared Koin SettingsRepository
+        if !geminiApiKey.isEmpty {
+            SettingsHelper.shared.setSetting(key: "gemini_api_key", value: geminiApiKey)
+        } else {
+            SettingsHelper.shared.deleteSetting(key: "gemini_api_key")
+        }
+        
+        if !openAiApiKey.isEmpty {
+            SettingsHelper.shared.setSetting(key: "openai_api_key", value: openAiApiKey)
+        } else {
+            SettingsHelper.shared.deleteSetting(key: "openai_api_key")
+        }
         
         // Show success message
         withAnimation {

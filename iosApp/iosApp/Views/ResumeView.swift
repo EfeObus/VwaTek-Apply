@@ -1,10 +1,15 @@
 import SwiftUI
 import shared
+import UniformTypeIdentifiers
 
 struct ResumeView: View {
     @StateObject private var viewModel = ResumeViewModelWrapper()
+    @StateObject private var linkedInAuthManager = LinkedInAuthManager.shared
     @State private var showCreateSheet = false
+    @State private var showUploadSheet = false
+    @State private var showLinkedInImportSheet = false
     @State private var showError = false
+    @State private var isLinkedInImporting = false
     
     var body: some View {
         NavigationStack {
@@ -12,7 +17,7 @@ struct ResumeView: View {
                 if viewModel.resumes.isEmpty && !viewModel.isLoading {
                     EmptyResumeView(
                         onCreateNew: { showCreateSheet = true },
-                        onUpload: { /* Handle upload */ }
+                        onUpload: { showUploadSheet = true }
                     )
                 } else if viewModel.isLoading {
                     ProgressView("Loading resumes...")
@@ -23,7 +28,18 @@ struct ResumeView: View {
             .navigationTitle("Resume")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button(action: { showCreateSheet = true }) {
+                    Menu {
+                        Button(action: { showCreateSheet = true }) {
+                            Label("Create New", systemImage: "plus")
+                        }
+                        Button(action: { showUploadSheet = true }) {
+                            Label("Upload File", systemImage: "arrow.up.doc")
+                        }
+                        Divider()
+                        Button(action: { showLinkedInImportSheet = true }) {
+                            Label("Import from LinkedIn", systemImage: "link")
+                        }
+                    } label: {
                         Image(systemName: "plus")
                     }
                 }
@@ -34,6 +50,32 @@ struct ResumeView: View {
                     showCreateSheet = false
                 })
             }
+            .sheet(isPresented: $showUploadSheet) {
+                ResumeUploadSheet(viewModel: viewModel, onDismiss: { showUploadSheet = false })
+            }
+            .sheet(isPresented: $showLinkedInImportSheet) {
+                LinkedInImportSheet(
+                    isLoading: isLinkedInImporting,
+                    onImport: {
+                        Task {
+                            isLinkedInImporting = true
+                            defer { isLinkedInImporting = false }
+                            
+                            let result = await linkedInAuthManager.signIn()
+                            switch result {
+                            case .success(let signInResult):
+                                viewModel.importFromLinkedIn(authCode: signInResult.authCode)
+                                showLinkedInImportSheet = false
+                            case .failure(let error):
+                                if (error as NSError).code != -999 {
+                                    print("LinkedIn import failed: \(error.localizedDescription)")
+                                }
+                            }
+                        }
+                    },
+                    onDismiss: { showLinkedInImportSheet = false }
+                )
+            }
             .alert("Error", isPresented: $showError) {
                 Button("OK") {
                     viewModel.clearError()
@@ -43,6 +85,14 @@ struct ResumeView: View {
             }
             .onChange(of: viewModel.error) { error in
                 showError = error != nil
+            }
+            .onAppear {
+                // Refresh resumes when view appears
+                viewModel.loadResumes()
+            }
+            .refreshable {
+                // Pull to refresh
+                viewModel.loadResumes()
             }
         }
     }
@@ -114,6 +164,8 @@ struct ResumeRow: View {
     let resume: Resume
     @ObservedObject var viewModel: ResumeViewModelWrapper
     @State private var showOptimizeSheet = false
+    @State private var showPDFExportSheet = false
+    @State private var showVersionHistorySheet = false
     
     var body: some View {
         HStack(spacing: 12) {
@@ -162,6 +214,18 @@ struct ResumeRow: View {
                     Label("Optimize with AI", systemImage: "sparkles")
                 }
                 
+                Button(action: {
+                    showPDFExportSheet = true
+                }) {
+                    Label("Export PDF", systemImage: "square.and.arrow.up")
+                }
+                
+                Button(action: {
+                    showVersionHistorySheet = true
+                }) {
+                    Label("Version History", systemImage: "clock.arrow.circlepath")
+                }
+                
                 Divider()
                 
                 Button(role: .destructive, action: { 
@@ -177,6 +241,16 @@ struct ResumeRow: View {
         .padding(.vertical, 4)
         .sheet(isPresented: $showOptimizeSheet) {
             ResumeOptimizerSheet(resume: resume, viewModel: viewModel)
+        }
+        .sheet(isPresented: $showPDFExportSheet) {
+            PDFExportSheet(resume: resume, onDismiss: { showPDFExportSheet = false })
+        }
+        .sheet(isPresented: $showVersionHistorySheet) {
+            VersionHistorySheet(
+                resume: resume,
+                viewModel: viewModel,
+                onDismiss: { showVersionHistorySheet = false }
+            )
         }
     }
     
@@ -336,6 +410,157 @@ struct CreateResumeSheet: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Resume Upload Sheet
+struct ResumeUploadSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var viewModel: ResumeViewModelWrapper
+    var onDismiss: () -> Void
+    
+    @State private var showFilePicker = false
+    @State private var selectedFileURL: URL? = nil
+    @State private var extractedContent: String = ""
+    @State private var resumeName: String = ""
+    @State private var industry: String = ""
+    @State private var isProcessing = false
+    @State private var errorMessage: String? = nil
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Button(action: { showFilePicker = true }) {
+                        HStack {
+                            Image(systemName: selectedFileURL != nil ? "doc.fill" : "arrow.up.doc")
+                                .foregroundColor(selectedFileURL != nil ? .blue : .secondary)
+                            
+                            Text(selectedFileURL?.lastPathComponent ?? "Select a file...")
+                                .foregroundColor(selectedFileURL != nil ? .primary : .secondary)
+                            
+                            Spacer()
+                            
+                            if isProcessing {
+                                ProgressView()
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Upload Resume")
+                } footer: {
+                    Text("Supported formats: PDF, DOCX, DOC, TXT")
+                }
+                
+                if selectedFileURL != nil {
+                    Section {
+                        TextField("Resume Name", text: $resumeName)
+                        TextField("Industry (Optional)", text: $industry)
+                    } header: {
+                        Text("Resume Details")
+                    }
+                    
+                    if !extractedContent.isEmpty {
+                        Section {
+                            Text(extractedContent.prefix(500) + (extractedContent.count > 500 ? "..." : ""))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        } header: {
+                            Text("Preview")
+                        }
+                    }
+                }
+                
+                if let error = errorMessage {
+                    Section {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.red)
+                            Text(error)
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Upload Resume")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        onDismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveResume()
+                    }
+                    .disabled(resumeName.isEmpty || extractedContent.isEmpty || isProcessing)
+                }
+            }
+            .fileImporter(
+                isPresented: $showFilePicker,
+                allowedContentTypes: [
+                    UTType.pdf,
+                    UTType(filenameExtension: "docx") ?? .data,
+                    UTType(filenameExtension: "doc") ?? .data,
+                    UTType.plainText
+                ],
+                allowsMultipleSelection: false
+            ) { result in
+                handleFileSelection(result)
+            }
+        }
+    }
+    
+    private func handleFileSelection(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else { return }
+            selectedFileURL = url
+            resumeName = url.deletingPathExtension().lastPathComponent
+            isProcessing = true
+            errorMessage = nil
+            
+            // Start accessing the security-scoped resource
+            guard url.startAccessingSecurityScopedResource() else {
+                errorMessage = "Unable to access the selected file"
+                isProcessing = false
+                return
+            }
+            
+            defer { url.stopAccessingSecurityScopedResource() }
+            
+            // Try to extract text content
+            do {
+                if url.pathExtension.lowercased() == "txt" {
+                    extractedContent = try String(contentsOf: url, encoding: .utf8)
+                } else if url.pathExtension.lowercased() == "pdf" {
+                    // For PDF, we'll read raw data and use placeholder text
+                    // A real implementation would use PDFKit
+                    extractedContent = "[PDF content imported from: \(url.lastPathComponent)]\n\nPlease paste your resume content below or edit this text with your resume information."
+                } else {
+                    // For DOCX/DOC, use placeholder
+                    extractedContent = "[Document imported from: \(url.lastPathComponent)]\n\nPlease paste your resume content below or edit this text with your resume information."
+                }
+                isProcessing = false
+            } catch {
+                errorMessage = "Failed to read file: \(error.localizedDescription)"
+                isProcessing = false
+            }
+            
+        case .failure(let error):
+            errorMessage = "Failed to select file: \(error.localizedDescription)"
+        }
+    }
+    
+    private func saveResume() {
+        viewModel.createResume(
+            name: resumeName,
+            content: extractedContent,
+            industry: industry.isEmpty ? nil : industry
+        )
+        onDismiss()
     }
 }
 

@@ -51,8 +51,8 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.datetime)
     
-    // Google Cloud SQL Socket Factory for Cloud Run
-    implementation("com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.15.0")
+    // Google Cloud SQL Socket Factory for Cloud Run (updated for MySQL 8.4 compatibility)
+    implementation("com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.21.0")
     
     // Email (JavaMail/Jakarta Mail)
     implementation("com.sun.mail:jakarta.mail:2.0.1")

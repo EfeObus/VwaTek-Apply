@@ -2,7 +2,7 @@ package com.vwatek.apply.di
 
 import com.vwatek.apply.data.local.DatabaseDriverFactory
 import com.vwatek.apply.data.local.createDatabaseDriverFactory
-import com.vwatek.apply.data.repository.ResumeRepositoryImpl
+import com.vwatek.apply.data.repository.IosSyncingResumeRepository
 import com.vwatek.apply.data.repository.AnalysisRepositoryImpl
 import com.vwatek.apply.data.repository.CoverLetterRepositoryImpl
 import com.vwatek.apply.data.repository.InterviewRepositoryImpl
@@ -64,15 +64,19 @@ actual fun platformModule(): Module = module {
         }
     }
     
-    // Repositories using local SQLDelight database
-    single<ResumeRepository> { ResumeRepositoryImpl(get()) }
+    // Auth repository - uses backend API with token persistence
+    single<AuthRepository> { IosAuthRepository(get()) }
+    
+    // Resume repository - syncs with backend API
+    single<ResumeRepository> { IosSyncingResumeRepository(get(), get(), get()) }
+    
+    // Other repositories using local SQLDelight database
     single<AnalysisRepository> { AnalysisRepositoryImpl(get()) }
     single<CoverLetterRepository> { CoverLetterRepositoryImpl(get()) }
     single<InterviewRepository> { InterviewRepositoryImpl(get()) }
     single<SettingsRepository> { SettingsRepositoryImpl(get()) }
     
-    // Auth, LinkedIn, and FileUpload repositories
-    single<AuthRepository> { IosAuthRepository() }
-    single<LinkedInRepository> { IosLinkedInRepository() }
+    // LinkedIn and FileUpload repositories
+    single<LinkedInRepository> { IosLinkedInRepository(get()) }
     single<FileUploadRepository> { IosFileUploadRepository() }
 }

@@ -1,9 +1,11 @@
 package com.vwatek.apply.di
 
+import com.vwatek.apply.domain.repository.SettingsRepository
 import com.vwatek.apply.presentation.auth.AuthViewModel
 import com.vwatek.apply.presentation.resume.ResumeViewModel
 import com.vwatek.apply.presentation.coverletter.CoverLetterViewModel
 import com.vwatek.apply.presentation.interview.InterviewViewModel
+import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.context.startKoin
@@ -17,11 +19,33 @@ object KoinHelper : KoinComponent {
     private val resumeViewModel: ResumeViewModel by inject()
     private val coverLetterViewModel: CoverLetterViewModel by inject()
     private val interviewViewModel: InterviewViewModel by inject()
+    private val settingsRepository: SettingsRepository by inject()
     
     fun getAuthViewModel(): AuthViewModel = authViewModel
     fun getResumeViewModel(): ResumeViewModel = resumeViewModel
     fun getCoverLetterViewModel(): CoverLetterViewModel = coverLetterViewModel
     fun getInterviewViewModel(): InterviewViewModel = interviewViewModel
+    fun getSettingsRepository(): SettingsRepository = settingsRepository
+}
+
+/**
+ * Swift-friendly settings helper with blocking methods
+ * This allows Swift to call settings operations without dealing with suspend functions
+ */
+object SettingsHelper : KoinComponent {
+    private val settingsRepository: SettingsRepository by inject()
+    
+    fun getSetting(key: String): String? = runBlocking {
+        settingsRepository.getSetting(key)
+    }
+    
+    fun setSetting(key: String, value: String) = runBlocking {
+        settingsRepository.setSetting(key, value)
+    }
+    
+    fun deleteSetting(key: String) = runBlocking {
+        settingsRepository.deleteSetting(key)
+    }
 }
 
 /**
@@ -43,3 +67,9 @@ fun getAuthViewModel(): AuthViewModel = KoinHelper.getAuthViewModel()
 fun getResumeViewModel(): ResumeViewModel = KoinHelper.getResumeViewModel()
 fun getCoverLetterViewModel(): CoverLetterViewModel = KoinHelper.getCoverLetterViewModel()
 fun getInterviewViewModel(): InterviewViewModel = KoinHelper.getInterviewViewModel()
+fun getSettingsRepository(): SettingsRepository = KoinHelper.getSettingsRepository()
+
+// Settings helper functions for Swift
+fun getSetting(key: String): String? = SettingsHelper.getSetting(key)
+fun setSetting(key: String, value: String) = SettingsHelper.setSetting(key, value)
+fun deleteSetting(key: String) = SettingsHelper.deleteSetting(key)

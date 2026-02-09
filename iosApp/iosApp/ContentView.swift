@@ -25,7 +25,7 @@ struct MainTabView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView(userName: authViewModel.userName)
+            HomeView(userName: authViewModel.fullName, selectedTab: $selectedTab)
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }
@@ -37,23 +37,29 @@ struct MainTabView: View {
                 }
                 .tag(1)
             
+            OptimizerView()
+                .tabItem {
+                    Label("Optimizer", systemImage: "wand.and.stars")
+                }
+                .tag(2)
+            
             CoverLetterView()
                 .tabItem {
                     Label("Cover Letter", systemImage: "envelope.fill")
                 }
-                .tag(2)
+                .tag(3)
             
             InterviewView()
                 .tabItem {
                     Label("Interview", systemImage: "mic.fill")
                 }
-                .tag(3)
+                .tag(4)
             
             ProfileView(viewModel: authViewModel)
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
                 }
-                .tag(4)
+                .tag(5)
         }
         .accentColor(.blue)
     }
@@ -63,10 +69,12 @@ struct MainTabView: View {
 struct iPadMainView: View {
     @ObservedObject var authViewModel: AuthViewModelWrapper
     @State private var selectedSection: NavigationSection? = .home
+    @State private var selectedTab = 0
     
     enum NavigationSection: String, CaseIterable {
         case home = "Home"
         case resume = "Resume"
+        case optimizer = "Optimizer"
         case coverLetter = "Cover Letter"
         case interview = "Interview"
         case profile = "Profile"
@@ -75,6 +83,7 @@ struct iPadMainView: View {
             switch self {
             case .home: return "house.fill"
             case .resume: return "doc.text.fill"
+            case .optimizer: return "wand.and.stars"
             case .coverLetter: return "envelope.fill"
             case .interview: return "mic.fill"
             case .profile: return "person.fill"
@@ -91,9 +100,11 @@ struct iPadMainView: View {
         } detail: {
             switch selectedSection {
             case .home:
-                HomeView(userName: authViewModel.userName)
+                HomeView(userName: authViewModel.fullName, selectedTab: $selectedTab)
             case .resume:
                 ResumeView()
+            case .optimizer:
+                OptimizerView()
             case .coverLetter:
                 CoverLetterView()
             case .interview:

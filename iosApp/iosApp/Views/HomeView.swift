@@ -2,6 +2,8 @@ import SwiftUI
 
 struct HomeView: View {
     let userName: String
+    @Binding var selectedTab: Int
+    @StateObject private var resumeViewModel = ResumeViewModelWrapper()
     
     var body: some View {
         NavigationStack {
@@ -25,28 +27,36 @@ struct HomeView: View {
                                 title: "Create Resume",
                                 description: "Build a professional resume",
                                 color: .blue
-                            )
+                            ) {
+                                selectedTab = 1 // Resume tab
+                            }
+                            
+                            QuickActionCard(
+                                icon: "wand.and.stars",
+                                title: "Optimizer",
+                                description: "ATS & Section Rewriter",
+                                color: .purple
+                            ) {
+                                selectedTab = 2 // Optimizer tab
+                            }
                             
                             QuickActionCard(
                                 icon: "envelope.fill",
                                 title: "Cover Letter",
                                 description: "AI-generated letters",
                                 color: .green
-                            )
+                            ) {
+                                selectedTab = 3 // Cover Letter tab
+                            }
                             
                             QuickActionCard(
                                 icon: "mic.fill",
                                 title: "Mock Interview",
                                 description: "Practice with AI",
                                 color: .orange
-                            )
-                            
-                            QuickActionCard(
-                                icon: "arrow.up.doc.fill",
-                                title: "Upload Resume",
-                                description: "Import existing resume",
-                                color: .purple
-                            )
+                            ) {
+                                selectedTab = 4 // Interview tab
+                            }
                         }
                         .padding(.horizontal)
                     }
@@ -61,22 +71,37 @@ struct HomeView: View {
                             stepNumber: 1,
                             title: "Create or Upload Your Resume",
                             description: "Start by creating a professional resume or uploading an existing one.",
-                            isCompleted: false
-                        )
+                            isCompleted: !resumeViewModel.resumes.isEmpty
+                        ) {
+                            selectedTab = 1
+                        }
                         
                         GettingStartedCard(
                             stepNumber: 2,
-                            title: "Generate Cover Letters",
-                            description: "Use AI to generate tailored cover letters for specific job postings.",
+                            title: "Optimize for ATS",
+                            description: "Use the Optimizer to check ATS compatibility and rewrite sections.",
                             isCompleted: false
-                        )
+                        ) {
+                            selectedTab = 2
+                        }
                         
                         GettingStartedCard(
                             stepNumber: 3,
+                            title: "Generate Cover Letters",
+                            description: "Use AI to generate tailored cover letters for specific job postings.",
+                            isCompleted: false
+                        ) {
+                            selectedTab = 3
+                        }
+                        
+                        GettingStartedCard(
+                            stepNumber: 4,
                             title: "Practice Interviews",
                             description: "Prepare for interviews with AI-powered mock interview sessions.",
                             isCompleted: false
-                        )
+                        ) {
+                            selectedTab = 4
+                        }
                     }
                     
                     // Pro Tip
@@ -133,28 +158,32 @@ struct QuickActionCard: View {
     let title: String
     let description: String
     let color: Color
+    let action: () -> Void
     
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 30))
-                .foregroundColor(color)
-            
-            VStack(spacing: 4) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
+        Button(action: action) {
+            VStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 30))
+                    .foregroundColor(color)
                 
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
+                VStack(spacing: 4) {
+                    Text(title)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primary)
+                    
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
             }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
         }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
     }
 }
 
@@ -163,45 +192,49 @@ struct GettingStartedCard: View {
     let title: String
     let description: String
     let isCompleted: Bool
+    let action: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
-            // Step number
-            ZStack {
-                Circle()
-                    .fill(isCompleted ? Color.green : Color.blue)
-                    .frame(width: 36, height: 36)
-                
-                if isCompleted {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(.white)
-                        .fontWeight(.bold)
-                } else {
-                    Text("\(stepNumber)")
-                        .foregroundColor(.white)
-                        .fontWeight(.bold)
+        Button(action: action) {
+            HStack(spacing: 12) {
+                // Step number
+                ZStack {
+                    Circle()
+                        .fill(isCompleted ? Color.green : Color.blue)
+                        .frame(width: 36, height: 36)
+                    
+                    if isCompleted {
+                        Image(systemName: "checkmark")
+                            .foregroundColor(.white)
+                            .fontWeight(.bold)
+                    } else {
+                        Text("\(stepNumber)")
+                            .foregroundColor(.white)
+                            .fontWeight(.bold)
+                    }
                 }
-            }
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
                 
-                Text(description)
-                    .font(.caption)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                    
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
                     .foregroundColor(.secondary)
             }
-            
-            Spacer()
-            
-            Image(systemName: "chevron.right")
-                .foregroundColor(.secondary)
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+            .padding(.horizontal)
         }
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(12)
-        .padding(.horizontal)
     }
 }
 
@@ -230,5 +263,5 @@ struct ProTipCard: View {
 }
 
 #Preview {
-    HomeView(userName: "John")
+    HomeView(userName: "John", selectedTab: .constant(0))
 }

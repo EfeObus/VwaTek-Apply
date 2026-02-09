@@ -684,6 +684,16 @@ private fun ProfileView(
     onLogout: () -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    val viewModel = remember { GlobalContext.get().get<AuthViewModel>() }
+    val state by viewModel.state.collectAsState()
+    
+    var showChangePassword by remember { mutableStateOf(false) }
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+    var passwordMessage by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    
     user?.let { u ->
         H2(attrs = { classes("text-center", "mb-lg") }) { Text("Profile") }
         
@@ -727,6 +737,116 @@ private fun ProfileView(
                 }
             }
             ProfileField("Auth Provider", u.authProvider.name)
+        }
+        
+        // Change Password Section
+        Div(attrs = { classes("profile-section", "mb-lg") }) {
+            Button(attrs = {
+                classes("btn", "btn-outline", "w-full")
+                onClick { showChangePassword = !showChangePassword }
+            }) {
+                Text(if (showChangePassword) "Hide Change Password" else "Change Password")
+            }
+            
+            if (showChangePassword) {
+                Div(attrs = { 
+                    classes("card", "mt-md")
+                    style { property("padding", "var(--spacing-lg)") }
+                }) {
+                    H4(attrs = { classes("mb-md") }) { Text("Change Password") }
+                    
+                    // Success message
+                    passwordMessage?.let { msg ->
+                        Div(attrs = { classes("alert", "alert-success", "mb-md") }) {
+                            Text(msg)
+                        }
+                    }
+                    
+                    // Error message
+                    passwordError?.let { err ->
+                        Div(attrs = { classes("alert", "alert-error", "mb-md") }) {
+                            Text(err)
+                        }
+                    }
+                    
+                    Form(attrs = {
+                        onSubmit { e ->
+                            e.preventDefault()
+                            passwordError = null
+                            passwordMessage = null
+                            
+                            if (newPassword.length < 8) {
+                                passwordError = "Password must be at least 8 characters"
+                                return@onSubmit
+                            }
+                            if (newPassword != confirmPassword) {
+                                passwordError = "Passwords do not match"
+                                return@onSubmit
+                            }
+                            
+                            viewModel.onIntent(AuthIntent.ChangePassword(currentPassword, newPassword))
+                            passwordMessage = "Password changed successfully"
+                            currentPassword = ""
+                            newPassword = ""
+                            confirmPassword = ""
+                        }
+                    }) {
+                        Div(attrs = { classes("form-group", "mb-md") }) {
+                            Label(attrs = { classes("form-label") }) { Text("Current Password") }
+                            Input(InputType.Password) {
+                                classes("form-input")
+                                placeholder("Enter current password")
+                                value(currentPassword)
+                                onInput { currentPassword = it.value }
+                                required()
+                            }
+                        }
+                        
+                        Div(attrs = { classes("form-group", "mb-md") }) {
+                            Label(attrs = { classes("form-label") }) { Text("New Password") }
+                            Input(InputType.Password) {
+                                classes("form-input")
+                                placeholder("Min 8 characters")
+                                value(newPassword)
+                                onInput { newPassword = it.value }
+                                required()
+                                attr("minlength", "8")
+                            }
+                            P(attrs = { classes("form-helper") }) {
+                                Text("Must be at least 8 characters with uppercase, lowercase, and number")
+                            }
+                        }
+                        
+                        Div(attrs = { classes("form-group", "mb-md") }) {
+                            Label(attrs = { classes("form-label") }) { Text("Confirm New Password") }
+                            Input(InputType.Password) {
+                                classes("form-input")
+                                placeholder("Confirm new password")
+                                value(confirmPassword)
+                                onInput { confirmPassword = it.value }
+                                required()
+                            }
+                            if (confirmPassword.isNotEmpty() && newPassword != confirmPassword) {
+                                P(attrs = { classes("text-error", "text-sm", "mt-xs") }) {
+                                    Text("Passwords do not match")
+                                }
+                            }
+                        }
+                        
+                        Button(attrs = {
+                            classes("btn", "btn-primary")
+                            if (state.isLoading) attr("disabled", "true")
+                        }) {
+                            if (state.isLoading) {
+                                Span(attrs = { classes("spinner-sm") })
+                                Text(" Saving...")
+                            } else {
+                                Text("Update Password")
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         Div(attrs = { classes("flex", "gap-md", "justify-center") }) {

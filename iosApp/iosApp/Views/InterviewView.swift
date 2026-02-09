@@ -4,6 +4,7 @@ import shared
 struct InterviewView: View {
     @StateObject private var viewModel = InterviewViewModelWrapper()
     @State private var showSetupSheet = false
+    @State private var showStarCoachingSheet = false
     @State private var showError = false
     
     var body: some View {
@@ -19,9 +20,14 @@ struct InterviewView: View {
                     }
                 )
             } else {
-                InterviewSetupView(onStartInterview: {
-                    showSetupSheet = true
-                })
+                InterviewSetupView(
+                    onStartInterview: {
+                        showSetupSheet = true
+                    },
+                    onStarCoaching: {
+                        showStarCoachingSheet = true
+                    }
+                )
             }
         }
         .sheet(isPresented: $showSetupSheet) {
@@ -36,6 +42,9 @@ struct InterviewView: View {
                     )
                 }
             )
+        }
+        .sheet(isPresented: $showStarCoachingSheet) {
+            StarCoachingSheet(viewModel: viewModel, isPresented: $showStarCoachingSheet)
         }
         .alert("Error", isPresented: $showError) {
             Button("OK") {
@@ -52,6 +61,7 @@ struct InterviewView: View {
 
 struct InterviewSetupView: View {
     var onStartInterview: () -> Void
+    var onStarCoaching: () -> Void
     
     var body: some View {
         ScrollView {
@@ -80,10 +90,42 @@ struct InterviewSetupView: View {
                             .foregroundColor(.white)
                             .cornerRadius(10)
                     }
+                    
+                    Button(action: onStarCoaching) {
+                        Label("STAR Method Coaching", systemImage: "star.fill")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: 250)
+                            .padding()
+                            .background(Color.orange.opacity(0.2))
+                            .foregroundColor(.orange)
+                            .cornerRadius(10)
+                    }
                 }
                 .padding(24)
                 .background(Color.blue.opacity(0.1))
                 .cornerRadius(16)
+                .padding(.horizontal)
+                
+                // STAR Method Info Card
+                VStack(alignment: .leading, spacing: 12) {
+                    Label("STAR Method", systemImage: "star.fill")
+                        .font(.headline)
+                        .foregroundColor(.orange)
+                    
+                    Text("Structure your answers using:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        StarMethodItem(letter: "S", title: "Situation", description: "Set the context")
+                        StarMethodItem(letter: "T", title: "Task", description: "Describe your responsibility")
+                        StarMethodItem(letter: "A", title: "Action", description: "Explain what you did")
+                        StarMethodItem(letter: "R", title: "Result", description: "Share the outcome")
+                    }
+                }
+                .padding()
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(12)
                 .padding(.horizontal)
                 
                 // Interview types

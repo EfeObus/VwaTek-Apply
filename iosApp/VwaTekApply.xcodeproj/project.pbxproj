@@ -3,52 +3,43 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		17A5949D86D7F4EF99877111 /* VwaTekApplyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E9D196F4271F22B876911E /* VwaTekApplyApp.swift */; };
 		272CFC352B1BDA211BD0406F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FDF7F0B041A43B9251A7FB /* ContentView.swift */; };
 		28F55CAC0EA5B300260AFC41 /* AuthViewModelWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF6063F0553C53F3B7168FF4 /* AuthViewModelWrapper.swift */; };
-		38234545E7CB847D5B4BD5CB /* shared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C3B7AA1652B62B95FC4734E /* shared.framework */; };
 		3B14D7A1A4567B63FEE6FE03 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF848420A89F863F3069441 /* HomeView.swift */; };
-		6D55505CD81ECEC9B6FA445F /* shared.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4C3B7AA1652B62B95FC4734E /* shared.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6E3D9F16479301607C546EE9 /* InterviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51DE1AD865ECE94131AFFE15 /* InterviewView.swift */; };
 		7E2C23EE0E4F5F0F0E0C889A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6F88C7C85B95DD89B6610D53 /* Assets.xcassets */; };
 		A038C240468CBB527CABF9F5 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D004132C4947C7BF1067C59 /* libsqlite3.tbd */; };
 		AA52E3E81814674337D4F74A /* ResumeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B7A98948F343A5463D1B4 /* ResumeView.swift */; };
+		AB82098BB049F447AF4BBDD3 /* OptimizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0DACF25C7368524842371D /* OptimizerView.swift */; };
 		AE6EF4B758720F0A00163AE3 /* CoverLetterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C9DF557E1860DF402B406BA /* CoverLetterView.swift */; };
 		BD0830CE063A935AF4D96281 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EFB2DCB22C75BDAFA51685B /* ProfileView.swift */; };
+		DD5C020DBCDF81405A2C7F05 /* ResumeViewModelWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48687A3711EA6C709300C285 /* ResumeViewModelWrapper.swift */; };
+		E2BFD307630E7E9E5C1D8DC1 /* InterviewViewModelWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92A2445FCECB46CBDB6CE1E /* InterviewViewModelWrapper.swift */; };
+		EF631B0E73BCC48D8F39A184 /* CoverLetterViewModelWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB51E3D062E3B9D96899E3A /* CoverLetterViewModelWrapper.swift */; };
 		F8A5B23BB4CFC0BEF23973E0 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C87484A8D9B5990CB43986 /* AuthView.swift */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		F6A6D41C1EC316C2133D39D3 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				6D55505CD81ECEC9B6FA445F /* shared.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
-
 /* Begin PBXFileReference section */
+		2AB51E3D062E3B9D96899E3A /* CoverLetterViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverLetterViewModelWrapper.swift; sourceTree = "<group>"; };
 		2C5B7A98948F343A5463D1B4 /* ResumeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeView.swift; sourceTree = "<group>"; };
 		3D004132C4947C7BF1067C59 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		40E9D196F4271F22B876911E /* VwaTekApplyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VwaTekApplyApp.swift; sourceTree = "<group>"; };
-		4C3B7AA1652B62B95FC4734E /* shared.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = shared.framework; path = ../shared/build/bin/iosSimulatorArm64/debugFramework/shared.framework; sourceTree = "<group>"; };
+		48687A3711EA6C709300C285 /* ResumeViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeViewModelWrapper.swift; sourceTree = "<group>"; };
 		51DE1AD865ECE94131AFFE15 /* InterviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewView.swift; sourceTree = "<group>"; };
 		6F88C7C85B95DD89B6610D53 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		708549F41DBED85F7CEA6370 /* iosApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		708549F41DBED85F7CEA6370 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EFB2DCB22C75BDAFA51685B /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		8C9DF557E1860DF402B406BA /* CoverLetterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverLetterView.swift; sourceTree = "<group>"; };
 		92C87484A8D9B5990CB43986 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		A3FDF7F0B041A43B9251A7FB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		CC0DACF25C7368524842371D /* OptimizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptimizerView.swift; sourceTree = "<group>"; };
 		DF6063F0553C53F3B7168FF4 /* AuthViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModelWrapper.swift; sourceTree = "<group>"; };
+		E92A2445FCECB46CBDB6CE1E /* InterviewViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewViewModelWrapper.swift; sourceTree = "<group>"; };
 		EC3F5B9BB97B532D640CF983 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EDF848420A89F863F3069441 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -58,7 +49,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				38234545E7CB847D5B4BD5CB /* shared.framework in Frameworks */,
 				A038C240468CBB527CABF9F5 /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -70,7 +60,6 @@
 			isa = PBXGroup;
 			children = (
 				3D004132C4947C7BF1067C59 /* libsqlite3.tbd */,
-				4C3B7AA1652B62B95FC4734E /* shared.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -104,6 +93,7 @@
 				8C9DF557E1860DF402B406BA /* CoverLetterView.swift */,
 				EDF848420A89F863F3069441 /* HomeView.swift */,
 				51DE1AD865ECE94131AFFE15 /* InterviewView.swift */,
+				CC0DACF25C7368524842371D /* OptimizerView.swift */,
 				7EFB2DCB22C75BDAFA51685B /* ProfileView.swift */,
 				2C5B7A98948F343A5463D1B4 /* ResumeView.swift */,
 			);
@@ -114,6 +104,9 @@
 			isa = PBXGroup;
 			children = (
 				DF6063F0553C53F3B7168FF4 /* AuthViewModelWrapper.swift */,
+				2AB51E3D062E3B9D96899E3A /* CoverLetterViewModelWrapper.swift */,
+				E92A2445FCECB46CBDB6CE1E /* InterviewViewModelWrapper.swift */,
+				48687A3711EA6C709300C285 /* ResumeViewModelWrapper.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -137,7 +130,6 @@
 				91A72D8D7118FC7A10901DF4 /* Sources */,
 				7839B2EDFC1D4CDD3B7E42E5 /* Resources */,
 				5D28CBFF6BAF0519C45F6798 /* Frameworks */,
-				F6A6D41C1EC316C2133D39D3 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -160,7 +152,6 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					7AC8F141666C9C07F32E1E2D = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -175,7 +166,6 @@
 			);
 			mainGroup = 71A83B96EE7652FF7AC1F1B9;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -213,7 +203,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"$SRCROOT/..\"\nif [ \"$CONFIGURATION\" = \"Debug\" ]; then\n  ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --no-daemon\nelse\n  ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon\nfi\n";
+			shellScript = "cd \"$SRCROOT/..\"\nif [ \"$CONFIGURATION\" = \"Debug\" ]; then\n  if [ \"$PLATFORM_NAME\" = \"iphonesimulator\" ]; then\n    ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --no-daemon\n  else\n    ./gradlew :shared:linkDebugFrameworkIosArm64 --no-daemon\n  fi\nelse\n  ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -226,10 +216,14 @@
 				28F55CAC0EA5B300260AFC41 /* AuthViewModelWrapper.swift in Sources */,
 				272CFC352B1BDA211BD0406F /* ContentView.swift in Sources */,
 				AE6EF4B758720F0A00163AE3 /* CoverLetterView.swift in Sources */,
+				EF631B0E73BCC48D8F39A184 /* CoverLetterViewModelWrapper.swift in Sources */,
 				3B14D7A1A4567B63FEE6FE03 /* HomeView.swift in Sources */,
 				6E3D9F16479301607C546EE9 /* InterviewView.swift in Sources */,
+				E2BFD307630E7E9E5C1D8DC1 /* InterviewViewModelWrapper.swift in Sources */,
+				AB82098BB049F447AF4BBDD3 /* OptimizerView.swift in Sources */,
 				BD0830CE063A935AF4D96281 /* ProfileView.swift in Sources */,
 				AA52E3E81814674337D4F74A /* ResumeView.swift in Sources */,
+				DD5C020DBCDF81405A2C7F05 /* ResumeViewModelWrapper.swift in Sources */,
 				17A5949D86D7F4EF99877111 /* VwaTekApplyApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -301,10 +295,14 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited) \"$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework\"",
-					"\"../shared/build/bin/iosSimulatorArm64/debugFramework\"",
+				DEVELOPMENT_TEAM = 65SZ4D8A7Y;
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../shared/build/bin/iosArm64/debugFramework\"",
+				);
+				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
+					"$(inherited)",
+					"\"$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework\"",
 				);
 				INFOPLIST_FILE = iosApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
@@ -313,7 +311,12 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				OTHER_LDFLAGS = "$(inherited) -ObjC";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-framework",
+					shared,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.vwatek.apply;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;
@@ -330,10 +333,10 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 65SZ4D8A7Y;
 				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited) \"$(SRCROOT)/../shared/build/bin/iosArm64/releaseFramework\"",
-					"\"../shared/build/bin/iosSimulatorArm64/debugFramework\"",
+					"$(inherited)",
+					"\"$(SRCROOT)/../shared/build/bin/iosArm64/releaseFramework\"",
 				);
 				INFOPLIST_FILE = iosApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
@@ -342,7 +345,12 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				OTHER_LDFLAGS = "$(inherited) -ObjC";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-framework",
+					shared,
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.vwatek.apply;
 				SDKROOT = iphoneos;
 				SUPPORTS_MACCATALYST = NO;

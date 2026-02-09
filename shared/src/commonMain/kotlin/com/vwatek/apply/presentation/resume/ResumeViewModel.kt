@@ -1,6 +1,7 @@
 package com.vwatek.apply.presentation.resume
 
 import com.vwatek.apply.domain.model.Resume
+import com.vwatek.apply.domain.model.ResumeVersion
 import com.vwatek.apply.domain.model.ResumeAnalysis
 import com.vwatek.apply.domain.model.ATSAnalysis
 import com.vwatek.apply.domain.model.ImpactBullet
@@ -16,6 +17,8 @@ import com.vwatek.apply.domain.usecase.GenerateImpactBulletsUseCase
 import com.vwatek.apply.domain.usecase.AnalyzeGrammarUseCase
 import com.vwatek.apply.domain.usecase.RewriteSectionUseCase
 import com.vwatek.apply.domain.usecase.SectionRewriteResult
+import com.vwatek.apply.domain.usecase.GetResumeVersionsUseCase
+import com.vwatek.apply.domain.usecase.RestoreResumeVersionUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,7 +41,9 @@ class ResumeViewModel(
     private val performATSAnalysisUseCase: PerformATSAnalysisUseCase,
     private val generateImpactBulletsUseCase: GenerateImpactBulletsUseCase,
     private val analyzeGrammarUseCase: AnalyzeGrammarUseCase,
-    private val rewriteSectionUseCase: RewriteSectionUseCase
+    private val rewriteSectionUseCase: RewriteSectionUseCase,
+    private val getResumeVersionsUseCase: GetResumeVersionsUseCase,
+    private val restoreResumeVersionUseCase: RestoreResumeVersionUseCase
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
@@ -66,6 +71,9 @@ class ResumeViewModel(
             is ResumeIntent.GenerateImpactBullets -> generateImpactBullets(intent.experiences, intent.jobContext)
             is ResumeIntent.AnalyzeGrammar -> analyzeGrammar(intent.text)
             is ResumeIntent.RewriteSection -> rewriteSection(intent.sectionType, intent.sectionContent, intent.targetRole, intent.targetIndustry, intent.style)
+            is ResumeIntent.LoadVersionHistory -> loadVersionHistory(intent.resumeId)
+            is ResumeIntent.RestoreVersion -> restoreVersion(intent.resumeId, intent.versionId)
+            is ResumeIntent.ClearVersionHistory -> clearVersionHistory()
             is ResumeIntent.ClearError -> clearError()
             is ResumeIntent.ClearAnalysis -> clearAnalysis()
             is ResumeIntent.ClearOptimizedContent -> clearOptimizedContent()
@@ -279,6 +287,46 @@ class ResumeViewModel(
     private fun clearSectionRewrite() {
         _state.update { it.copy(sectionRewriteResult = null) }
     }
+    
+    private fun loadVersionHistory(resumeId: String) {
+        scope.launch {
+            _state.update { it.copy(isLoadingVersions = true) }
+            try {
+                getResumeVersionsUseCase(resumeId).collect { versions ->
+                    _state.update { it.copy(
+                        versionHistory = versions.sortedByDescending { v -> v.versionNumber },
+                        isLoadingVersions = false
+                    ) }
+                }
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoadingVersions = false, error = e.message) }
+            }
+        }
+    }
+    
+    private fun restoreVersion(resumeId: String, versionId: String) {
+        scope.launch {
+            _state.update { it.copy(isRestoringVersion = true) }
+            restoreResumeVersionUseCase(resumeId, versionId)
+                .onSuccess { resume ->
+                    _state.update { it.copy(
+                        isRestoringVersion = false,
+                        selectedResume = resume,
+                        versionRestoreSuccess = true
+                    ) }
+                    // Refresh resumes and version history
+                    loadResumes()
+                    loadVersionHistory(resumeId)
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(isRestoringVersion = false, error = e.message) }
+                }
+        }
+    }
+    
+    private fun clearVersionHistory() {
+        _state.update { it.copy(versionHistory = emptyList(), versionRestoreSuccess = false) }
+    }
 }
 
 data class ResumeState(
@@ -290,6 +338,7 @@ data class ResumeState(
     val grammarIssues: List<GrammarIssue> = emptyList(),
     val sectionRewriteResult: SectionRewriteResult? = null,
     val optimizedContent: String? = null,
+    val versionHistory: List<ResumeVersion> = emptyList(),
     val isLoading: Boolean = true,
     val isAnalyzing: Boolean = false,
     val isOptimizing: Boolean = false,
@@ -297,6 +346,9 @@ data class ResumeState(
     val isGeneratingBullets: Boolean = false,
     val isAnalyzingGrammar: Boolean = false,
     val isRewritingSection: Boolean = false,
+    val isLoadingVersions: Boolean = false,
+    val isRestoringVersion: Boolean = false,
+    val versionRestoreSuccess: Boolean = false,
     val error: String? = null
 )
 
@@ -320,6 +372,9 @@ sealed class ResumeIntent {
         val targetIndustry: String? = null,
         val style: String = "professional"
     ) : ResumeIntent()
+    data class LoadVersionHistory(val resumeId: String) : ResumeIntent()
+    data class RestoreVersion(val resumeId: String, val versionId: String) : ResumeIntent()
+    data object ClearVersionHistory : ResumeIntent()
     data object ClearError : ResumeIntent()
     data object ClearAnalysis : ResumeIntent()
     data object ClearOptimizedContent : ResumeIntent()

@@ -48,6 +48,15 @@ kotlin {
             
             // Security for encrypted SharedPreferences
             implementation(libs.androidx.security.crypto)
+            
+            // Google Sign-In with Credential Manager
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services)
+            implementation(libs.google.id)
+            implementation(libs.play.services.auth)
+            
+            // Browser Custom Tabs for OAuth
+            implementation(libs.androidx.browser)
         }
     }
 }

@@ -38,10 +38,16 @@ struct AuthView: View {
 // MARK: - Login View
 struct LoginView: View {
     @ObservedObject var viewModel: AuthViewModelWrapper
+    @StateObject private var googleSignInManager = GoogleSignInManager.shared
+    @StateObject private var appleSignInManager = AppleSignInManager.shared
+    @StateObject private var linkedInAuthManager = LinkedInAuthManager.shared
     @State private var email = ""
     @State private var password = ""
     @State private var rememberMe = true
     @State private var showPassword = false
+    @State private var isGoogleSigningIn = false
+    @State private var isAppleSigningIn = false
+    @State private var isLinkedInSigningIn = false
     
     var onSwitchToRegister: () -> Void
     var onForgotPassword: () -> Void
@@ -162,15 +168,89 @@ struct LoginView: View {
                         SocialLoginButton(
                             icon: "apple.logo",
                             title: "Apple",
-                            action: { /* TODO: Apple Sign-In */ }
+                            isLoading: isAppleSigningIn,
+                            action: {
+                                Task {
+                                    isAppleSigningIn = true
+                                    defer { isAppleSigningIn = false }
+                                    
+                                    let result = await appleSignInManager.signIn()
+                                    switch result {
+                                    case .success(let signInResult):
+                                        // Apple only provides name/email on first sign-in
+                                        // For subsequent sign-ins, we might only get the user ID
+                                        let email = signInResult.email ?? "\(signInResult.userId)@privaterelay.appleid.com"
+                                        viewModel.appleSignIn(
+                                            email: email,
+                                            firstName: signInResult.givenName ?? "",
+                                            lastName: signInResult.familyName ?? ""
+                                        )
+                                    case .failure(let error):
+                                        // Check if user cancelled (code -999)
+                                        if (error as NSError).code != -999 {
+                                            print("Apple Sign-In failed: \(error.localizedDescription)")
+                                        }
+                                    }
+                                }
+                            }
                         )
                         
                         SocialLoginButton(
                             icon: "globe",
                             title: "Google",
-                            action: { /* TODO: Google Sign-In */ }
+                            isLoading: isGoogleSigningIn,
+                            action: {
+                                Task {
+                                    isGoogleSigningIn = true
+                                    defer { isGoogleSigningIn = false }
+                                    
+                                    // Get the root view controller for presenting
+                                    guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                                          let rootVC = windowScene.windows.first?.rootViewController else {
+                                        return
+                                    }
+                                    
+                                    let result = await googleSignInManager.signIn(presentingViewController: rootVC)
+                                    switch result {
+                                    case .success(let signInResult):
+                                        viewModel.googleSignIn(
+                                            email: signInResult.email,
+                                            firstName: signInResult.givenName ?? "",
+                                            lastName: signInResult.familyName ?? "",
+                                            profilePicture: signInResult.profilePictureURL
+                                        )
+                                    case .failure(let error):
+                                        // Error is handled by GoogleSignInManager
+                                        print("Google Sign-In failed: \(error.localizedDescription)")
+                                    }
+                                }
+                            }
                         )
                     }
+                    
+                    // LinkedIn button (separate row for better UI)
+                    SocialLoginButton(
+                        icon: "link",
+                        title: "LinkedIn",
+                        isLoading: isLinkedInSigningIn,
+                        action: {
+                            Task {
+                                isLinkedInSigningIn = true
+                                defer { isLinkedInSigningIn = false }
+                                
+                                let result = await linkedInAuthManager.signIn()
+                                switch result {
+                                case .success(let signInResult):
+                                    viewModel.linkedInSignIn(authCode: signInResult.authCode)
+                                case .failure(let error):
+                                    // Check if user cancelled (code -999)
+                                    if (error as NSError).code != -999 {
+                                        print("LinkedIn Sign-In failed: \(error.localizedDescription)")
+                                    }
+                                }
+                            }
+                        }
+                    )
                 }
                 .padding(.horizontal)
                 
@@ -469,12 +549,19 @@ struct ForgotPasswordView: View {
 struct SocialLoginButton: View {
     let icon: String
     let title: String
+    var isLoading: Bool = false
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
             HStack {
-                Image(systemName: icon)
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .scaleEffect(0.8)
+                } else {
+                    Image(systemName: icon)
+                }
                 Text(title)
             }
             .frame(maxWidth: .infinity)
@@ -483,6 +570,7 @@ struct SocialLoginButton: View {
             .cornerRadius(10)
         }
         .foregroundColor(.primary)
+        .disabled(isLoading)
     }
 }
 

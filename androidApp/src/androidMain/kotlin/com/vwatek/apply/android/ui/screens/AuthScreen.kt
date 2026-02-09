@@ -1,5 +1,8 @@
 package com.vwatek.apply.android.ui.screens
 
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -13,15 +16,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.vwatek.apply.android.R
+import com.vwatek.apply.android.auth.GoogleSignInHelper
 import com.vwatek.apply.presentation.auth.AuthIntent
 import com.vwatek.apply.presentation.auth.AuthView
 import com.vwatek.apply.presentation.auth.AuthViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun AuthScreen(viewModel: AuthViewModel) {
@@ -36,6 +45,19 @@ fun AuthScreen(viewModel: AuthViewModel) {
             AuthView.LOGIN -> LoginContent(
                 onLogin = { email, password, remember ->
                     viewModel.onIntent(AuthIntent.Login(email, password, remember))
+                },
+                onGoogleSignIn = { email, firstName, lastName, profilePicture ->
+                    viewModel.onIntent(
+                        AuthIntent.GoogleSignIn(
+                            email = email,
+                            firstName = firstName,
+                            lastName = lastName,
+                            profilePicture = profilePicture
+                        )
+                    )
+                },
+                onLinkedInSignIn = {
+                    viewModel.onIntent(AuthIntent.GetLinkedInAuthUrl)
                 },
                 onSwitchToRegister = {
                     viewModel.onIntent(AuthIntent.SwitchView(AuthView.REGISTER))
@@ -94,6 +116,8 @@ fun AuthScreen(viewModel: AuthViewModel) {
 @Composable
 private fun LoginContent(
     onLogin: (String, String, Boolean) -> Unit,
+    onGoogleSignIn: (String, String, String, String?) -> Unit,
+    onLinkedInSignIn: () -> Unit,
     onSwitchToRegister: () -> Unit,
     onForgotPassword: () -> Unit,
     isLoading: Boolean,
@@ -103,6 +127,11 @@ private fun LoginContent(
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(true) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var googleSignInLoading by remember { mutableStateOf(false) }
+    
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val googleSignInHelper = remember { GoogleSignInHelper(context) }
     
     Column(
         modifier = Modifier
@@ -205,7 +234,7 @@ private fun LoginContent(
         
         Button(
             onClick = { onLogin(email, password, rememberMe) },
-            enabled = !isLoading && email.isNotBlank() && password.isNotBlank(),
+            enabled = !isLoading && !googleSignInLoading && email.isNotBlank() && password.isNotBlank(),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
@@ -217,6 +246,112 @@ private fun LoginContent(
                 )
             } else {
                 Text("Sign In")
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Divider with "or continue with"
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            HorizontalDivider(modifier = Modifier.weight(1f))
+            Text(
+                text = "  or continue with  ",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            HorizontalDivider(modifier = Modifier.weight(1f))
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Google Sign-In Button
+        OutlinedButton(
+            onClick = {
+                googleSignInLoading = true
+                scope.launch {
+                    when (val result = googleSignInHelper.signIn()) {
+                        is GoogleSignInHelper.SignInResult.Success -> {
+                            Log.d("AuthScreen", "Google sign-in success: ${result.email}")
+                            onGoogleSignIn(
+                                result.email,
+                                result.givenName ?: "",
+                                result.familyName ?: "",
+                                result.profilePictureUri
+                            )
+                        }
+                        is GoogleSignInHelper.SignInResult.Error -> {
+                            Log.e("AuthScreen", "Google sign-in error: ${result.message}")
+                        }
+                        GoogleSignInHelper.SignInResult.Cancelled -> {
+                            Log.d("AuthScreen", "Google sign-in cancelled")
+                        }
+                        GoogleSignInHelper.SignInResult.NoCredentials -> {
+                            Log.d("AuthScreen", "No Google credentials available")
+                        }
+                    }
+                    googleSignInLoading = false
+                }
+            },
+            enabled = !isLoading && !googleSignInLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        ) {
+            if (googleSignInLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // Google "G" icon placeholder
+                    Text(
+                        text = "G",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color(0xFF4285F4) // Google Blue
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Continue with Google",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // LinkedIn Sign-In Button
+        OutlinedButton(
+            onClick = onLinkedInSignIn,
+            enabled = !isLoading && !googleSignInLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                // LinkedIn "in" icon placeholder
+                Text(
+                    text = "in",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Color(0xFF0A66C2) // LinkedIn Blue
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Continue with LinkedIn",
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
         }
         

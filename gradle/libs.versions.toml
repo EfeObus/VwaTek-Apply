@@ -16,8 +16,12 @@ androidx-lifecycle = "2.8.7"
 security-crypto = "1.1.0-alpha06"
 logback = "1.4.14"
 hikari = "5.1.0"
-mysql = "8.0.33"
+mysql = "9.1.0"
 exposed = "0.45.0"
+credential-manager = "1.3.0"
+google-id = "1.1.1"
+play-services-auth = "21.0.0"
+browser = "1.8.0"
 
 [libraries]
 # Kotlin
@@ -50,7 +54,7 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 
 # Database
 hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
-mysql-connector = { module = "mysql:mysql-connector-java", version.ref = "mysql" }
+mysql-connector = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
@@ -75,6 +79,11 @@ androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmode
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "security-crypto" }
 androidx-compose-material3-windowsize = { module = "androidx.compose.material3:material3-window-size-class", version = "1.2.1" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credential-manager" }
+androidx-credentials-play-services = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credential-manager" }
+google-id = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "google-id" }
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "play-services-auth" }
+androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
 
 # Testing
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }

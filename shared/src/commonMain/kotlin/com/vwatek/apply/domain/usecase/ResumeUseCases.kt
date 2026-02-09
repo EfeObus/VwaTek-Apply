@@ -376,9 +376,10 @@ class RewriteSectionUseCase(
     }
 }
 
+@kotlinx.serialization.Serializable
 data class SectionRewriteResult(
     val rewrittenContent: String,
-    val changes: List<String>,
-    val keywords: List<String>,
-    val tips: List<String>
+    val changes: List<String> = emptyList(),
+    val keywords: List<String> = emptyList(),
+    val tips: List<String> = emptyList()
 )

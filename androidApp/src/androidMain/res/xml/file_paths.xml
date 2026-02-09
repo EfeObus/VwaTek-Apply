@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- For sharing PDF files -->
+    <external-files-path
+        name="resumes"
+        path="Documents/resumes/" />
+    
+    <!-- For other document sharing -->
+    <external-files-path
+        name="documents"
+        path="Documents/" />
+    
+    <!-- Cache directory for temporary files -->
+    <cache-path
+        name="cache"
+        path="/" />
+</paths>

@@ -1,20 +1,75 @@
 package com.vwatek.apply.ui.screens
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import com.vwatek.apply.presentation.resume.ResumeViewModel
+import com.vwatek.apply.presentation.coverletter.CoverLetterViewModel
+import com.vwatek.apply.presentation.interview.InterviewViewModel
 import org.jetbrains.compose.web.dom.*
+import org.koin.core.context.GlobalContext
 
 @Composable
 fun DashboardScreen(
     onNavigateToResumes: () -> Unit,
     onNavigateToCoverLetters: () -> Unit,
-    onNavigateToInterview: () -> Unit
+    onNavigateToInterview: () -> Unit,
+    onNavigateToOptimizer: () -> Unit = {}
 ) {
+    val resumeViewModel = remember { GlobalContext.get().get<ResumeViewModel>() }
+    val coverLetterViewModel = remember { GlobalContext.get().get<CoverLetterViewModel>() }
+    val interviewViewModel = remember { GlobalContext.get().get<InterviewViewModel>() }
+    
+    val resumeState by resumeViewModel.state.collectAsState()
+    val coverLetterState by coverLetterViewModel.state.collectAsState()
+    val interviewState by interviewViewModel.state.collectAsState()
+    
     Div {
         // Header
         Div(attrs = { classes("mb-lg") }) {
             H1 { Text("Welcome to VwaTek Apply") }
             P(attrs = { classes("text-secondary") }) {
                 Text("Your AI-powered career suite. Transform your job hunt into a data-driven strategy.")
+            }
+        }
+        
+        // Getting Started Section
+        Div(attrs = { classes("card", "mb-lg") }) {
+            H3(attrs = { classes("card-title", "mb-md") }) { Text("Getting Started") }
+            
+            Div(attrs = { classes("getting-started-list") }) {
+                GettingStartedCard(
+                    stepNumber = 1,
+                    title = "Create or Upload Your Resume",
+                    description = "Start by creating a professional resume or uploading an existing one.",
+                    isCompleted = resumeState.resumes.isNotEmpty(),
+                    onClick = onNavigateToResumes
+                )
+                
+                GettingStartedCard(
+                    stepNumber = 2,
+                    title = "Optimize for ATS",
+                    description = "Use the Optimizer to check ATS compatibility and rewrite sections.",
+                    isCompleted = false,
+                    onClick = onNavigateToOptimizer
+                )
+                
+                GettingStartedCard(
+                    stepNumber = 3,
+                    title = "Generate Cover Letters",
+                    description = "Use AI to generate tailored cover letters for specific job postings.",
+                    isCompleted = coverLetterState.coverLetters.isNotEmpty(),
+                    onClick = onNavigateToCoverLetters
+                )
+                
+                GettingStartedCard(
+                    stepNumber = 4,
+                    title = "Practice Interviews",
+                    description = "Prepare for interviews with AI-powered mock interview sessions.",
+                    isCompleted = interviewState.sessions.isNotEmpty(),
+                    onClick = onNavigateToInterview
+                )
             }
         }
         
@@ -127,6 +182,74 @@ private fun FeatureItem(title: String, description: String) {
             P(attrs = { classes("text-secondary", "text-sm") }) {
                 Text(description)
             }
+        }
+    }
+}
+
+@Composable
+private fun GettingStartedCard(
+    stepNumber: Int,
+    title: String,
+    description: String,
+    isCompleted: Boolean,
+    onClick: () -> Unit
+) {
+    Div(attrs = {
+        classes("getting-started-card")
+        onClick { onClick() }
+        style {
+            property("display", "flex")
+            property("align-items", "center")
+            property("gap", "var(--spacing-md)")
+            property("padding", "var(--spacing-md)")
+            property("background", "var(--color-surface-variant)")
+            property("border-radius", "var(--radius-md)")
+            property("cursor", "pointer")
+            property("transition", "var(--transition-normal)")
+            property("margin-bottom", "var(--spacing-sm)")
+        }
+    }) {
+        // Step number circle
+        Div(attrs = {
+            style {
+                property("width", "36px")
+                property("height", "36px")
+                property("border-radius", "50%")
+                property("background", if (isCompleted) "var(--color-success)" else "var(--color-primary)")
+                property("color", "white")
+                property("display", "flex")
+                property("align-items", "center")
+                property("justify-content", "center")
+                property("font-weight", "600")
+                property("flex-shrink", "0")
+            }
+        }) {
+            if (isCompleted) {
+                Text("✓")
+            } else {
+                Text("$stepNumber")
+            }
+        }
+        
+        // Content
+        Div(attrs = { style { property("flex", "1") } }) {
+            H4(attrs = {
+                style {
+                    property("font-size", "var(--font-size-md)")
+                    property("margin-bottom", "var(--spacing-xs)")
+                }
+            }) { Text(title) }
+            P(attrs = { classes("text-secondary", "text-sm") }) {
+                Text(description)
+            }
+        }
+        
+        // Chevron
+        Span(attrs = {
+            classes("text-secondary")
+            style { property("font-size", "1.2rem") }
+        }) {
+            Text("›")
         }
     }
 }

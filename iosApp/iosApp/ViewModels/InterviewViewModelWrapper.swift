@@ -11,9 +11,11 @@ class InterviewViewModelWrapper: ObservableObject {
     @Published var currentSession: InterviewSession? = nil
     @Published var currentQuestionIndex: Int = 0
     @Published var lastFeedback: String? = nil
+    @Published var starResponse: StarResponse? = nil
     @Published var isLoading: Bool = true
     @Published var isStartingSession: Bool = false
     @Published var isSubmittingAnswer: Bool = false
+    @Published var isGettingStarCoaching: Bool = false
     @Published var error: String? = nil
     
     private var stateWatcher: Closeable?
@@ -37,9 +39,11 @@ class InterviewViewModelWrapper: ObservableObject {
                 self.currentSession = interviewState.currentSession
                 self.currentQuestionIndex = Int(interviewState.currentQuestionIndex)
                 self.lastFeedback = interviewState.lastFeedback
+                self.starResponse = interviewState.starResponse
                 self.isLoading = interviewState.isLoading
                 self.isStartingSession = interviewState.isStartingSession
                 self.isSubmittingAnswer = interviewState.isSubmittingAnswer
+                self.isGettingStarCoaching = interviewState.isGettingStarCoaching
                 self.error = interviewState.error
             }
         }
@@ -83,6 +87,14 @@ class InterviewViewModelWrapper: ObservableObject {
     
     func clearError() {
         viewModel.onIntent(intent: InterviewIntent.ClearError.shared)
+    }
+    
+    func getStarCoaching(experience: String, jobContext: String) {
+        viewModel.onIntent(intent: InterviewIntent.GetStarCoaching(experience: experience, jobContext: jobContext))
+    }
+    
+    func clearStarResponse() {
+        viewModel.onIntent(intent: InterviewIntent.ClearStarResponse.shared)
     }
     
     var currentQuestion: InterviewQuestion? {

@@ -8,6 +8,7 @@ import com.vwatek.apply.domain.model.InterviewQuestion
 import com.vwatek.apply.domain.model.InterviewStatus
 import com.vwatek.apply.domain.repository.SettingsRepository
 import com.vwatek.apply.domain.usecase.StarResponse
+import com.vwatek.apply.domain.usecase.SectionRewriteResult
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
@@ -805,13 +806,7 @@ data class GrammarResult(
     val type: String
 )
 
-@Serializable
-data class SectionRewriteResult(
-    val rewrittenContent: String,
-    val changes: List<String> = emptyList(),
-    val keywords: List<String> = emptyList(),
-    val tips: List<String> = emptyList()
-)
+// Note: SectionRewriteResult is imported from domain.usecase
 
 // OpenAI API data classes for fallback
 @Serializable

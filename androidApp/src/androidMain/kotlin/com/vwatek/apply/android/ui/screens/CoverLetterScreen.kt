@@ -1,5 +1,8 @@
 package com.vwatek.apply.android.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -10,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vwatek.apply.domain.model.CoverLetter
@@ -18,6 +22,7 @@ import com.vwatek.apply.domain.model.Resume
 import com.vwatek.apply.presentation.coverletter.CoverLetterIntent
 import com.vwatek.apply.presentation.coverletter.CoverLetterViewModel
 import com.vwatek.apply.presentation.resume.ResumeViewModel
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -502,77 +507,97 @@ private fun CoverLetterDetailSheet(
     coverLetter: CoverLetter,
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp)
-        ) {
-            Text(
-                text = "${coverLetter.jobTitle} at ${coverLetter.companyName}",
-                style = MaterialTheme.typography.headlineSmall
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AssistChip(
-                    onClick = { },
-                    label = { Text(coverLetter.tone.name.lowercase().replaceFirstChar { it.uppercase() }) }
-                )
-                Text(
-                    text = "Created ${coverLetter.createdAt.toString().take(10)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(24.dp)
             ) {
                 Text(
-                    text = coverLetter.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(16.dp)
+                    text = "${coverLetter.jobTitle} at ${coverLetter.companyName}",
+                    style = MaterialTheme.typography.headlineSmall
                 )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { /* Copy to clipboard */ },
-                    modifier = Modifier.weight(1f)
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Share, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Copy")
+                    AssistChip(
+                        onClick = { },
+                        label = { Text(coverLetter.tone.name.lowercase().replaceFirstChar { it.uppercase() }) }
+                    )
+                    Text(
+                        text = "Created ${coverLetter.createdAt.toString().take(10)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.align(Alignment.CenterVertically)
+                    )
                 }
                 
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f)
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 ) {
-                    Text("Done")
+                    Text(
+                        text = coverLetter.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(16.dp)
+                    )
                 }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("Cover Letter", coverLetter.content)
+                            clipboardManager.setPrimaryClip(clip)
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Copied to clipboard")
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Copy")
+                    }
+                    
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Done")
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(32.dp))
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 80.dp)
+            )
         }
     }
 }

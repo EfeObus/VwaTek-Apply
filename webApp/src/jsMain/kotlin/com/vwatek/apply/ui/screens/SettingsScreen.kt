@@ -24,7 +24,17 @@ fun SettingsScreen() {
     var savedMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     
-    // Load existing API keys
+    // Notification preferences
+    var emailNotifications by remember { mutableStateOf(true) }
+    var pushNotifications by remember { mutableStateOf(true) }
+    var weeklyDigest by remember { mutableStateOf(false) }
+    var interviewReminders by remember { mutableStateOf(true) }
+    
+    // Appearance preferences
+    var darkMode by remember { mutableStateOf(false) }
+    var compactMode by remember { mutableStateOf(false) }
+    
+    // Load existing settings
     LaunchedEffect(Unit) {
         val existingGeminiKey = settingsRepository.getSetting("gemini_api_key")
         val existingOpenAiKey = settingsRepository.getSetting("openai_api_key")
@@ -34,6 +44,22 @@ fun SettingsScreen() {
         if (existingOpenAiKey != null) {
             openAiApiKey = existingOpenAiKey
         }
+        
+        // Load notification preferences
+        emailNotifications = settingsRepository.getSetting("email_notifications") != "false"
+        pushNotifications = settingsRepository.getSetting("push_notifications") != "false"
+        weeklyDigest = settingsRepository.getSetting("weekly_digest") == "true"
+        interviewReminders = settingsRepository.getSetting("interview_reminders") != "false"
+        
+        // Load appearance preferences
+        darkMode = settingsRepository.getSetting("dark_mode") == "true"
+        compactMode = settingsRepository.getSetting("compact_mode") == "true"
+        
+        // Apply dark mode if enabled
+        if (darkMode) {
+            kotlinx.browser.document.documentElement?.classList?.add("dark-mode")
+        }
+        
         isLoading = false
     }
     
@@ -136,6 +162,118 @@ fun SettingsScreen() {
             }
         }
         
+        // Notifications Card
+        Div(attrs = { classes("card", "mb-lg") }) {
+            H3(attrs = { classes("card-title", "mb-md") }) { Text("Notifications") }
+            
+            P(attrs = { classes("text-secondary", "mb-lg") }) {
+                Text("Configure how and when you receive notifications about your job applications.")
+            }
+            
+            Div(attrs = { classes("settings-toggles") }) {
+                // Email Notifications
+                SettingsToggle(
+                    label = "Email Notifications",
+                    description = "Receive important updates via email",
+                    checked = emailNotifications,
+                    onToggle = { checked ->
+                        emailNotifications = checked
+                        scope.launch {
+                            settingsRepository.setSetting("email_notifications", checked.toString())
+                        }
+                    }
+                )
+                
+                // Push Notifications
+                SettingsToggle(
+                    label = "Push Notifications",
+                    description = "Browser push notifications for real-time alerts",
+                    checked = pushNotifications,
+                    onToggle = { checked ->
+                        pushNotifications = checked
+                        scope.launch {
+                            settingsRepository.setSetting("push_notifications", checked.toString())
+                        }
+                    }
+                )
+                
+                // Weekly Digest
+                SettingsToggle(
+                    label = "Weekly Digest",
+                    description = "Receive a weekly summary of your activity",
+                    checked = weeklyDigest,
+                    onToggle = { checked ->
+                        weeklyDigest = checked
+                        scope.launch {
+                            settingsRepository.setSetting("weekly_digest", checked.toString())
+                        }
+                    }
+                )
+                
+                // Interview Reminders
+                SettingsToggle(
+                    label = "Interview Reminders",
+                    description = "Get reminded before scheduled interviews",
+                    checked = interviewReminders,
+                    onToggle = { checked ->
+                        interviewReminders = checked
+                        scope.launch {
+                            settingsRepository.setSetting("interview_reminders", checked.toString())
+                        }
+                    }
+                )
+            }
+        }
+        
+        // Appearance Card
+        Div(attrs = { classes("card", "mb-lg") }) {
+            H3(attrs = { classes("card-title", "mb-md") }) { Text("Appearance") }
+            
+            P(attrs = { classes("text-secondary", "mb-lg") }) {
+                Text("Customize the look and feel of the application.")
+            }
+            
+            Div(attrs = { classes("settings-toggles") }) {
+                // Dark Mode
+                SettingsToggle(
+                    label = "Dark Mode",
+                    description = "Use dark color theme for reduced eye strain",
+                    checked = darkMode,
+                    onToggle = { checked ->
+                        darkMode = checked
+                        scope.launch {
+                            settingsRepository.setSetting("dark_mode", checked.toString())
+                        }
+                        // Apply or remove dark mode class
+                        if (checked) {
+                            kotlinx.browser.document.documentElement?.classList?.add("dark-mode")
+                        } else {
+                            kotlinx.browser.document.documentElement?.classList?.remove("dark-mode")
+                        }
+                    }
+                )
+                
+                // Compact Mode
+                SettingsToggle(
+                    label = "Compact Mode",
+                    description = "Reduce spacing for more content on screen",
+                    checked = compactMode,
+                    onToggle = { checked ->
+                        compactMode = checked
+                        scope.launch {
+                            settingsRepository.setSetting("compact_mode", checked.toString())
+                        }
+                        // Apply or remove compact mode class
+                        if (checked) {
+                            kotlinx.browser.document.documentElement?.classList?.add("compact-mode")
+                        } else {
+                            kotlinx.browser.document.documentElement?.classList?.remove("compact-mode")
+                        }
+                    }
+                )
+            }
+        }
+        
         // About Card
         Div(attrs = { classes("card", "mb-lg") }) {
             H3(attrs = { classes("card-title", "mb-md") }) { Text("About VwaTek Apply") }
@@ -212,6 +350,86 @@ fun SettingsScreen() {
                 P(attrs = { classes("text-secondary", "text-sm") }) {
                     Text("VwaTek Apply does not require account creation. You maintain full control over your data at all times.")
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsToggle(
+    label: String,
+    description: String,
+    checked: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    Div(attrs = { 
+        classes("settings-toggle-item")
+        style {
+            property("display", "flex")
+            property("justify-content", "space-between")
+            property("align-items", "flex-start")
+            property("padding", "var(--spacing-md) 0")
+            property("border-bottom", "1px solid var(--border-color)")
+        }
+    }) {
+        Div(attrs = { style { property("flex", "1") } }) {
+            Label(attrs = { 
+                classes("form-label")
+                style { property("margin-bottom", "var(--spacing-xs)") }
+            }) { 
+                Text(label) 
+            }
+            P(attrs = { classes("text-secondary", "text-sm") }) {
+                Text(description)
+            }
+        }
+        
+        Label(attrs = {
+            classes("toggle-switch")
+            style {
+                property("position", "relative")
+                property("display", "inline-block")
+                property("width", "50px")
+                property("height", "26px")
+                property("margin-left", "var(--spacing-md)")
+            }
+        }) {
+            Input(InputType.Checkbox) {
+                checked(checked)
+                onInput { onToggle(it.value) }
+                style {
+                    property("opacity", "0")
+                    property("width", "0")
+                    property("height", "0")
+                }
+            }
+            Span(attrs = {
+                classes("toggle-slider")
+                style {
+                    property("position", "absolute")
+                    property("cursor", "pointer")
+                    property("top", "0")
+                    property("left", "0")
+                    property("right", "0")
+                    property("bottom", "0")
+                    property("background-color", if (checked) "var(--primary-color)" else "#ccc")
+                    property("transition", "0.3s")
+                    property("border-radius", "26px")
+                }
+            }) {
+                Span(attrs = {
+                    style {
+                        property("position", "absolute")
+                        property("content", "")
+                        property("height", "20px")
+                        property("width", "20px")
+                        property("left", if (checked) "27px" else "3px")
+                        property("bottom", "3px")
+                        property("background-color", "white")
+                        property("transition", "0.3s")
+                        property("border-radius", "50%")
+                    }
+                })
             }
         }
     }

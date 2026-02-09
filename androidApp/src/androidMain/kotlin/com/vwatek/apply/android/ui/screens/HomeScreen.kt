@@ -2,12 +2,15 @@ package com.vwatek.apply.android.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -98,6 +101,53 @@ fun HomeScreen(
                     title = "Interviews",
                     value = "${interviewState.sessions.size}",
                     modifier = Modifier.weight(1f),
+                    onClick = onNavigateToInterview
+                )
+            }
+        }
+        
+        // Getting Started Section
+        item {
+            Text(
+                text = "Getting Started",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+        
+        item {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                GettingStartedCard(
+                    stepNumber = 1,
+                    title = "Create or Upload Your Resume",
+                    description = "Start by creating a professional resume or uploading an existing one.",
+                    isCompleted = resumeState.resumes.isNotEmpty(),
+                    onClick = onNavigateToResume
+                )
+                
+                GettingStartedCard(
+                    stepNumber = 2,
+                    title = "Optimize for ATS",
+                    description = "Use the Optimizer to check ATS compatibility and rewrite sections.",
+                    isCompleted = false, // Could track via settings/state
+                    onClick = onNavigateToOptimizer
+                )
+                
+                GettingStartedCard(
+                    stepNumber = 3,
+                    title = "Generate Cover Letters",
+                    description = "Use AI to generate tailored cover letters for specific job postings.",
+                    isCompleted = coverLetterState.coverLetters.isNotEmpty(),
+                    onClick = onNavigateToCoverLetter
+                )
+                
+                GettingStartedCard(
+                    stepNumber = 4,
+                    title = "Practice Interviews",
+                    description = "Prepare for interviews with AI-powered mock interview sessions.",
+                    isCompleted = interviewState.sessions.isNotEmpty(),
                     onClick = onNavigateToInterview
                 )
             }
@@ -264,6 +314,75 @@ private fun QuickActionCard(
             
             Icon(
                 Icons.Default.Add,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GettingStartedCard(
+    stepNumber: Int,
+    title: String,
+    description: String,
+    isCompleted: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Step number circle
+            Surface(
+                shape = CircleShape,
+                color = if (isCompleted) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    if (isCompleted) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = "Completed",
+                            tint = MaterialTheme.colorScheme.onTertiary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "$stepNumber",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            Icon(
+                Icons.Default.KeyboardArrowRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )

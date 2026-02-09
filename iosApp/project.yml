@@ -7,6 +7,11 @@ options:
   createIntermediateGroups: true
   groupSortPosition: bottom
 
+packages:
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    minorVersion: "8.0.0"
+
 configs:
   Debug: debug
   Release: release
@@ -39,12 +44,21 @@ targets:
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
         SUPPORTS_MACCATALYST: NO
-        OTHER_LDFLAGS: $(inherited) -ObjC
-        FRAMEWORK_SEARCH_PATHS: $(inherited) "$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework"
+        OTHER_LDFLAGS: $(inherited) -ObjC -framework shared
+    entitlements:
+      path: iosApp/iosApp.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
+    attributes:
+      SystemCapabilities:
+        com.apple.SignInWithApple:
+          enabled: 1
       configs:
         Debug:
           SWIFT_OPTIMIZATION_LEVEL: -Onone
-          FRAMEWORK_SEARCH_PATHS: $(inherited) "$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework"
+          FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]: $(inherited) "$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework"
+          FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]: $(inherited) "$(SRCROOT)/../shared/build/bin/iosArm64/debugFramework"
         Release:
           SWIFT_OPTIMIZATION_LEVEL: -O
           FRAMEWORK_SEARCH_PATHS: $(inherited) "$(SRCROOT)/../shared/build/bin/iosArm64/releaseFramework"
@@ -53,16 +67,18 @@ targets:
         script: |
           cd "$SRCROOT/.."
           if [ "$CONFIGURATION" = "Debug" ]; then
-            ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --no-daemon
+            if [ "$PLATFORM_NAME" = "iphonesimulator" ]; then
+              ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64 --no-daemon
+            else
+              ./gradlew :shared:linkDebugFrameworkIosArm64 --no-daemon
+            fi
           else
             ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
           fi
         basedOnDependencyAnalysis: false
     dependencies:
-      - framework: ../shared/build/bin/iosSimulatorArm64/debugFramework/shared.framework
-        embed: true
-        link: true
       - sdk: libsqlite3.tbd
+      - package: GoogleSignIn
 
 schemes:
   iosApp:
