@@ -3,10 +3,14 @@ package com.vwatek.apply.android.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
@@ -29,15 +33,15 @@ enum class NavigationItem(
 ) {
     Home("home", "Home", Icons.Filled.Home, Icons.Outlined.Home),
     Resume("resume", "Resumes", Icons.Filled.Menu, Icons.Outlined.Menu),
+    Optimizer("optimizer", "Optimizer", Icons.Filled.Edit, Icons.Outlined.Edit),
+    CoverLetter("coverletter", "Letters", Icons.Filled.Email, Icons.Outlined.Email),
     Interview("interview", "Interview", Icons.Filled.Person, Icons.Outlined.Person),
     Profile("profile", "Profile", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle)
 }
 
-// Internal navigation destinations
+// Internal navigation destinations (for sub-screens only)
 sealed class AppDestination {
     data object Main : AppDestination()
-    data object Optimizer : AppDestination()
-    data object CoverLetter : AppDestination()
     data object ResumeUpload : AppDestination()
 }
 
@@ -56,16 +60,6 @@ fun VwaTekApp(windowSizeClass: WindowSizeClass) {
     } else {
         // Handle internal navigation
         when (currentDestination) {
-            is AppDestination.Optimizer -> {
-                OptimizerScreen(
-                    onNavigateBack = { currentDestination = AppDestination.Main }
-                )
-            }
-            is AppDestination.CoverLetter -> {
-                CoverLetterScreen(
-                    onNavigateBack = { currentDestination = AppDestination.Main }
-                )
-            }
             is AppDestination.ResumeUpload -> {
                 // Navigate back to main and switch to Resume tab
                 currentDestination = AppDestination.Main
@@ -80,22 +74,14 @@ fun VwaTekApp(windowSizeClass: WindowSizeClass) {
                         selectedItem = selectedItem,
                         onItemSelected = { selectedItem = it },
                         authViewModel = authViewModel,
-                        authState = authState,
-                        onNavigateToOptimizer = { currentDestination = AppDestination.Optimizer },
-                        onNavigateToCoverLetter = { currentDestination = AppDestination.CoverLetter },
-                        onNavigateToInterview = { selectedItem = NavigationItem.Interview },
-                        onNavigateToResume = { selectedItem = NavigationItem.Resume }
+                        authState = authState
                     )
                 } else {
                     PhoneLayout(
                         selectedItem = selectedItem,
                         onItemSelected = { selectedItem = it },
                         authViewModel = authViewModel,
-                        authState = authState,
-                        onNavigateToOptimizer = { currentDestination = AppDestination.Optimizer },
-                        onNavigateToCoverLetter = { currentDestination = AppDestination.CoverLetter },
-                        onNavigateToInterview = { selectedItem = NavigationItem.Interview },
-                        onNavigateToResume = { selectedItem = NavigationItem.Resume }
+                        authState = authState
                     )
                 }
             }
@@ -108,11 +94,7 @@ private fun PhoneLayout(
     selectedItem: NavigationItem,
     onItemSelected: (NavigationItem) -> Unit,
     authViewModel: AuthViewModel,
-    authState: com.vwatek.apply.presentation.auth.AuthViewState,
-    onNavigateToOptimizer: () -> Unit,
-    onNavigateToCoverLetter: () -> Unit,
-    onNavigateToInterview: () -> Unit,
-    onNavigateToResume: () -> Unit
+    authState: com.vwatek.apply.presentation.auth.AuthViewState
 ) {
     Scaffold(
         bottomBar = {
@@ -138,10 +120,7 @@ private fun PhoneLayout(
                 selectedItem = selectedItem,
                 authViewModel = authViewModel,
                 authState = authState,
-                onNavigateToOptimizer = onNavigateToOptimizer,
-                onNavigateToCoverLetter = onNavigateToCoverLetter,
-                onNavigateToInterview = onNavigateToInterview,
-                onNavigateToResume = onNavigateToResume
+                onNavigateToItem = onItemSelected
             )
         }
     }
@@ -152,11 +131,7 @@ private fun TabletLayout(
     selectedItem: NavigationItem,
     onItemSelected: (NavigationItem) -> Unit,
     authViewModel: AuthViewModel,
-    authState: com.vwatek.apply.presentation.auth.AuthViewState,
-    onNavigateToOptimizer: () -> Unit,
-    onNavigateToCoverLetter: () -> Unit,
-    onNavigateToInterview: () -> Unit,
-    onNavigateToResume: () -> Unit
+    authState: com.vwatek.apply.presentation.auth.AuthViewState
 ) {
     Row(modifier = Modifier.fillMaxSize()) {
         NavigationRail {
@@ -182,10 +157,7 @@ private fun TabletLayout(
                 selectedItem = selectedItem,
                 authViewModel = authViewModel,
                 authState = authState,
-                onNavigateToOptimizer = onNavigateToOptimizer,
-                onNavigateToCoverLetter = onNavigateToCoverLetter,
-                onNavigateToInterview = onNavigateToInterview,
-                onNavigateToResume = onNavigateToResume
+                onNavigateToItem = onItemSelected
             )
         }
     }
@@ -196,19 +168,18 @@ private fun ScreenContent(
     selectedItem: NavigationItem,
     authViewModel: AuthViewModel,
     authState: com.vwatek.apply.presentation.auth.AuthViewState,
-    onNavigateToOptimizer: () -> Unit,
-    onNavigateToCoverLetter: () -> Unit,
-    onNavigateToInterview: () -> Unit,
-    onNavigateToResume: () -> Unit
+    onNavigateToItem: (NavigationItem) -> Unit
 ) {
     when (selectedItem) {
         NavigationItem.Home -> HomeScreen(
-            onNavigateToOptimizer = onNavigateToOptimizer,
-            onNavigateToCoverLetter = onNavigateToCoverLetter,
-            onNavigateToInterview = onNavigateToInterview,
-            onNavigateToResume = onNavigateToResume
+            onNavigateToOptimizer = { onNavigateToItem(NavigationItem.Optimizer) },
+            onNavigateToCoverLetter = { onNavigateToItem(NavigationItem.CoverLetter) },
+            onNavigateToInterview = { onNavigateToItem(NavigationItem.Interview) },
+            onNavigateToResume = { onNavigateToItem(NavigationItem.Resume) }
         )
         NavigationItem.Resume -> ResumeScreen()
+        NavigationItem.Optimizer -> OptimizerScreen()
+        NavigationItem.CoverLetter -> CoverLetterScreen()
         NavigationItem.Interview -> InterviewScreen()
         NavigationItem.Profile -> ProfileScreen(authViewModel, authState)
     }

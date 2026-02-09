@@ -17,9 +17,7 @@ import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun OptimizerScreen(
-    onNavigateBack: () -> Unit
-) {
+fun OptimizerScreen() {
     val viewModel: ResumeViewModel = koinInject()
     val state by viewModel.state.collectAsState()
     
@@ -41,12 +39,7 @@ fun OptimizerScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Resume Optimizer") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                }
+                title = { Text("Resume Optimizer") }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }

@@ -22,9 +22,7 @@ import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CoverLetterScreen(
-    onNavigateBack: () -> Unit
-) {
+fun CoverLetterScreen() {
     val coverLetterViewModel: CoverLetterViewModel = koinInject()
     val resumeViewModel: ResumeViewModel = koinInject()
     
@@ -38,11 +36,6 @@ fun CoverLetterScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Cover Letters") },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
                 actions = {
                     IconButton(onClick = { showGenerateSheet = true }) {
                         Icon(Icons.Default.Add, contentDescription = "Generate new")
@@ -98,11 +91,31 @@ fun CoverLetterScreen(
         }
     }
     
+    // Watch for successful generation and close sheet
+    LaunchedEffect(coverLetterState.generatedCoverLetter) {
+        if (coverLetterState.generatedCoverLetter != null) {
+            showGenerateSheet = false
+            // Clear the generated state after showing
+            coverLetterViewModel.onIntent(CoverLetterIntent.ClearGenerated)
+        }
+    }
+    
+    // Watch for error during generation
+    LaunchedEffect(coverLetterState.error) {
+        if (coverLetterState.error != null && coverLetterState.isGenerating.not()) {
+            // Keep sheet open on error so user can see the error and retry
+        }
+    }
+    
     if (showGenerateSheet) {
         GenerateCoverLetterSheet(
             resumes = resumeState.resumes,
             isGenerating = coverLetterState.isGenerating,
-            onDismiss = { showGenerateSheet = false },
+            error = coverLetterState.error,
+            onDismiss = { 
+                showGenerateSheet = false
+                coverLetterViewModel.onIntent(CoverLetterIntent.ClearError)
+            },
             onGenerate = { resumeContent, jobTitle, companyName, jobDescription, tone ->
                 coverLetterViewModel.onIntent(
                     CoverLetterIntent.GenerateCoverLetter(
@@ -113,6 +126,7 @@ fun CoverLetterScreen(
                         tone = tone
                     )
                 )
+                // Don't dismiss here - wait for generation to complete
             }
         )
     }
@@ -303,6 +317,7 @@ private fun CoverLetterCard(
 private fun GenerateCoverLetterSheet(
     resumes: List<Resume>,
     isGenerating: Boolean,
+    error: String?,
     onDismiss: () -> Unit,
     onGenerate: (resumeContent: String, jobTitle: String, companyName: String, jobDescription: String, tone: CoverLetterTone) -> Unit
 ) {
@@ -424,6 +439,34 @@ private fun GenerateCoverLetterSheet(
             
             Spacer(modifier = Modifier.height(8.dp))
             
+            // Show error if any
+            error?.let { errorMessage ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
             Button(
                 onClick = {
                     onGenerate(
@@ -433,7 +476,7 @@ private fun GenerateCoverLetterSheet(
                         jobDescription,
                         selectedTone
                     )
-                    onDismiss()
+                    // Don't dismiss - wait for generation to complete
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = jobTitle.isNotBlank() && companyName.isNotBlank() && !isGenerating
