@@ -279,7 +279,7 @@ Currently, all features are available to all users. Premium tiers may be introdu
 
 ### How do I contact support?
 
-- **Email:** support@vwatekapply.com
+- **Email:** support@vwatek.com
 - **GitHub:** Open an issue or discussion
 - **Response time:** Within 48 hours
 

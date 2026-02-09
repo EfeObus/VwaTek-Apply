@@ -15,7 +15,7 @@ First off, thank you for considering contributing to VwaTek Apply! It's people l
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by our Code of Conduct. By participating, you are expected to uphold this code. Please report unacceptable behavior to [conduct@vwatekapply.com](mailto:conduct@vwatekapply.com).
+This project and everyone participating in it is governed by our Code of Conduct. By participating, you are expected to uphold this code. Please report unacceptable behavior to [conduct@vwatek.com](mailto:conduct@vwatek.com).
 
 ### Our Pledge
 
@@ -528,7 +528,7 @@ If you have questions about contributing:
 1. Check the [FAQ](docs/FAQ.md)
 2. Search existing issues
 3. Open a new discussion on GitHub
-4. Reach out to maintainers at [dev@vwatekapply.com](mailto:dev@vwatekapply.com)
+4. Reach out to maintainers at [dev@vwatek.com](mailto:dev@vwatek.com)
 
 ---
 

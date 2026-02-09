@@ -498,7 +498,7 @@ struct HelpCenterSheet: View {
                             .font(.headline)
                         
                         Button(action: {
-                            if let url = URL(string: "https://vwatekapply.com/help") {
+                            if let url = URL(string: "https://vwatek.com/help") {
                                 UIApplication.shared.open(url)
                             }
                         }) {
@@ -515,7 +515,7 @@ struct HelpCenterSheet: View {
                         }
                         
                         Button(action: {
-                            if let url = URL(string: "mailto:support@vwatekapply.com") {
+                            if let url = URL(string: "mailto:support@vwatek.com") {
                                 UIApplication.shared.open(url)
                             }
                         }) {
@@ -675,7 +675,7 @@ struct FeedbackSheet: View {
         Device: \(UIDevice.current.model)
         """
         
-if let url = URL(string: "mailto:support@vwatekapply.com?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ")") {
+        if let url = URL(string: "mailto:support@vwatek.com?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
             UIApplication.shared.open(url)
         }
         dismiss()
@@ -733,7 +733,7 @@ struct AboutSheet: View {
                             title: "Visit Website",
                             color: .blue
                         ) {
-                            if let url = URL(string: "https://vwatekapply.com") {
+                            if let url = URL(string: "https://vwatek.com") {
                                 UIApplication.shared.open(url)
                             }
                         }
@@ -743,7 +743,7 @@ struct AboutSheet: View {
                             title: "Privacy Policy",
                             color: .green
                         ) {
-                            if let url = URL(string: "https://vwatekapply.com/privacy") {
+                            if let url = URL(string: "https://vwatek.com/privacy") {
                                 UIApplication.shared.open(url)
                             }
                         }
@@ -753,7 +753,7 @@ struct AboutSheet: View {
                             title: "Terms of Service",
                             color: .orange
                         ) {
-                            if let url = URL(string: "https://vwatekapply.com/terms") {
+                            if let url = URL(string: "https://vwatek.com/terms") {
                                 UIApplication.shared.open(url)
                             }
                         }
