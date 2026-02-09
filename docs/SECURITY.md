@@ -189,7 +189,7 @@ fun sanitizeForApi(content: String): String {
 If you discover a security vulnerability, please report it responsibly:
 
 1. **DO NOT** create a public GitHub issue
-2. Email security details to: **security@vwatek.com**
+2. Email security details to: **security@vwatekapply.com**
 3. Include:
    - Description of the vulnerability
    - Steps to reproduce
@@ -253,7 +253,7 @@ If you suspect your data has been compromised:
 1. Delete the app and reinstall
 2. Generate a new Gemini API key
 3. Review exported documents for sensitive info
-4. Contact us at security@vwatek.com
+4. Contact us at security@vwatekapply.com
 
 ## Compliance
 
@@ -344,7 +344,7 @@ During incidents, we will:
 
 For security-related inquiries:
 
-- **Email**: security@vwatek.com
+- **Email**: security@vwatekapply.com
 - **PGP Key**: [Available upon request]
 - **Response Time**: Within 24 hours
 

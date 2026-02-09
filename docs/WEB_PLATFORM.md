@@ -606,7 +606,7 @@ object WebConfig {
     val apiBaseUrl: String
         get() = when {
             js("window.location.hostname") == "localhost" -> "http://localhost:8080"
-            else -> "https://api.vwatek.com"
+            else -> "https://api.vwatekapply.com"
         }
     
     val isDevelopment: Boolean

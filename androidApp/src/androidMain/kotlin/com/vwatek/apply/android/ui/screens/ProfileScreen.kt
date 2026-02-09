@@ -327,7 +327,7 @@ fun ProfileScreen(
         HelpCenterDialog(
             onDismiss = { showHelpDialog = false },
             onOpenWebsite = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatek.com/help"))
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatekapply.com/help"))
                 context.startActivity(intent)
             }
         )
@@ -339,7 +339,7 @@ fun ProfileScreen(
             onDismiss = { showFeedbackDialog = false },
             onSendEmail = { feedback ->
                 val intent = Intent(Intent.ACTION_SENDTO).apply {
-                    data = Uri.parse("mailto:support@vwatek.com")
+                    data = Uri.parse("mailto:support@vwatekapply.com")
                     putExtra(Intent.EXTRA_SUBJECT, "VwaTek Apply Feedback")
                     putExtra(Intent.EXTRA_TEXT, feedback)
                 }
@@ -354,15 +354,15 @@ fun ProfileScreen(
         AboutDialog(
             onDismiss = { showAboutDialog = false },
             onOpenWebsite = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatek.com"))
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatekapply.com"))
                 context.startActivity(intent)
             },
             onOpenPrivacy = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatek.com/privacy"))
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatekapply.com/privacy"))
                 context.startActivity(intent)
             },
             onOpenTerms = {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatek.com/terms"))
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatekapply.com/terms"))
                 context.startActivity(intent)
             }
         )
@@ -733,7 +733,7 @@ private fun HelpCenterDialog(
                 Text("• How do I practice interviews?\n   Visit the Interview tab to start AI-powered mock interviews.")
                 
                 Text(
-                    text = "For more help, visit our website or contact support@vwatek.com",
+                    text = "For more help, visit our website or contact support@vwatekapply.com",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

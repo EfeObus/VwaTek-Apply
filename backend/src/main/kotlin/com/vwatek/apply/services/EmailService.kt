@@ -14,7 +14,7 @@ object EmailService {
     private val smtpPort = System.getenv("SMTP_PORT") ?: "587"
     private val smtpUsername = System.getenv("SMTP_USERNAME") ?: "apikey"
     private val smtpPassword = System.getenv("SMTP_PASSWORD") ?: ""
-    private val fromEmail = System.getenv("SMTP_FROM_EMAIL") ?: "noreply@vwatek.com"
+    private val fromEmail = System.getenv("SMTP_FROM_EMAIL") ?: "noreply@vwatekapply.com"
     private val fromName = System.getenv("SMTP_FROM_NAME") ?: "VwaTek Apply"
     
     private val session: Session by lazy {
