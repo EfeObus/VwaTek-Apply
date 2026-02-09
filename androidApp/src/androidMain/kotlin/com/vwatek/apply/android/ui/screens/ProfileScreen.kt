@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vwatek.apply.domain.model.User
@@ -41,6 +42,7 @@ fun ProfileScreen(
     var showHelpDialog by remember { mutableStateOf(false) }
     var showFeedbackDialog by remember { mutableStateOf(false) }
     var showApiSettingsDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
     
     Column(
         modifier = Modifier
@@ -217,6 +219,15 @@ fun ProfileScreen(
                     subtitle = "Help us improve the app",
                     onClick = { showFeedbackDialog = true }
                 )
+                
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                
+                ProfileListItem(
+                    icon = Icons.Default.Info,
+                    title = "About",
+                    subtitle = "Version 1.0.0 • VwaTek Inc.",
+                    onClick = { showAboutDialog = true }
+                )
             }
         }
         
@@ -334,6 +345,25 @@ fun ProfileScreen(
                 }
                 context.startActivity(Intent.createChooser(intent, "Send Feedback"))
                 showFeedbackDialog = false
+            }
+        )
+    }
+    
+    // About Dialog
+    if (showAboutDialog) {
+        AboutDialog(
+            onDismiss = { showAboutDialog = false },
+            onOpenWebsite = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatek.com"))
+                context.startActivity(intent)
+            },
+            onOpenPrivacy = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatek.com/privacy"))
+                context.startActivity(intent)
+            },
+            onOpenTerms = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatek.com/terms"))
+                context.startActivity(intent)
             }
         )
     }
@@ -926,6 +956,97 @@ private fun ApiSettingsDialog(
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun AboutDialog(
+    onDismiss: () -> Unit,
+    onOpenWebsite: () -> Unit,
+    onOpenPrivacy: () -> Unit,
+    onOpenTerms: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { 
+            Icon(
+                Icons.Default.Info, 
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            ) 
+        },
+        title = { Text("About VwaTek Apply") },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // App Logo and Version
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "VwaTek Apply",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Version 1.0.0 (Build 2026.02)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                HorizontalDivider()
+                
+                Text(
+                    text = "Your AI-powered job application companion. Create stunning resumes, generate tailored cover letters, and ace your interviews with AI assistance.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                
+                HorizontalDivider()
+                
+                // Company Info
+                Text(
+                    text = "Developed by VwaTek Inc.",
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Text(
+                    text = "© 2026 VwaTek Inc. All rights reserved.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                
+                // Links
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = onOpenWebsite) {
+                        Icon(Icons.Default.Home, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Visit Website")
+                    }
+                    TextButton(onClick = onOpenPrivacy) {
+                        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Privacy Policy")
+                    }
+                    TextButton(onClick = onOpenTerms) {
+                        Icon(Icons.Default.List, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Terms of Service")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Close")
             }
         }
     )

@@ -6,6 +6,9 @@ struct ProfileView: View {
     @State private var showLogoutAlert = false
     @State private var showEditSheet = false
     @State private var showApiSettingsSheet = false
+    @State private var showHelpSheet = false
+    @State private var showFeedbackSheet = false
+    @State private var showAboutSheet = false
     
     var body: some View {
         NavigationStack {
@@ -148,7 +151,7 @@ struct ProfileView: View {
                                 icon: "questionmark.circle.fill",
                                 title: "Help Center",
                                 subtitle: "FAQs and support articles"
-                            ) { }
+                            ) { showHelpSheet = true }
                             
                             Divider().padding(.leading, 56)
                             
@@ -156,7 +159,7 @@ struct ProfileView: View {
                                 icon: "bubble.left.fill",
                                 title: "Send Feedback",
                                 subtitle: "Help us improve the app"
-                            ) { }
+                            ) { showFeedbackSheet = true }
                             
                             Divider().padding(.leading, 56)
                             
@@ -164,7 +167,7 @@ struct ProfileView: View {
                                 icon: "info.circle.fill",
                                 title: "About",
                                 subtitle: "Version 1.0.0"
-                            ) { }
+                            ) { showAboutSheet = true }
                         }
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(12)
@@ -207,6 +210,15 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showApiSettingsSheet) {
                 ApiSettingsSheet()
+            }
+            .sheet(isPresented: $showHelpSheet) {
+                HelpCenterSheet(onDismiss: { showHelpSheet = false })
+            }
+            .sheet(isPresented: $showFeedbackSheet) {
+                FeedbackSheet(onDismiss: { showFeedbackSheet = false })
+            }
+            .sheet(isPresented: $showAboutSheet) {
+                AboutSheet(onDismiss: { showAboutSheet = false })
             }
         }
     }
@@ -421,6 +433,389 @@ struct ApiSettingsSheet: View {
         // Auto-dismiss after a short delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             dismiss()
+        }
+    }
+}
+
+// MARK: - Help Center Sheet
+struct HelpCenterSheet: View {
+    let onDismiss: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Header
+                    VStack(spacing: 8) {
+                        Image(systemName: "questionmark.circle.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.blue)
+                        
+                        Text("Help Center")
+                            .font(.title)
+                            .fontWeight(.bold)
+                        
+                        Text("Find answers to common questions")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical)
+                    
+                    // FAQ Section
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Frequently Asked Questions")
+                            .font(.headline)
+                        
+                        FAQItem(
+                            question: "How do I create a resume?",
+                            answer: "Tap the + button on the Resume tab to create a new resume or upload an existing one. You can also import from LinkedIn."
+                        )
+                        
+                        FAQItem(
+                            question: "How do I generate a cover letter?",
+                            answer: "Go to the Cover Letters tab and tap Generate. Enter the job details and our AI will create a tailored cover letter for you."
+                        )
+                        
+                        FAQItem(
+                            question: "How do I practice interviews?",
+                            answer: "Visit the Interview tab to start AI-powered mock interviews. Select your industry and question type to begin practicing."
+                        )
+                        
+                        FAQItem(
+                            question: "How does the resume optimizer work?",
+                            answer: "The optimizer analyzes your resume against job descriptions and provides an ATS compatibility score with specific improvement suggestions."
+                        )
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(12)
+                    
+                    // Contact Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Need More Help?")
+                            .font(.headline)
+                        
+                        Button(action: {
+                            if let url = URL(string: "https://vwatek.com/help") {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "globe")
+                                Text("Visit Help Website")
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                            }
+                            .padding()
+                            .background(Color.blue.opacity(0.1))
+                            .foregroundColor(.blue)
+                            .cornerRadius(10)
+                        }
+                        
+                        Button(action: {
+                            if let url = URL(string: "mailto:support@vwatek.com") {
+                                UIApplication.shared.open(url)
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "envelope")
+                                Text("Email Support")
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                            }
+                            .padding()
+                            .background(Color.green.opacity(0.1))
+                            .foregroundColor(.green)
+                            .cornerRadius(10)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(12)
+                }
+                .padding()
+            }
+            .navigationTitle("Help Center")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+struct FAQItem: View {
+    let question: String
+    let answer: String
+    @State private var isExpanded = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button(action: { withAnimation { isExpanded.toggle() } }) {
+                HStack {
+                    Text(question)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundColor(.primary)
+                        .multilineTextAlignment(.leading)
+                    Spacer()
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            if isExpanded {
+                Text(answer)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 4)
+            }
+            
+            Divider()
+        }
+    }
+}
+
+// MARK: - Feedback Sheet
+struct FeedbackSheet: View {
+    let onDismiss: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var feedback = ""
+    @State private var rating = 0
+    @State private var feedbackType = "Bug Report"
+    
+    let feedbackTypes = ["Bug Report", "Feature Request", "General Feedback", "Other"]
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    VStack(spacing: 8) {
+                        Image(systemName: "bubble.left.and.bubble.right.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(.blue)
+                        
+                        Text("We'd love to hear from you!")
+                            .font(.headline)
+                        
+                        Text("Your feedback helps us improve VwaTek Apply")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical)
+                }
+                
+                Section("Rate Your Experience") {
+                    HStack(spacing: 8) {
+                        ForEach(1...5, id: \.self) { star in
+                            Button(action: { rating = star }) {
+                                Image(systemName: star <= rating ? "star.fill" : "star")
+                                    .font(.title2)
+                                    .foregroundColor(star <= rating ? .yellow : .gray)
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 8)
+                }
+                
+                Section("Feedback Type") {
+                    Picker("Type", selection: $feedbackType) {
+                        ForEach(feedbackTypes, id: \.self) { type in
+                            Text(type).tag(type)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
+                Section("Your Feedback") {
+                    TextEditor(text: $feedback)
+                        .frame(minHeight: 120)
+                }
+                
+                Section {
+                    Button(action: sendFeedback) {
+                        HStack {
+                            Image(systemName: "paperplane.fill")
+                            Text("Send Feedback")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(.white)
+                    }
+                    .listRowBackground(Color.blue)
+                }
+            }
+            .navigationTitle("Send Feedback")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+    }
+    
+    private func sendFeedback() {
+        let subject = "VwaTek Apply Feedback - \(feedbackType)"
+        let body = """
+        Rating: \(rating)/5 stars
+        Type: \(feedbackType)
+        
+        Feedback:
+        \(feedback)
+        
+        ---
+        App Version: 1.0.0
+        iOS Version: \(UIDevice.current.systemVersion)
+        Device: \(UIDevice.current.model)
+        """
+        
+        if let url = URL(string: "mailto:support@vwatek.com?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
+            UIApplication.shared.open(url)
+        }
+        dismiss()
+    }
+}
+
+// MARK: - About Sheet
+struct AboutSheet: View {
+    let onDismiss: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // App Logo and Name
+                    VStack(spacing: 12) {
+                        Image(systemName: "doc.text.fill")
+                            .font(.system(size: 80))
+                            .foregroundColor(.blue)
+                        
+                        Text("VwaTek Apply")
+                            .font(.title)
+                            .fontWeight(.bold)
+                        
+                        Text("Version 1.0.0 (Build 2026.02)")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 20)
+                    
+                    // Description
+                    Text("Your AI-powered job application companion. Create stunning resumes, generate tailored cover letters, and ace your interviews with AI assistance.")
+                        .font(.body)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                    
+                    Divider()
+                    
+                    // Company Info
+                    VStack(spacing: 8) {
+                        Text("Developed by VwaTek Inc.")
+                            .font(.headline)
+                        
+                        Text("© 2026 VwaTek Inc. All rights reserved.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    // Links
+                    VStack(spacing: 12) {
+                        AboutLinkButton(
+                            icon: "globe",
+                            title: "Visit Website",
+                            color: .blue
+                        ) {
+                            if let url = URL(string: "https://vwatek.com") {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                        
+                        AboutLinkButton(
+                            icon: "shield.fill",
+                            title: "Privacy Policy",
+                            color: .green
+                        ) {
+                            if let url = URL(string: "https://vwatek.com/privacy") {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                        
+                        AboutLinkButton(
+                            icon: "doc.text.fill",
+                            title: "Terms of Service",
+                            color: .orange
+                        ) {
+                            if let url = URL(string: "https://vwatek.com/terms") {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                        
+                        AboutLinkButton(
+                            icon: "star.fill",
+                            title: "Rate on App Store",
+                            color: .yellow
+                        ) {
+                            // App Store link would go here
+                            if let url = URL(string: "https://apps.apple.com/app/vwatek-apply") {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    Spacer()
+                    
+                    // Footer
+                    Text("Made with ❤️ for job seekers everywhere")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.bottom)
+                }
+            }
+            .navigationTitle("About")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+struct AboutLinkButton: View {
+    let icon: String
+    let title: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(color)
+                    .frame(width: 24)
+                
+                Text(title)
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+            }
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(10)
         }
     }
 }
