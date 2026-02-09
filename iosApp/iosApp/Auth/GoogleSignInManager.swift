@@ -1,6 +1,9 @@
 import Foundation
 import UIKit
+
+#if canImport(GoogleSignIn)
 import GoogleSignIn
+#endif
 
 /// Manager for Google Sign-In using Google Identity Services SDK
 @MainActor
@@ -34,7 +37,11 @@ class GoogleSignInManager: NSObject, ObservableObject {
     
     /// Handle URL callback from Google Sign-In
     func handle(_ url: URL) -> Bool {
+        #if canImport(GoogleSignIn)
         return GIDSignIn.sharedInstance.handle(url)
+        #else
+        return false
+        #endif
     }
     
     /// Perform Google Sign-In
@@ -45,6 +52,7 @@ class GoogleSignInManager: NSObject, ObservableObject {
         error = nil
         defer { isSigningIn = false }
         
+        #if canImport(GoogleSignIn)
         guard let viewController = presentingViewController as? UIViewController else {
             let error = NSError(
                 domain: "GoogleSignIn",
@@ -86,15 +94,27 @@ class GoogleSignInManager: NSObject, ObservableObject {
                 continuation.resume(returning: .success(result))
             }
         }
+        #else
+        let notAvailableError = NSError(
+            domain: "GoogleSignIn",
+            code: -1,
+            userInfo: [NSLocalizedDescriptionKey: "Google Sign-In SDK not available"]
+        )
+        self.error = notAvailableError.localizedDescription
+        return .failure(notAvailableError)
+        #endif
     }
     
     /// Sign out from Google
     func signOut() {
+        #if canImport(GoogleSignIn)
         GIDSignIn.sharedInstance.signOut()
+        #endif
     }
     
     /// Check if user is already signed in
     func restorePreviousSignIn() async -> SignInResult? {
+        #if canImport(GoogleSignIn)
         return await withCheckedContinuation { continuation in
             GIDSignIn.sharedInstance.restorePreviousSignIn { user, error in
                 guard let user = user, let profile = user.profile else {
@@ -112,5 +132,8 @@ class GoogleSignInManager: NSObject, ObservableObject {
                 continuation.resume(returning: result)
             }
         }
+        #else
+        return nil
+        #endif
     }
 }

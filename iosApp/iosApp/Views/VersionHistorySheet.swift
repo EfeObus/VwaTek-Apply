@@ -162,9 +162,13 @@ struct VersionHistoryRow: View {
             name: "Software Engineer Resume",
             content: "Sample content",
             industry: "Technology",
-            version: 1,
+            sourceType: .manual,
+            fileName: nil,
+            fileType: nil,
+            originalFileData: nil,
             createdAt: Kotlinx_datetimeInstant.companion.fromEpochMilliseconds(epochMilliseconds: Int64(Date().timeIntervalSince1970 * 1000)),
-            updatedAt: Kotlinx_datetimeInstant.companion.fromEpochMilliseconds(epochMilliseconds: Int64(Date().timeIntervalSince1970 * 1000))
+            updatedAt: Kotlinx_datetimeInstant.companion.fromEpochMilliseconds(epochMilliseconds: Int64(Date().timeIntervalSince1970 * 1000)),
+            currentVersionId: nil
         ),
         viewModel: ResumeViewModelWrapper(),
         onDismiss: {}

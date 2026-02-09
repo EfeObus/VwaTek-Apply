@@ -186,9 +186,13 @@ struct ShareSheet: UIViewControllerRepresentable {
             name: "Software Engineer Resume",
             content: "Experience\nSoftware Engineer at Tech Corp\n\nEducation\nBS Computer Science",
             industry: "Technology",
-            version: 1,
+            sourceType: .manual,
+            fileName: nil,
+            fileType: nil,
+            originalFileData: nil,
             createdAt: Kotlinx_datetimeInstant.companion.fromEpochMilliseconds(epochMilliseconds: Int64(Date().timeIntervalSince1970 * 1000)),
-            updatedAt: Kotlinx_datetimeInstant.companion.fromEpochMilliseconds(epochMilliseconds: Int64(Date().timeIntervalSince1970 * 1000))
+            updatedAt: Kotlinx_datetimeInstant.companion.fromEpochMilliseconds(epochMilliseconds: Int64(Date().timeIntervalSince1970 * 1000)),
+            currentVersionId: nil
         ),
         onDismiss: {}
     )

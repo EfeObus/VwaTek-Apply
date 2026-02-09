@@ -8,40 +8,70 @@
 
 /* Begin PBXBuildFile section */
 		17A5949D86D7F4EF99877111 /* VwaTekApplyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E9D196F4271F22B876911E /* VwaTekApplyApp.swift */; };
+		1C1CB1D9ECA6E817E01AB399 /* PDFGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A189CB88AAA2D32E63445D8 /* PDFGenerator.swift */; };
+		1FF5696C3D77F3356BD8A33F /* StarCoachingSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F51208F58345C733015129 /* StarCoachingSheet.swift */; };
 		272CFC352B1BDA211BD0406F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3FDF7F0B041A43B9251A7FB /* ContentView.swift */; };
 		28F55CAC0EA5B300260AFC41 /* AuthViewModelWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF6063F0553C53F3B7168FF4 /* AuthViewModelWrapper.swift */; };
+		2A8E941ECA01D5434A0184EB /* LinkedInImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC31741B1382183DEC54E54 /* LinkedInImportSheet.swift */; };
+		2FAE483DBEA87C74D79ED4FE /* PDFExportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8678DE0B78A0AA615B192912 /* PDFExportSheet.swift */; };
 		3B14D7A1A4567B63FEE6FE03 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF848420A89F863F3069441 /* HomeView.swift */; };
+		478D005BBA1082AA16F4A68E /* AppleSignInManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE2C6B5CAD1EDFE62F7973EC /* AppleSignInManager.swift */; };
+		65AB3375CA176CC7556227FF /* VersionHistorySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1C2E87473D82ABC30B62CA /* VersionHistorySheet.swift */; };
+		6A2AC03A23FBA26DE546486D /* OptimizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B67CA604446C13252343EDDA /* OptimizerView.swift */; };
+		6BDF1473F6CB23A229630BA2 /* PDFExportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAEE0C86979A04977BF47995 /* PDFExportSheet.swift */; };
 		6E3D9F16479301607C546EE9 /* InterviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51DE1AD865ECE94131AFFE15 /* InterviewView.swift */; };
+		726C4CD633E58267F88842A9 /* GoogleSignInManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353E959E7995FEF67E7B48C4 /* GoogleSignInManager.swift */; };
+		7AFB4CBD0CB5B414D96C959C /* LinkedInImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299BEAD11464B706E1C31E60 /* LinkedInImportSheet.swift */; };
 		7E2C23EE0E4F5F0F0E0C889A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6F88C7C85B95DD89B6610D53 /* Assets.xcassets */; };
 		A038C240468CBB527CABF9F5 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D004132C4947C7BF1067C59 /* libsqlite3.tbd */; };
+		A1F8A5E762BC3384B624B88A /* VersionHistorySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0805B8A45ED28A8AD62BD61 /* VersionHistorySheet.swift */; };
 		AA52E3E81814674337D4F74A /* ResumeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B7A98948F343A5463D1B4 /* ResumeView.swift */; };
 		AB82098BB049F447AF4BBDD3 /* OptimizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC0DACF25C7368524842371D /* OptimizerView.swift */; };
 		AE6EF4B758720F0A00163AE3 /* CoverLetterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C9DF557E1860DF402B406BA /* CoverLetterView.swift */; };
+		B5FD1B2282FC2948E6BA657C /* StarCoachingSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E46CC685044F29571504B60 /* StarCoachingSheet.swift */; };
 		BD0830CE063A935AF4D96281 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EFB2DCB22C75BDAFA51685B /* ProfileView.swift */; };
+		D0EFA89C277B22B0A9227757 /* OptimizerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84F2A1791FD26A948AC15434 /* OptimizerView.swift */; };
 		DD5C020DBCDF81405A2C7F05 /* ResumeViewModelWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48687A3711EA6C709300C285 /* ResumeViewModelWrapper.swift */; };
 		E2BFD307630E7E9E5C1D8DC1 /* InterviewViewModelWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E92A2445FCECB46CBDB6CE1E /* InterviewViewModelWrapper.swift */; };
+		E7061917A43DC917DAFEA2BC /* PDFGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1E31393F7D97B5EC115DBD /* PDFGenerator.swift */; };
 		EF631B0E73BCC48D8F39A184 /* CoverLetterViewModelWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AB51E3D062E3B9D96899E3A /* CoverLetterViewModelWrapper.swift */; };
 		F8A5B23BB4CFC0BEF23973E0 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92C87484A8D9B5990CB43986 /* AuthView.swift */; };
+		FD03C8B4E8484A92F98992AB /* LinkedInAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD190ED735B01C2522F8D164 /* LinkedInAuthManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		03F51208F58345C733015129 /* StarCoachingSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StarCoachingSheet.swift; sourceTree = "<group>"; };
+		0A189CB88AAA2D32E63445D8 /* PDFGenerator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PDFGenerator.swift; sourceTree = "<group>"; };
+		299BEAD11464B706E1C31E60 /* LinkedInImportSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LinkedInImportSheet.swift; sourceTree = "<group>"; };
 		2AB51E3D062E3B9D96899E3A /* CoverLetterViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverLetterViewModelWrapper.swift; sourceTree = "<group>"; };
 		2C5B7A98948F343A5463D1B4 /* ResumeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeView.swift; sourceTree = "<group>"; };
+		353E959E7995FEF67E7B48C4 /* GoogleSignInManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GoogleSignInManager.swift; sourceTree = "<group>"; };
 		3D004132C4947C7BF1067C59 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		40E9D196F4271F22B876911E /* VwaTekApplyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VwaTekApplyApp.swift; sourceTree = "<group>"; };
 		48687A3711EA6C709300C285 /* ResumeViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeViewModelWrapper.swift; sourceTree = "<group>"; };
+		4C1C2E87473D82ABC30B62CA /* VersionHistorySheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VersionHistorySheet.swift; sourceTree = "<group>"; };
+		4D1E31393F7D97B5EC115DBD /* PDFGenerator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PDFGenerator.swift; sourceTree = "<group>"; };
 		51DE1AD865ECE94131AFFE15 /* InterviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewView.swift; sourceTree = "<group>"; };
 		6F88C7C85B95DD89B6610D53 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		708549F41DBED85F7CEA6370 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EFB2DCB22C75BDAFA51685B /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		84F2A1791FD26A948AC15434 /* OptimizerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OptimizerView.swift; sourceTree = "<group>"; };
+		8678DE0B78A0AA615B192912 /* PDFExportSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PDFExportSheet.swift; sourceTree = "<group>"; };
+		8AC31741B1382183DEC54E54 /* LinkedInImportSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LinkedInImportSheet.swift; sourceTree = "<group>"; };
 		8C9DF557E1860DF402B406BA /* CoverLetterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverLetterView.swift; sourceTree = "<group>"; };
 		92C87484A8D9B5990CB43986 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		9E46CC685044F29571504B60 /* StarCoachingSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StarCoachingSheet.swift; sourceTree = "<group>"; };
+		A0805B8A45ED28A8AD62BD61 /* VersionHistorySheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VersionHistorySheet.swift; sourceTree = "<group>"; };
 		A3FDF7F0B041A43B9251A7FB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B67CA604446C13252343EDDA /* OptimizerView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = OptimizerView.swift; sourceTree = "<group>"; };
+		CAEE0C86979A04977BF47995 /* PDFExportSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PDFExportSheet.swift; sourceTree = "<group>"; };
 		CC0DACF25C7368524842371D /* OptimizerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptimizerView.swift; sourceTree = "<group>"; };
+		DE2C6B5CAD1EDFE62F7973EC /* AppleSignInManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppleSignInManager.swift; sourceTree = "<group>"; };
 		DF6063F0553C53F3B7168FF4 /* AuthViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModelWrapper.swift; sourceTree = "<group>"; };
 		E92A2445FCECB46CBDB6CE1E /* InterviewViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterviewViewModelWrapper.swift; sourceTree = "<group>"; };
 		EC3F5B9BB97B532D640CF983 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EDF848420A89F863F3069441 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		FD190ED735B01C2522F8D164 /* LinkedInAuthManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LinkedInAuthManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +86,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0A00CB3C2579755106EBA5EA /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				353E959E7995FEF67E7B48C4 /* GoogleSignInManager.swift */,
+				DE2C6B5CAD1EDFE62F7973EC /* AppleSignInManager.swift */,
+				FD190ED735B01C2522F8D164 /* LinkedInAuthManager.swift */,
+			);
+			name = Auth;
+			path = Auth;
+			sourceTree = "<group>";
+		};
 		2E87FDAC85E0946BED8A40A9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -73,8 +114,21 @@
 				40E9D196F4271F22B876911E /* VwaTekApplyApp.swift */,
 				81A7D4BDD10DDCE306B7DF04 /* ViewModels */,
 				760F386EC6D9DA235724B8E4 /* Views */,
+				0A00CB3C2579755106EBA5EA /* Auth */,
+				921D91346BC63F85A37EA798 /* Views */,
+				4F6A2A51BB345829338EE879 /* Utilities */,
 			);
 			path = iosApp;
+			sourceTree = "<group>";
+		};
+		4F6A2A51BB345829338EE879 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				4D1E31393F7D97B5EC115DBD /* PDFGenerator.swift */,
+				0A189CB88AAA2D32E63445D8 /* PDFGenerator.swift */,
+			);
+			name = Utilities;
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 		71A83B96EE7652FF7AC1F1B9 = {
@@ -111,6 +165,24 @@
 			path = ViewModels;
 			sourceTree = "<group>";
 		};
+		921D91346BC63F85A37EA798 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				9E46CC685044F29571504B60 /* StarCoachingSheet.swift */,
+				299BEAD11464B706E1C31E60 /* LinkedInImportSheet.swift */,
+				8678DE0B78A0AA615B192912 /* PDFExportSheet.swift */,
+				4C1C2E87473D82ABC30B62CA /* VersionHistorySheet.swift */,
+				B67CA604446C13252343EDDA /* OptimizerView.swift */,
+				03F51208F58345C733015129 /* StarCoachingSheet.swift */,
+				8AC31741B1382183DEC54E54 /* LinkedInImportSheet.swift */,
+				CAEE0C86979A04977BF47995 /* PDFExportSheet.swift */,
+				A0805B8A45ED28A8AD62BD61 /* VersionHistorySheet.swift */,
+				84F2A1791FD26A948AC15434 /* OptimizerView.swift */,
+			);
+			name = Views;
+			path = Views;
+			sourceTree = "<group>";
+		};
 		92F36DCDEC1AB664986F7746 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -136,8 +208,6 @@
 			dependencies = (
 			);
 			name = iosApp;
-			packageProductDependencies = (
-			);
 			productName = iosApp;
 			productReference = 708549F41DBED85F7CEA6370 /* iosApp.app */;
 			productType = "com.apple.product-type.application";
@@ -166,6 +236,7 @@
 			);
 			mainGroup = 71A83B96EE7652FF7AC1F1B9;
 			minimizedProjectReferenceProxies = 1;
+			productRefGroup = 92F36DCDEC1AB664986F7746 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -225,6 +296,21 @@
 				AA52E3E81814674337D4F74A /* ResumeView.swift in Sources */,
 				DD5C020DBCDF81405A2C7F05 /* ResumeViewModelWrapper.swift in Sources */,
 				17A5949D86D7F4EF99877111 /* VwaTekApplyApp.swift in Sources */,
+				726C4CD633E58267F88842A9 /* GoogleSignInManager.swift in Sources */,
+				478D005BBA1082AA16F4A68E /* AppleSignInManager.swift in Sources */,
+				FD03C8B4E8484A92F98992AB /* LinkedInAuthManager.swift in Sources */,
+				B5FD1B2282FC2948E6BA657C /* StarCoachingSheet.swift in Sources */,
+				7AFB4CBD0CB5B414D96C959C /* LinkedInImportSheet.swift in Sources */,
+				2FAE483DBEA87C74D79ED4FE /* PDFExportSheet.swift in Sources */,
+				65AB3375CA176CC7556227FF /* VersionHistorySheet.swift in Sources */,
+				6A2AC03A23FBA26DE546486D /* OptimizerView.swift in Sources */,
+				E7061917A43DC917DAFEA2BC /* PDFGenerator.swift in Sources */,
+				1FF5696C3D77F3356BD8A33F /* StarCoachingSheet.swift in Sources */,
+				2A8E941ECA01D5434A0184EB /* LinkedInImportSheet.swift in Sources */,
+				6BDF1473F6CB23A229630BA2 /* PDFExportSheet.swift in Sources */,
+				A1F8A5E762BC3384B624B88A /* VersionHistorySheet.swift in Sources */,
+				D0EFA89C277B22B0A9227757 /* OptimizerView.swift in Sources */,
+				1C1CB1D9ECA6E817E01AB399 /* PDFGenerator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

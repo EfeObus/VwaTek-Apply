@@ -39,70 +39,152 @@ fun Sidebar(
         // User Section
         Div(attrs = { 
             classes("user-section")
-            onClick { onAuthClick() }
             style {
-                property("cursor", "pointer")
                 property("padding", "var(--spacing-md)")
                 property("margin", "var(--spacing-md)")
                 property("border-radius", "var(--border-radius-md)")
-                property("background", "var(--bg-secondary)")
+                property("background", "linear-gradient(135deg, var(--bg-secondary) 0%, rgba(99, 102, 241, 0.1) 100%)")
+                property("border", "1px solid rgba(99, 102, 241, 0.2)")
             }
         }) {
             if (isAuthenticated && userName != null) {
+                // Profile header row
                 Div(attrs = { 
                     classes("flex", "items-center", "gap-sm")
+                    style {
+                        property("margin-bottom", "12px")
+                    }
                 }) {
+                    // Avatar with gradient
                     Div(attrs = {
                         style {
-                            property("width", "36px")
-                            property("height", "36px")
+                            property("width", "48px")
+                            property("height", "48px")
                             property("border-radius", "50%")
-                            property("background", "var(--primary-color)")
+                            property("background", "linear-gradient(135deg, var(--primary-color) 0%, #8b5cf6 100%)")
                             property("color", "white")
                             property("display", "flex")
                             property("align-items", "center")
                             property("justify-content", "center")
-                            property("font-weight", "600")
+                            property("font-weight", "700")
+                            property("font-size", "1.2rem")
+                            property("box-shadow", "0 4px 12px rgba(99, 102, 241, 0.3)")
                         }
                     }) {
                         Text(userName.first().toString().uppercase())
                     }
-                    Div {
+                    Div(attrs = {
+                        style {
+                            property("flex", "1")
+                        }
+                    }) {
                         P(attrs = { 
                             style { 
-                                property("font-weight", "500")
-                                property("font-size", "0.9rem")
+                                property("font-weight", "600")
+                                property("font-size", "1rem")
+                                property("margin", "0")
+                                property("color", "var(--text-primary)")
                             } 
                         }) { 
                             Text(userName) 
                         }
                         P(attrs = { 
-                            classes("text-secondary")
-                            style { property("font-size", "0.75rem") }
+                            style { 
+                                property("font-size", "0.75rem")
+                                property("margin", "2px 0 0 0")
+                                property("color", "var(--text-secondary)")
+                            }
                         }) { 
-                            Text("View Profile") 
+                            Text("Premium Member")
                         }
                     }
                 }
+                // View Profile Button
+                Button(attrs = {
+                    classes("view-profile-btn")
+                    onClick { onAuthClick() }
+                    style {
+                        property("width", "100%")
+                        property("padding", "10px 16px")
+                        property("border", "none")
+                        property("border-radius", "8px")
+                        property("background", "var(--primary-color)")
+                        property("color", "white")
+                        property("font-weight", "500")
+                        property("font-size", "0.875rem")
+                        property("cursor", "pointer")
+                        property("display", "flex")
+                        property("align-items", "center")
+                        property("justify-content", "center")
+                        property("gap", "8px")
+                        property("transition", "all 0.2s ease")
+                    }
+                }) {
+                    RawHtml("""<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>""")
+                    Text("View Profile")
+                }
             } else {
-                Div(attrs = { classes("flex", "items-center", "gap-sm") }) {
-                    RawHtml(Icons.USER)
-                    Div {
+                Div(attrs = { 
+                    classes("flex", "items-center", "gap-sm")
+                    onClick { onAuthClick() }
+                    style {
+                        property("cursor", "pointer")
+                        property("padding", "8px 0")
+                    }
+                }) {
+                    Div(attrs = {
+                        style {
+                            property("width", "48px")
+                            property("height", "48px")
+                            property("border-radius", "50%")
+                            property("background", "var(--bg-tertiary)")
+                            property("display", "flex")
+                            property("align-items", "center")
+                            property("justify-content", "center")
+                        }
+                    }) {
+                        RawHtml(Icons.USER)
+                    }
+                    Div(attrs = {
+                        style { property("flex", "1") }
+                    }) {
                         P(attrs = { 
                             style { 
-                                property("font-weight", "500")
-                                property("font-size", "0.9rem")
+                                property("font-weight", "600")
+                                property("font-size", "1rem")
+                                property("margin", "0")
                             } 
                         }) { 
-                            Text("Sign In") 
+                            Text("Welcome!") 
                         }
                         P(attrs = { 
-                            classes("text-secondary")
-                            style { property("font-size", "0.75rem") }
+                            style { 
+                                property("font-size", "0.75rem")
+                                property("margin", "2px 0 0 0")
+                                property("color", "var(--text-secondary)")
+                            }
                         }) { 
-                            Text("Login or Register") 
+                            Text("Sign in to continue") 
                         }
                     }
+                }
+                Button(attrs = {
+                    onClick { onAuthClick() }
+                    style {
+                        property("width", "100%")
+                        property("margin-top", "12px")
+                        property("padding", "10px 16px")
+                        property("border", "2px solid var(--primary-color)")
+                        property("border-radius", "8px")
+                        property("background", "transparent")
+                        property("color", "var(--primary-color)")
+                        property("font-weight", "500")
+                        property("font-size", "0.875rem")
+                        property("cursor", "pointer")
+                        property("transition", "all 0.2s ease")
+                    }
+                }) {
+                    Text("Sign In / Register")
                 }
             }
         }
