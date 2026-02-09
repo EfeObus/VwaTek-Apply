@@ -103,14 +103,14 @@ steps:
     args:
       - '-c'
       - |
-        BACKEND_URL=$(gcloud run services describe ${_BACKEND_SERVICE} --region=${_REGION} --format='value(status.url)')
-        echo "Backend URL: $BACKEND_URL"
+        BACKEND_URL=$$(gcloud run services describe ${_BACKEND_SERVICE} --region=${_REGION} --format='value(status.url)')
+        echo "Backend URL: $$BACKEND_URL"
         sleep 30
-        response=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/health")
-        if [ "$response" = "200" ]; then
+        response=$$(curl -s -o /dev/null -w "%{http_code}" "$$BACKEND_URL/health")
+        if [ "$$response" = "200" ]; then
           echo "✅ Backend health check passed"
         else
-          echo "⚠️ Health check returned $response"
+          echo "⚠️ Health check returned $$response"
         fi
     waitFor: ['deploy-backend']
 
