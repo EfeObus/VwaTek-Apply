@@ -235,7 +235,7 @@ fun Application.configureMonitoringRoutes() {
             call.respond(HttpStatusCode.OK, mapOf(
                 "status" to "healthy",
                 "service" to "vwatek-apply-backend",
-                "timestamp" to System.currentTimeMillis()
+                "timestamp" to System.currentTimeMillis().toString()
             ))
         }
         
@@ -252,9 +252,7 @@ fun Application.configureMonitoringRoutes() {
             if (isReady) {
                 call.respond(HttpStatusCode.OK, mapOf(
                     "status" to "ready",
-                    "checks" to mapOf(
-                        "database" to "ok"
-                    )
+                    "checks" to "database:ok"
                 ))
             } else {
                 call.respond(HttpStatusCode.ServiceUnavailable, mapOf(
