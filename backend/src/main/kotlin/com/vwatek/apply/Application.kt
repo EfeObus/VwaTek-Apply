@@ -20,6 +20,7 @@ fun Application.module() {
     configureSerialization()
     configureCORS()
     configureMonitoring()
+    configureSecurity()  // Must be before routing for authenticate() blocks
     configureMonitoringRoutes()
     configureRouting()
     configureStatusPages()
