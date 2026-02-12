@@ -230,14 +230,8 @@ fun Application.configureMonitoringRoutes() {
             )
         }
         
-        // Health check endpoint (for Kubernetes/Cloud Run health probes)
-        get("/health") {
-            call.respond(HttpStatusCode.OK, mapOf(
-                "status" to "healthy",
-                "service" to "vwatek-apply-backend",
-                "timestamp" to System.currentTimeMillis().toString()
-            ))
-        }
+        // Note: Main /health endpoint is in Routing.kt with proper serialization
+        // These are additional probe endpoints for Kubernetes/Cloud Run
         
         // Liveness probe (basic check that the service is running)
         get("/health/live") {

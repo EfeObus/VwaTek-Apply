@@ -3,10 +3,10 @@
 # Triggers: Push to main branch or manual trigger
 
 substitutions:
-  _REGION: us-central1
+  _REGION: northamerica-northeast1
   _BACKEND_SERVICE: vwatek-backend
   _FRONTEND_BUCKET: vwatek-apply-web
-  _CLOUD_SQL_INSTANCE: vwatek-apply:us-central1:vwatekapply
+  _CLOUD_SQL_INSTANCE: vwatek-apply:northamerica-northeast1:vwatekapply
 
 options:
   logging: CLOUD_LOGGING_ONLY
