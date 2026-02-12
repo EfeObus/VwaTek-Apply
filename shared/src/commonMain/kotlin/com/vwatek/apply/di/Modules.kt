@@ -1,6 +1,7 @@
 package com.vwatek.apply.di
 
 import com.vwatek.apply.data.api.GeminiService
+import com.vwatek.apply.data.api.JobTrackerApiClient
 import com.vwatek.apply.domain.repository.ResumeRepository
 import com.vwatek.apply.domain.repository.AnalysisRepository
 import com.vwatek.apply.domain.repository.CoverLetterRepository
@@ -49,10 +50,12 @@ import com.vwatek.apply.domain.usecase.ImportLinkedInProfileUseCase
 import com.vwatek.apply.domain.usecase.UploadResumeFileUseCase
 import com.vwatek.apply.domain.usecase.GetSupportedFileTypesUseCase
 import com.vwatek.apply.domain.usecase.GetMaxFileSizeUseCase
+import com.vwatek.apply.domain.usecase.tracker.*
 import com.vwatek.apply.presentation.resume.ResumeViewModel
 import com.vwatek.apply.presentation.coverletter.CoverLetterViewModel
 import com.vwatek.apply.presentation.interview.InterviewViewModel
 import com.vwatek.apply.presentation.auth.AuthViewModel
+import com.vwatek.apply.presentation.tracker.TrackerViewModel
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -121,6 +124,21 @@ val sharedModule = module {
     factory { GetSupportedFileTypesUseCase(get()) }
     factory { GetMaxFileSizeUseCase(get()) }
     
+    // Phase 2: Job Tracker API Client
+    single { JobTrackerApiClient(get()) }
+    
+    // Phase 2: Tracker Use Cases
+    factory<com.vwatek.apply.presentation.tracker.GetJobApplicationsUseCase> { GetJobApplicationsUseCaseImpl(get()) }
+    factory<com.vwatek.apply.presentation.tracker.GetJobApplicationByIdUseCase> { GetJobApplicationByIdUseCaseImpl(get()) }
+    factory<com.vwatek.apply.presentation.tracker.CreateJobApplicationUseCase> { CreateJobApplicationUseCaseImpl(get()) }
+    factory<com.vwatek.apply.presentation.tracker.UpdateJobApplicationUseCase> { UpdateJobApplicationUseCaseImpl(get()) }
+    factory<com.vwatek.apply.presentation.tracker.UpdateApplicationStatusUseCase> { UpdateApplicationStatusUseCaseImpl(get()) }
+    factory<com.vwatek.apply.presentation.tracker.DeleteJobApplicationUseCase> { DeleteJobApplicationUseCaseImpl(get()) }
+    factory<com.vwatek.apply.presentation.tracker.AddApplicationNoteUseCase> { AddApplicationNoteUseCaseImpl(get()) }
+    factory<com.vwatek.apply.presentation.tracker.AddApplicationReminderUseCase> { AddApplicationReminderUseCaseImpl(get()) }
+    factory<com.vwatek.apply.presentation.tracker.AddApplicationInterviewUseCase> { AddApplicationInterviewUseCaseImpl(get()) }
+    factory<com.vwatek.apply.presentation.tracker.GetTrackerStatsUseCase> { GetTrackerStatsUseCaseImpl(get()) }
+    
     // ViewModels
     factory { ResumeViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { CoverLetterViewModel(get(), get(), get()) }
@@ -129,6 +147,11 @@ val sharedModule = module {
         AuthViewModel(
             get(), get(), get(), get(), get(), get(), 
             get(), get(), get(), get(), get(), get(), get()
+        )
+    }
+    factory {
+        TrackerViewModel(
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), get()
         )
     }
 }

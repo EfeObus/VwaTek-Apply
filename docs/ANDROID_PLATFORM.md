@@ -15,6 +15,8 @@ The Android version of VwaTek Apply uses **Jetpack Compose** for the UI layer wh
 | Build Tool | Gradle (Kotlin DSL) |
 | Secure Storage | Android Keystore + EncryptedSharedPreferences |
 | Networking | Ktor (OkHttp engine) |
+| Crash Reporting | Firebase Crashlytics (Phase 1) |
+| Analytics | Firebase Analytics (Phase 1) |
 | Min SDK | 26 (Android 8.0) |
 | Target SDK | 34 (Android 14) |
 
@@ -103,6 +105,12 @@ class VwaTekApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         
+        // Initialize Firebase Crashlytics (Phase 1)
+        FirebaseCrashlytics.getInstance().apply {
+            setCrashlyticsCollectionEnabled(!BuildConfig.DEBUG)
+            setCustomKey("app_version", BuildConfig.VERSION_NAME)
+        }
+        
         // Initialize Koin
         startKoin {
             androidContext(this@VwaTekApplication)
@@ -111,6 +119,10 @@ class VwaTekApplication : Application() {
                 androidModule
             )
         }
+        
+        // Start network monitoring (Phase 1)
+        val networkMonitor: NetworkMonitor = get()
+        networkMonitor.startMonitoring()
     }
 }
 ```
@@ -235,6 +247,100 @@ actual class DatabaseDriverFactory(private val context: Context) {
         keyGenerator.init(256)
         return keyGenerator.generateKey().encoded
     }
+}
+```
+
+## Phase 1 Components (February 2026)
+
+### Network Monitor
+
+```kotlin
+// NetworkMonitor.android.kt
+actual class NetworkMonitorFactory actual constructor() {
+    actual fun create(): NetworkMonitor = AndroidNetworkMonitor(context)
+}
+
+class AndroidNetworkMonitor(context: Context) : NetworkMonitor {
+    private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) 
+        as ConnectivityManager
+    
+    private val _networkState = MutableStateFlow(NetworkState(
+        status = NetworkStatus.UNKNOWN,
+        type = NetworkType.UNKNOWN
+    ))
+    override val networkState: StateFlow<NetworkState> = _networkState.asStateFlow()
+    
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            updateNetworkState()
+        }
+        override fun onLost(network: Network) {
+            _networkState.value = NetworkState(NetworkStatus.UNAVAILABLE, NetworkType.UNKNOWN)
+        }
+    }
+    
+    override fun startMonitoring() {
+        val request = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        connectivityManager.registerNetworkCallback(request, networkCallback)
+        updateNetworkState()
+    }
+    
+    override fun stopMonitoring() {
+        connectivityManager.unregisterNetworkCallback(networkCallback)
+    }
+}
+```
+
+### Sync Engine
+
+```kotlin
+// SyncEngine.android.kt
+actual class SyncEngineFactory actual constructor() {
+    actual fun create(
+        syncApiClient: SyncApiClient,
+        networkMonitor: NetworkMonitor,
+        coroutineScope: CoroutineScope
+    ): SyncEngine = AndroidSyncEngine(syncApiClient, networkMonitor, coroutineScope)
+}
+
+class AndroidSyncEngine(
+    private val syncApiClient: SyncApiClient,
+    private val networkMonitor: NetworkMonitor,
+    private val scope: CoroutineScope
+) : SyncEngine {
+    // Automatically syncs when network becomes available
+    init {
+        scope.launch {
+            networkMonitor.networkState.collect { state ->
+                if (state.status == NetworkStatus.AVAILABLE) {
+                    syncPendingChanges()
+                }
+            }
+        }
+    }
+}
+```
+
+### Consent Manager
+
+```kotlin
+// ConsentManager.android.kt
+actual class ConsentManagerFactory actual constructor() {
+    actual fun create(
+        privacyApiClient: PrivacyApiClient,
+        coroutineScope: CoroutineScope
+    ): ConsentManager = AndroidConsentManager(context, privacyApiClient, coroutineScope)
+}
+
+class AndroidConsentManager(
+    context: Context,
+    private val privacyApiClient: PrivacyApiClient,
+    private val scope: CoroutineScope
+) : ConsentManager {
+    // Uses EncryptedSharedPreferences for consent storage
+    private val storage = SecureStorage(context)
 }
 ```
 

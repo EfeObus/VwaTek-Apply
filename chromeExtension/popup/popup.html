@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VwaTek Apply</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <!-- Header -->
+        <header class="header">
+            <img src="../icons/icon48.png" alt="VwaTek Apply" class="logo">
+            <h1>VwaTek Apply</h1>
+        </header>
+
+        <!-- Not Logged In State -->
+        <div id="login-section" class="section hidden">
+            <div class="login-prompt">
+                <p>Sign in to save jobs to your tracker</p>
+                <button id="login-btn" class="btn btn-primary btn-full">
+                    Sign In
+                </button>
+                <p class="login-subtext">
+                    Don't have an account? 
+                    <a href="#" id="signup-link">Sign up free</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Logged In State -->
+        <div id="main-section" class="section hidden">
+            <!-- User Info -->
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <div class="user-details">
+                    <span class="user-name" id="user-name">User</span>
+                    <span class="user-email" id="user-email">user@email.com</span>
+                </div>
+                <button id="logout-btn" class="btn btn-icon" title="Sign Out">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Current Job Detection -->
+            <div id="job-detected" class="job-card hidden">
+                <div class="job-header">
+                    <span class="badge badge-success">Job Detected</span>
+                </div>
+                <h3 class="job-title" id="detected-job-title">Software Engineer</h3>
+                <p class="job-company" id="detected-job-company">Company Name</p>
+                <p class="job-location" id="detected-job-location">City, Province</p>
+                
+                <div class="job-actions">
+                    <button id="quick-save-btn" class="btn btn-primary btn-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Quick Save
+                    </button>
+                    <button id="save-details-btn" class="btn btn-secondary">
+                        Save with Details
+                    </button>
+                </div>
+            </div>
+
+            <!-- No Job Detected -->
+            <div id="no-job-detected" class="empty-state hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                </svg>
+                <p>No job posting detected</p>
+                <span class="empty-hint">Navigate to a job posting on a supported site to save it</span>
+            </div>
+
+            <!-- Save with Details Form -->
+            <div id="save-form" class="form-section hidden">
+                <h3 class="form-title">Save Job Details</h3>
+                <form id="job-form">
+                    <div class="form-group">
+                        <label for="job-title">Job Title *</label>
+                        <input type="text" id="job-title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="company-name">Company *</label>
+                        <input type="text" id="company-name" name="company" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="job-city">City</label>
+                            <input type="text" id="job-city" name="city">
+                        </div>
+                        <div class="form-group">
+                            <label for="job-province">Province</label>
+                            <select id="job-province" name="province">
+                                <option value="">Select...</option>
+                                <option value="ONTARIO">Ontario</option>
+                                <option value="QUEBEC">Quebec</option>
+                                <option value="BRITISH_COLUMBIA">British Columbia</option>
+                                <option value="ALBERTA">Alberta</option>
+                                <option value="MANITOBA">Manitoba</option>
+                                <option value="SASKATCHEWAN">Saskatchewan</option>
+                                <option value="NOVA_SCOTIA">Nova Scotia</option>
+                                <option value="NEW_BRUNSWICK">New Brunswick</option>
+                                <option value="NEWFOUNDLAND_AND_LABRADOR">Newfoundland & Labrador</option>
+                                <option value="PRINCE_EDWARD_ISLAND">Prince Edward Island</option>
+                                <option value="NORTHWEST_TERRITORIES">Northwest Territories</option>
+                                <option value="YUKON">Yukon</option>
+                                <option value="NUNAVUT">Nunavut</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="salary-min">Min Salary</label>
+                            <input type="number" id="salary-min" name="salaryMin" placeholder="CAD">
+                        </div>
+                        <div class="form-group">
+                            <label for="salary-max">Max Salary</label>
+                            <input type="number" id="salary-max" name="salaryMax" placeholder="CAD">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="job-type">Job Type</label>
+                        <select id="job-type" name="jobType">
+                            <option value="FULL_TIME">Full-time</option>
+                            <option value="PART_TIME">Part-time</option>
+                            <option value="CONTRACT">Contract</option>
+                            <option value="TEMPORARY">Temporary</option>
+                            <option value="INTERNSHIP">Internship</option>
+                            <option value="CO_OP">Co-op</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="work-model">Work Model</label>
+                        <select id="work-model" name="workModel">
+                            <option value="ON_SITE">On-site</option>
+                            <option value="HYBRID">Hybrid</option>
+                            <option value="REMOTE">Remote</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="lmia-required" name="lmiaRequired">
+                            LMIA/Work Permit Required
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" rows="2" placeholder="Add notes about this job..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="cancel-form-btn" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Job</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Stats Section -->
+            <div id="stats-section" class="stats-section">
+                <h4>Your Applications</h4>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-total">0</span>
+                        <span class="stat-label">Total</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-active">0</span>
+                        <span class="stat-label">Active</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-interviews">0</span>
+                        <span class="stat-label">Interviews</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="stat-offers">0</span>
+                        <span class="stat-label">Offers</span>
+                    </div>
+                </div>
+                <a href="#" id="open-dashboard-link" class="btn btn-text">Open Dashboard →</a>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-section" class="section">
+            <div class="loading-spinner"></div>
+            <p>Loading...</p>
+        </div>
+
+        <!-- Success Message -->
+        <div id="success-message" class="toast toast-success hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Job saved successfully!</span>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" class="toast toast-error hidden">
+            <span id="error-text">Something went wrong</span>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <span>VwaTek Apply v1.0.0</span>
+            <div class="footer-links">
+                <a href="#" id="settings-link">Settings</a>
+                <a href="#" id="help-link">Help</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="popup.js" type="module"></script>
+</body>
+</html>

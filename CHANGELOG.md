@@ -5,6 +5,112 @@ All notable changes to VwaTek Apply will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-02-11
+
+### Added - Phase 2: Core Feature Expansion
+
+#### Job Application Tracker
+- Comprehensive job tracker with Kanban, List, and Calendar views
+- JobTrackerApiClient for backend communication (`/api/v1/jobs/*`)
+- 13 application statuses: SAVED → APPLIED → INTERVIEW stages → OFFER → ACCEPTED/REJECTED
+- Canadian-specific tracking: Province selection, NOC codes, LMIA/work permit support
+- Job source tracking: LinkedIn, Indeed, Glassdoor, Job Bank Canada, Monster, etc.
+- TrackerViewModel with full MVI state management
+- TrackerUseCases with 10 use case implementations bridging ViewModel to API
+- Full platform coverage:
+  - Android: `TrackerScreen.kt` with Compose Material 3
+  - iOS: `TrackerView.swift` with SwiftUI + `TrackerViewModelWrapper.swift`
+  - Web: `TrackerScreen.kt` with Compose for Web
+
+#### Tracker Statistics
+- Real-time statistics: Total applications, applied count, interview count, offer count
+- Calculated metrics: Interview rate, offer rate
+- Response time tracking
+
+#### Application Details
+- Notes with types: GENERAL, FOLLOW_UP, INTERVIEW_FEEDBACK, RESEARCH
+- Reminders: FOLLOW_UP, INTERVIEW, DEADLINE, ASSESSMENT
+- Interview tracking: PHONE, VIDEO, ONSITE, TECHNICAL, BEHAVIORAL, PANEL, FINAL
+- Status history with transition audit trail
+
+#### Notification System
+- Push notification infrastructure
+- Device token management
+- Notification database tables
+- Notification API routes
+
+#### Chrome Extension
+- Content scripts for LinkedIn, Indeed, Glassdoor, Job Bank Canada
+- One-click job saving from job boards
+- Modern popup UI with authentication
+- Background sync to backend API
+
+### Changed
+- Updated Modules.kt with JobTrackerApiClient, TrackerUseCases, and TrackerViewModel DI bindings
+- Updated KoinHelper.kt for iOS to expose TrackerViewModel
+- Chrome Extension API endpoints aligned to `/api/v1/jobs/*`
+
+### Fixed
+- Chrome Extension API endpoint mismatches corrected
+- DTO mapper issues in TrackerUseCases (enum-to-String, missing parameters)
+- Added missing `GET /api/v1/jobs/reminders/upcoming` endpoint
+
+---
+
+## [1.1.0] - 2026-02-11
+
+### Added - Phase 1: Foundation & Infrastructure
+
+#### Observability & Monitoring
+- Firebase Crashlytics integration for Android and iOS crash reporting
+- Sentry integration for web error tracking and performance monitoring
+- Shared analytics framework with platform-specific implementations
+- Backend APM with Micrometer and Prometheus metrics
+- `/metrics` endpoint for Prometheus scraping
+- `/health` endpoint for health checks
+
+#### Cross-Device Sync Engine
+- Sync database tables (sync_operations, sync_conflicts)
+- SyncEngine with platform-specific implementations (Android, iOS, Web)
+- SyncApiClient for backend communication
+- Automatic sync on network availability
+- Conflict detection and resolution
+- NetworkMonitor for real-time connectivity status
+
+#### Canadian Data Residency
+- Infrastructure deployed to northamerica-northeast1 (Montreal)
+- Terraform configuration for Canadian region
+- PIPEDA-compliant data handling
+
+#### Privacy & Compliance (PIPEDA)
+- ConsentManager with platform-specific storage
+- Consent preferences (analytics, data sharing, marketing)
+- PrivacyApiClient for backend communication
+- Data export endpoint (POST /api/v1/privacy/export)
+- Data deletion endpoint (POST /api/v1/privacy/delete)
+- Consent audit trail with timestamps and IP logging
+- Privacy database tables (consent_records, data_export_requests, deletion_requests)
+
+#### API Infrastructure
+- Centralized ApiConfig for URL management
+- SyncApiClient with full CRUD operations
+- PrivacyApiClient for consent and data requests
+- Backend routes: /api/v1/sync/*, /api/v1/privacy/*
+
+### Changed
+- AndroidAuthRepository now calls backend API (previously local-only)
+- All API URLs now use Canadian region endpoints
+- Updated documentation for Phase 1 features
+
+### Security
+- PIPEDA compliance with explicit consent collection
+- Quebec Law 25 readiness
+- Consent withdrawal mechanism
+- 72-hour data export fulfillment
+- 30-day account deletion processing
+
+---
+
 ## [1.0.0] - 2026-02-02
 
 ### Added

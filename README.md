@@ -6,7 +6,8 @@
 
 <p align="center">
   <strong>Professional AI Career Suite</strong><br>
-  Transform your job hunt from a manual grind into an automated, data-driven strategy
+  Transform your job hunt from a manual grind into an automated, data-driven strategy<br>
+  <em>🇨🇦 Built for the Canadian job market</em>
 </p>
 
 <p align="center">
@@ -14,6 +15,7 @@
   <img src="https://img.shields.io/badge/Language-Kotlin-purple?style=flat-square&logo=kotlin" alt="Kotlin"/>
   <img src="https://img.shields.io/badge/UI-Compose%20Multiplatform-green?style=flat-square" alt="Compose"/>
   <img src="https://img.shields.io/badge/AI-Gemini%202.0%20Flash-orange?style=flat-square&logo=google" alt="Gemini"/>
+  <img src="https://img.shields.io/badge/Data-Canadian%20Hosted-red?style=flat-square" alt="Canadian"/>
 </p>
 
 ---
@@ -61,6 +63,17 @@ VwaTek Apply is a high-performance job application assistant built with **Kotlin
 | **Real-time Streaming** | View AI suggestions word-by-word for a responsive, modern UI experience |
 | **Browser Print-to-PDF** | Web version supports native browser print dialog for PDF generation |
 
+### 5. Infrastructure & Compliance (Phase 1 - February 2026)
+
+| Feature | Description |
+|---------|-------------|
+| **PIPEDA Compliance** | Full Canadian privacy law compliance with consent management |
+| **Canadian Data Residency** | All data hosted in Montreal (northamerica-northeast1) |
+| **Cross-Device Sync** | Automatic sync across all your devices with conflict resolution |
+| **Offline Support** | Work offline with automatic sync when connection restored |
+| **Crash Reporting** | Firebase Crashlytics (mobile) and Sentry (web) for reliability |
+| **Real-time Monitoring** | Prometheus metrics for backend health monitoring |
+
 ## Technical Stack
 
 ```
@@ -74,6 +87,11 @@ VwaTek Apply is a high-performance job application assistant built with **Kotlin
 |  Data Persistence     |  SQLDelight (Local Database)        |
 |  Networking           |  Ktor                               |
 |  Dependency Injection |  Koin                               |
+|  Backend              |  Ktor Server on Cloud Run           |
+|  Database             |  MySQL on Cloud SQL                 |
+|  Region               |  Canadian (Montreal)                |
+|  Monitoring           |  Firebase Crashlytics, Sentry       |
+|  Metrics              |  Micrometer + Prometheus            |
 +-------------------------------------------------------------+
 ```
 
@@ -180,21 +198,25 @@ vwatek-apply/
 | Document | Description |
 |----------|-------------|
 | [Architecture Guide](docs/ARCHITECTURE.md) | System architecture and design patterns |
-| [API Reference](docs/API.md) | Gemini API integration documentation |
+| [API Reference](docs/API.md) | Gemini API and Backend API documentation |
 | [iOS Platform Guide](docs/IOS_PLATFORM.md) | iOS-specific implementation details |
 | [Android Platform Guide](docs/ANDROID_PLATFORM.md) | Android-specific implementation details |
 | [Web Platform Guide](docs/WEB_PLATFORM.md) | Web-specific implementation details |
 | [Code Style Guide](docs/CODE_STYLE.md) | Coding standards and conventions |
 | [Contributing Guide](docs/CONTRIBUTING.md) | How to contribute to the project |
-| [Security Policy](docs/SECURITY.md) | Security guidelines and practices |
+| [Security Policy](docs/SECURITY.md) | Security guidelines and PIPEDA compliance |
+| [Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md) | Cloud deployment guide |
+| [Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md) | Feature roadmap and progress |
 | [FAQ](docs/FAQ.md) | Frequently asked questions |
 | [Changelog](CHANGELOG.md) | Version history and release notes |
 
 ## Roadmap
 
-- [ ] **Voice Mock Interviews** - Real-time audio practice for interview prep using Gemini Live
-- [ ] **LinkedIn Integration** - One-click import for work history and profile data
-- [ ] **Application Tracker** - Kanban-style board to track the status of every job application
+- [x] **Phase 1: Foundation** - PIPEDA compliance, cross-device sync, monitoring (February 2026)
+- [ ] **Phase 2: Core Features** - Job tracker, NOC integration, voice interviews
+- [ ] **Phase 3: Canadian Market** - Job Bank integration, bilingual support
+- [ ] **Phase 4: Premium** - Subscription tiers, enterprise features
+- [ ] **Phase 5: Scale** - Team accounts, ATS partnerships
 
 ## Contributing
 

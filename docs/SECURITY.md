@@ -155,10 +155,84 @@ val httpClient = HttpClient {
 
 #### What We DON'T Store
 
-- We do NOT store data on any server
-- We do NOT collect analytics or telemetry
-- We do NOT track user behavior
-- We do NOT share data with third parties
+- We do NOT store user data on servers outside Canada
+- We do NOT collect analytics without explicit consent
+- We do NOT track user behavior without consent
+- We do NOT share data with third parties without consent
+
+### Canadian Data Residency (Phase 1)
+
+All server-side data is stored in Canadian data centers:
+
+| Service | Region | Location |
+|---------|--------|----------|
+| Cloud Run | northamerica-northeast1 | Montreal, QC |
+| Cloud SQL | northamerica-northeast1 | Montreal, QC |
+| Cloud Storage | northamerica-northeast1 | Montreal, QC |
+| Secret Manager | northamerica-northeast1 | Montreal, QC |
+
+### PIPEDA Compliance Architecture (Phase 1)
+
+```
++------------------------------------------------------------------+
+|                    PIPEDA Compliance System                       |
++------------------------------------------------------------------+
+|                                                                   |
+|  +---------------------------+  +---------------------------+     |
+|  |  ConsentManager          |  |  Privacy API Routes       |     |
+|  |  (Platform-specific)     |  |  /api/v1/privacy/*        |     |
+|  +---------------------------+  +---------------------------+     |
+|           |                              |                        |
+|           v                              v                        |
+|  +---------------------------+  +---------------------------+     |
+|  |  Consent Storage         |  |  Data Export Service      |     |
+|  |  - Analytics opt-in/out  |  |  - JSON/CSV export        |     |
+|  |  - Data sharing consent  |  |  - 72-hour availability   |     |
+|  |  - Marketing consent     |  |  - Secure download        |     |
+|  +---------------------------+  +---------------------------+     |
+|           |                              |                        |
+|           v                              v                        |
+|  +---------------------------+  +---------------------------+     |
+|  |  Audit Trail             |  |  Account Deletion         |     |
+|  |  - Consent timestamps    |  |  - 30-day grace period    |     |
+|  |  - IP address logging    |  |  - Complete data removal  |     |
+|  |  - Version tracking      |  |  - Confirmation email     |     |
+|  +---------------------------+  +---------------------------+     |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+#### PIPEDA User Rights Implementation
+
+| Right | Implementation | API Endpoint |
+|-------|----------------|---------------|
+| Right to Access | Data export feature | `POST /api/v1/privacy/export` |
+| Right to Correction | In-app editing | N/A (user-controlled) |
+| Right to Deletion | Account deletion | `POST /api/v1/privacy/delete` |
+| Right to Withdraw Consent | Consent manager | `POST /api/v1/privacy/consent` |
+| Right to Complain | In-app support | Contact form |
+
+#### Consent Management
+
+```kotlin
+// ConsentManager usage
+interface ConsentManager {
+    val consentState: StateFlow<ConsentState>
+    suspend fun loadConsent()
+    suspend fun updateConsent(preferences: ConsentPreferences)
+    suspend fun revokeAllConsent()
+    fun hasAnalyticsConsent(): Boolean
+    fun hasDataSharingConsent(): Boolean
+    fun hasMarketingConsent(): Boolean
+}
+
+data class ConsentPreferences(
+    val analyticsEnabled: Boolean,
+    val dataSharingEnabled: Boolean,
+    val marketingEnabled: Boolean,
+    val consentVersion: String
+)
+```
 
 ### Data Transmission
 
@@ -261,17 +335,49 @@ If you suspect your data has been compromised:
 
 VwaTek Apply is designed with privacy by default:
 
+- **PIPEDA Compliant**: Full compliance with Canadian privacy law
+  - Explicit consent collection before data processing
+  - Data export within 30 days of request
+  - Account deletion within 30 days of request
+  - Consent audit trail maintained
+- **Quebec Law 25 Compliant**: Privacy impact assessments conducted
 - **GDPR Compliant**: No personal data leaves your device without consent
 - **CCPA Compliant**: No sale of personal information
 - **SOC 2 Principles**: Security and privacy controls in place
 
+### Canadian Privacy Requirements
+
+| Requirement | Status | Implementation |
+|-------------|--------|----------------|
+| Data stored in Canada | ✅ Complete | Montreal (northamerica-northeast1) |
+| Consent before collection | ✅ Complete | ConsentManager with opt-in |
+| Right to access data | ✅ Complete | Data export API |
+| Right to delete data | ✅ Complete | Account deletion API |
+| Consent withdrawal | ✅ Complete | Revoke consent feature |
+| Privacy policy | ✅ Complete | In-app and web |
+| Breach notification | ✅ Complete | 72-hour notification process |
+
 ### Data Retention
 
-All data is stored locally on your device. We do not retain any user data on our servers because we don't have servers storing user data.
+**Local Data:**
+All data is stored locally on your device. We do not retain any user data on our servers except:
+- Sync metadata (for cross-device sync, if enabled)
+- Consent preferences (for compliance audit trail)
+- Anonymized analytics (if user consents)
+
+**Server Data Retention:**
+| Data Type | Retention Period | Purpose |
+|-----------|------------------|----------|
+| Sync operations | 90 days | Cross-device sync |
+| Consent records | 7 years | Legal compliance |
+| Data export requests | 72 hours | User download |
+| Deletion requests | 30 days | Verification period |
+| Analytics (consented) | 2 years | Service improvement |
 
 To delete all data:
-1. Delete the app from your device
-2. Data is automatically removed with app deletion
+1. Use in-app "Delete My Account" feature
+2. Data is removed within 30 days
+3. Confirmation email sent upon completion
 
 ## Security Updates
 

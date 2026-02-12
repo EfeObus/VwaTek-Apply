@@ -780,3 +780,328 @@ class GeminiApiServiceTest {
 6. **Log API interactions** for debugging (exclude sensitive data)
 7. **Use timeouts** to prevent hanging requests
 8. **Test with mock services** for reliable unit tests
+
+---
+
+## Backend API (Phase 1)
+
+The VwaTek backend is a Ktor server deployed on Google Cloud Run in the Canadian region (`northamerica-northeast1`).
+
+### API Configuration
+
+```kotlin
+// shared/src/commonMain/kotlin/com/vwatek/apply/data/api/ApiConfig.kt
+object ApiConfig {
+    val BASE_URL = when (BuildKonfig.ENVIRONMENT) {
+        "production" -> "https://api.vwatek.ca"
+        "staging" -> "https://staging-api.vwatek.ca"
+        else -> "http://localhost:8080"  // development
+    }
+    
+    const val API_VERSION = "v1"
+    val API_BASE = "$BASE_URL/api/$API_VERSION"
+}
+```
+
+### Authentication Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/auth/register` | POST | Register new user |
+| `/api/v1/auth/login` | POST | Authenticate user |
+| `/api/v1/auth/logout` | POST | Invalidate session |
+| `/api/v1/auth/refresh` | POST | Refresh JWT token |
+| `/api/v1/auth/reset-password` | POST | Request password reset |
+
+### Sync API
+
+**Base Path:** `/api/v1/sync`
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/sync/changes` | GET | Fetch server changes since timestamp |
+| `/api/v1/sync/push` | POST | Push local changes to server |
+| `/api/v1/sync/conflicts` | GET | Get unresolved conflicts |
+| `/api/v1/sync/resolve` | POST | Resolve a sync conflict |
+| `/api/v1/sync/status` | GET | Get sync status for user |
+
+#### Sync Request/Response Models
+
+```kotlin
+@Serializable
+data class SyncPushRequest(
+    val operations: List<SyncOperation>,
+    val deviceId: String,
+    val lastSyncTimestamp: Long
+)
+
+@Serializable
+data class SyncOperation(
+    val id: String,
+    val entityType: String,      // "resume", "cover_letter", "job_application"
+    val entityId: String,
+    val operationType: String,   // "create", "update", "delete"
+    val data: String?,           // JSON payload for create/update
+    val timestamp: Long,
+    val deviceId: String
+)
+
+@Serializable
+data class SyncPushResponse(
+    val success: Boolean,
+    val syncedOperations: List<String>,
+    val conflicts: List<SyncConflict>,
+    val serverTimestamp: Long
+)
+
+@Serializable
+data class SyncConflict(
+    val operationId: String,
+    val entityType: String,
+    val entityId: String,
+    val localData: String,
+    val serverData: String,
+    val localTimestamp: Long,
+    val serverTimestamp: Long
+)
+```
+
+### Privacy API (PIPEDA Compliance)
+
+**Base Path:** `/api/v1/privacy`
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/privacy/consent` | GET | Get current consent preferences |
+| `/api/v1/privacy/consent` | POST | Update consent preferences |
+| `/api/v1/privacy/export` | POST | Request data export (PIPEDA right) |
+| `/api/v1/privacy/export/{requestId}` | GET | Check export status |
+| `/api/v1/privacy/export/{requestId}/download` | GET | Download exported data |
+| `/api/v1/privacy/delete` | POST | Request account deletion |
+| `/api/v1/privacy/delete/{requestId}` | GET | Check deletion status |
+
+#### Consent Models
+
+```kotlin
+@Serializable
+data class ConsentPreferences(
+    val analyticsEnabled: Boolean,
+    val dataSharingEnabled: Boolean,
+    val marketingEnabled: Boolean,
+    val consentVersion: String,
+    val lastUpdated: Long,
+    val ipAddress: String? = null
+)
+
+@Serializable
+data class DataExportRequest(
+    val format: String = "json",  // "json" or "csv"
+    val includeResumes: Boolean = true,
+    val includeCoverLetters: Boolean = true,
+    val includeJobApplications: Boolean = true,
+    val includeAnalytics: Boolean = false
+)
+
+@Serializable
+data class DataExportStatus(
+    val requestId: String,
+    val status: String,          // "pending", "processing", "ready", "expired"
+    val createdAt: Long,
+    val expiresAt: Long?,
+    val downloadUrl: String?
+)
+```
+
+### Monitoring Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check (returns "OK") |
+| `/metrics` | GET | Prometheus metrics |
+
+---
+
+### Job Tracker API (Phase 2)
+
+**Base Path:** `/api/v1/jobs`  
+**Authentication:** Required (JWT Bearer token)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/jobs` | GET | List applications (with filters: status, source, province, search) |
+| `/api/v1/jobs` | POST | Create new application |
+| `/api/v1/jobs/quick` | POST | Quick add application (minimal fields) |
+| `/api/v1/jobs/{id}` | GET | Get application details with notes, reminders, interviews |
+| `/api/v1/jobs/{id}` | PUT | Update application |
+| `/api/v1/jobs/{id}` | DELETE | Delete application |
+| `/api/v1/jobs/{id}/status` | PATCH | Update application status |
+| `/api/v1/jobs/{id}/notes` | POST | Add note to application |
+| `/api/v1/jobs/{id}/reminders` | POST | Add reminder to application |
+| `/api/v1/jobs/{id}/interviews` | POST | Add interview to application |
+| `/api/v1/jobs/stats` | GET | Get tracker statistics |
+| `/api/v1/jobs/reminders/upcoming` | GET | Get upcoming reminders |
+
+#### Job Tracker Models
+
+```kotlin
+@Serializable
+data class JobApplicationDto(
+    val id: String,
+    val jobTitle: String,
+    val companyName: String,
+    val companyLogo: String? = null,
+    val jobUrl: String? = null,
+    val jobBoardSource: String? = null,  // LINKEDIN, INDEED, JOB_BANK_CANADA, etc.
+    val city: String? = null,
+    val province: String? = null,  // Canadian province code (ON, BC, QC, etc.)
+    val isRemote: Boolean = false,
+    val isHybrid: Boolean = false,
+    val salaryMin: Int? = null,
+    val salaryMax: Int? = null,
+    val salaryCurrency: String? = "CAD",
+    val salaryPeriod: String? = null,  // HOURLY, DAILY, WEEKLY, MONTHLY, YEARLY
+    val status: String,  // SAVED, APPLIED, PHONE_INTERVIEW, etc.
+    val appliedAt: String? = null,
+    val nocCode: String? = null,  // Canadian NOC code
+    val createdAt: String,
+    val updatedAt: String
+)
+
+@Serializable
+data class CreateJobApplicationDto(
+    val jobTitle: String,
+    val companyName: String,
+    val resumeId: String? = null,
+    val coverLetterId: String? = null,
+    val companyLogo: String? = null,
+    val jobUrl: String? = null,
+    val jobDescription: String? = null,
+    val jobBoardSource: String? = null,
+    val externalJobId: String? = null,
+    val city: String? = null,
+    val province: String? = null,
+    val country: String? = "Canada",
+    val isRemote: Boolean = false,
+    val isHybrid: Boolean = false,
+    val salaryMin: Int? = null,
+    val salaryMax: Int? = null,
+    val salaryCurrency: String? = "CAD",
+    val salaryPeriod: String? = null,
+    val status: String? = "SAVED",
+    val appliedAt: String? = null,
+    val nocCode: String? = null,
+    val requiresWorkPermit: Boolean? = null,
+    val isLmiaRequired: Boolean? = null,
+    val contactName: String? = null,
+    val contactEmail: String? = null,
+    val contactPhone: String? = null
+)
+
+@Serializable
+data class TrackerStatsDto(
+    val totalApplications: Int,
+    val savedCount: Int,
+    val appliedCount: Int,
+    val interviewCount: Int,
+    val offerCount: Int,
+    val rejectedCount: Int,
+    val interviewRate: Double,  // Percentage
+    val offerRate: Double       // Percentage
+)
+```
+
+#### Application Statuses
+
+| Status | Description |
+|--------|-------------|
+| `SAVED` | Job saved for later |
+| `APPLIED` | Application submitted |
+| `PHONE_INTERVIEW` | Phone screen scheduled |
+| `VIDEO_INTERVIEW` | Video interview scheduled |
+| `TECHNICAL_INTERVIEW` | Technical assessment |
+| `ONSITE_INTERVIEW` | On-site interview |
+| `FINAL_INTERVIEW` | Final round interview |
+| `OFFER` | Offer received |
+| `NEGOTIATING` | In salary negotiation |
+| `ACCEPTED` | Offer accepted |
+| `REJECTED` | Application rejected |
+| `WITHDRAWN` | Application withdrawn |
+| `NO_RESPONSE` | No response received |
+
+#### Job Board Sources
+
+- `LINKEDIN` - LinkedIn Jobs
+- `INDEED` - Indeed
+- `GLASSDOOR` - Glassdoor
+- `JOB_BANK_CANADA` - Job Bank Canada (Government)
+- `MONSTER` - Monster
+- `WORKDAY` - Workday
+- `GREENHOUSE` - Greenhouse ATS
+- `LEVER` - Lever ATS
+- `COMPANY_WEBSITE` - Direct company website
+- `REFERRAL` - Referred by someone
+- `RECRUITER` - Recruiter outreach
+- `OTHER` - Other sources
+
+---
+
+### Error Responses
+
+All API errors follow a consistent format:
+
+```kotlin
+@Serializable
+data class ApiError(
+    val code: String,
+    val message: String,
+    val details: Map<String, String>? = null
+)
+```
+
+| HTTP Status | Error Code | Description |
+|-------------|------------|-------------|
+| 400 | `INVALID_REQUEST` | Malformed request body |
+| 401 | `UNAUTHORIZED` | Missing or invalid JWT |
+| 403 | `FORBIDDEN` | Insufficient permissions |
+| 404 | `NOT_FOUND` | Resource not found |
+| 409 | `CONFLICT` | Sync conflict detected |
+| 429 | `RATE_LIMITED` | Too many requests |
+| 500 | `INTERNAL_ERROR` | Server error |
+
+### API Client Usage
+
+```kotlin
+// SyncApiClient usage
+class SyncApiClient(private val httpClient: HttpClient) {
+    suspend fun pushChanges(operations: List<SyncOperation>): Result<SyncPushResponse> {
+        return try {
+            val response = httpClient.post("${ApiConfig.API_BASE}/sync/push") {
+                contentType(ContentType.Application.Json)
+                setBody(SyncPushRequest(
+                    operations = operations,
+                    deviceId = PlatformUtils.getDeviceId(),
+                    lastSyncTimestamp = getLastSyncTimestamp()
+                ))
+            }
+            Result.success(response.body())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+
+// PrivacyApiClient usage
+class PrivacyApiClient(private val httpClient: HttpClient) {
+    suspend fun requestDataExport(request: DataExportRequest): Result<DataExportStatus> {
+        return try {
+            val response = httpClient.post("${ApiConfig.API_BASE}/privacy/export") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+            Result.success(response.body())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+}
+```

@@ -15,6 +15,8 @@ The iOS version of VwaTek Apply uses **Compose Multiplatform for iOS** with a **
 | Build Tool | Gradle + Xcode |
 | Secure Storage | iOS Keychain Services |
 | Networking | Ktor (Darwin engine) |
+| Crash Reporting | Firebase Crashlytics (Phase 1) |
+| Analytics | Firebase Analytics (Phase 1) |
 
 ## Project Structure
 
@@ -81,12 +83,21 @@ shared/src/iosMain/
 // iOSApp.swift
 import SwiftUI
 import shared
+import FirebaseCore
+import FirebaseCrashlytics
 
 @main
 struct VwaTekApp: App {
     init() {
+        // Initialize Firebase (Phase 1)
+        FirebaseApp.configure()
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
+        
         // Initialize Koin
         KoinHelperKt.doInitKoin()
+        
+        // Start network monitoring (Phase 1)
+        NetworkMonitorHelper.shared.startMonitoring()
     }
     
     var body: some Scene {
@@ -200,6 +211,80 @@ actual class DatabaseDriverFactory {
             }
         )
     }
+}
+```
+
+## Phase 1 Components (February 2026)
+
+### Network Monitor
+
+```kotlin
+// NetworkMonitor.ios.kt
+import platform.Network.*
+import platform.darwin.dispatch_get_main_queue
+
+actual class NetworkMonitorFactory actual constructor() {
+    actual fun create(): NetworkMonitor = IOSNetworkMonitor()
+}
+
+class IOSNetworkMonitor : NetworkMonitor {
+    private val monitor = nw_path_monitor_create()
+    
+    private val _networkState = MutableStateFlow(NetworkState(
+        status = NetworkStatus.UNKNOWN,
+        type = NetworkType.UNKNOWN
+    ))
+    override val networkState: StateFlow<NetworkState> = _networkState.asStateFlow()
+    
+    override fun startMonitoring() {
+        nw_path_monitor_set_update_handler(monitor) { path ->
+            val status = when (nw_path_get_status(path)) {
+                nw_path_status_satisfied -> NetworkStatus.AVAILABLE
+                nw_path_status_unsatisfied -> NetworkStatus.UNAVAILABLE
+                else -> NetworkStatus.UNKNOWN
+            }
+            _networkState.value = NetworkState(status, detectNetworkType(path))
+        }
+        nw_path_monitor_set_queue(monitor, dispatch_get_main_queue())
+        nw_path_monitor_start(monitor)
+    }
+    
+    override fun stopMonitoring() {
+        nw_path_monitor_cancel(monitor)
+    }
+}
+```
+
+### Sync Engine
+
+```kotlin
+// SyncEngine.ios.kt
+actual class SyncEngineFactory actual constructor() {
+    actual fun create(
+        syncApiClient: SyncApiClient,
+        networkMonitor: NetworkMonitor,
+        coroutineScope: CoroutineScope
+    ): SyncEngine = IOSSyncEngine(syncApiClient, networkMonitor, coroutineScope)
+}
+```
+
+### Consent Manager
+
+```kotlin
+// ConsentManager.ios.kt
+actual class ConsentManagerFactory actual constructor() {
+    actual fun create(
+        privacyApiClient: PrivacyApiClient,
+        coroutineScope: CoroutineScope
+    ): ConsentManager = IOSConsentManager(privacyApiClient, coroutineScope)
+}
+
+class IOSConsentManager(
+    private val privacyApiClient: PrivacyApiClient,
+    private val scope: CoroutineScope
+) : ConsentManager {
+    // Uses iOS Keychain for consent storage
+    private val storage = SecureStorage()
 }
 ```
 

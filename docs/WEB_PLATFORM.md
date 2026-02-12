@@ -16,6 +16,8 @@ The Web version of VwaTek Apply uses **Compose for Web** (Compose HTML/DOM) to d
 | Bundler | Webpack (via Kotlin/JS) |
 | Storage | IndexedDB with encryption |
 | Networking | Ktor (JS engine) |
+| Error Tracking | Sentry (Phase 1) |
+| Analytics | Custom Analytics (Phase 1) |
 
 ## Project Structure
 
@@ -80,13 +82,35 @@ webApp/
 ```kotlin
 // Main.kt
 fun main() {
+    // Initialize Sentry for error tracking (Phase 1)
+    initSentry()
+    
     // Initialize Koin for dependency injection
     initKoin()
+    
+    // Start network monitoring (Phase 1)
+    val networkMonitor: NetworkMonitor = getKoin().get()
+    networkMonitor.startMonitoring()
     
     // Render the application
     renderComposable(rootElementId = "root") {
         App()
     }
+}
+
+// Phase 1: Sentry Configuration
+fun initSentry() {
+    js("""
+        Sentry.init({
+            dsn: "YOUR_SENTRY_DSN",
+            environment: "production",
+            tracesSampleRate: 0.1,
+            beforeSend: function(event) {
+                // Scrub sensitive data
+                return event;
+            }
+        });
+    """)
 }
 
 @Composable

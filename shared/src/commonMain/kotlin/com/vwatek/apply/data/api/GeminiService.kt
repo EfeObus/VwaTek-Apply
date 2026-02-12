@@ -28,8 +28,9 @@ class GeminiService(
 ) {
     private val geminiBaseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
     
-    // Backend API URL - this uses your centralized API keys
-    private val backendUrl = "https://vwatek-backend-21443684777.us-central1.run.app/api/v1"
+    // Backend API URL - using centralized ApiConfig (Canadian region in production)
+    private val backendUrl: String
+        get() = ApiConfig.apiV1Url
     
     private val json = Json {
         ignoreUnknownKeys = true

@@ -11,6 +11,9 @@ packages:
   GoogleSignIn:
     url: https://github.com/google/GoogleSignIn-iOS
     minorVersion: "8.0.0"
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    minorVersion: "10.19.0"
 
 configs:
   Debug: debug
@@ -76,9 +79,22 @@ targets:
             ./gradlew :shared:linkReleaseFrameworkIosArm64 --no-daemon
           fi
         basedOnDependencyAnalysis: false
+    postBuildScripts:
+      - name: Upload dSYMs to Crashlytics
+        script: |
+          # Only run for Release builds
+          if [ "$CONFIGURATION" = "Release" ]; then
+            "${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
+          fi
+        basedOnDependencyAnalysis: false
+        runOnlyWhenInstalling: true
     dependencies:
       - sdk: libsqlite3.tbd
       - package: GoogleSignIn
+      - package: Firebase
+        product: FirebaseCrashlytics
+      - package: Firebase
+        product: FirebaseAnalytics
 
 schemes:
   iosApp:

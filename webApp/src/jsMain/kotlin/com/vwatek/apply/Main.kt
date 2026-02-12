@@ -7,6 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.vwatek.apply.di.platformModule
 import com.vwatek.apply.di.sharedModule
+import com.vwatek.apply.monitoring.SentryConfig
+import com.vwatek.apply.monitoring.setupGlobalErrorHandler
 import com.vwatek.apply.ui.App
 import kotlinx.browser.localStorage
 import org.jetbrains.compose.web.css.*
@@ -15,6 +17,10 @@ import org.jetbrains.compose.web.renderComposable
 import org.koin.core.context.startKoin
 
 fun main() {
+    // Initialize error tracking first to catch initialization errors
+    SentryConfig.init()
+    setupGlobalErrorHandler()
+    
     initKoin()
     initializeDefaultApiKeys()
     

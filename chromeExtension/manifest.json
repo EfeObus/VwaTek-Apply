@@ -1,0 +1,99 @@
+{
+  "manifest_version": 3,
+  "name": "VwaTek Apply - Job Tracker",
+  "version": "1.0.0",
+  "description": "Quick save job postings to your VwaTek Apply job tracker. Track applications, get reminders, and land your dream job in Canada.",
+  "author": "VwaTek",
+  "homepage_url": "https://vwatek.com/apply",
+  
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  
+  "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "VwaTek Apply",
+    "default_popup": "popup/popup.html"
+  },
+  
+  "permissions": [
+    "activeTab",
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  
+  "host_permissions": [
+    "https://www.linkedin.com/jobs/*",
+    "https://www.indeed.com/*",
+    "https://www.indeed.ca/*",
+    "https://ca.indeed.com/*",
+    "https://www.glassdoor.com/*",
+    "https://www.glassdoor.ca/*",
+    "https://www.monster.ca/*",
+    "https://www.workopolis.com/*",
+    "https://www.jobbank.gc.ca/*",
+    "https://www.simplyhired.ca/*",
+    "https://www.ziprecruiter.com/*",
+    "https://www.careerbeacon.com/*",
+    "https://www.eluta.ca/*"
+  ],
+  
+  "background": {
+    "service_worker": "background/background.js",
+    "type": "module"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.linkedin.com/jobs/*"
+      ],
+      "js": ["content/linkedin.js"],
+      "css": ["content/content.css"]
+    },
+    {
+      "matches": [
+        "https://www.indeed.com/*",
+        "https://www.indeed.ca/*",
+        "https://ca.indeed.com/*"
+      ],
+      "js": ["content/indeed.js"],
+      "css": ["content/content.css"]
+    },
+    {
+      "matches": [
+        "https://www.glassdoor.com/*",
+        "https://www.glassdoor.ca/*"
+      ],
+      "js": ["content/glassdoor.js"],
+      "css": ["content/content.css"]
+    },
+    {
+      "matches": [
+        "https://www.jobbank.gc.ca/*"
+      ],
+      "js": ["content/jobbank.js"],
+      "css": ["content/content.css"]
+    }
+  ],
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*", "images/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  }
+}

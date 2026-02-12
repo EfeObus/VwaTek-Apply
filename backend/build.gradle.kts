@@ -36,7 +36,11 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.call.logging)
+    implementation(libs.ktor.server.metrics.micrometer)
     implementation(libs.logback.classic)
+    
+    // Metrics & Monitoring
+    implementation(libs.micrometer.registry.prometheus)
     
     // Ktor Client (for LinkedIn OAuth)
     implementation(libs.ktor.client.core)

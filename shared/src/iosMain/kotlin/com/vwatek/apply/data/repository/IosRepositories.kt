@@ -63,7 +63,9 @@ class IosAuthRepository(
     private val httpClient: HttpClient
 ) : AuthRepository {
     
-    private val apiBaseUrl = "https://vwatek-backend-21443684777.us-central1.run.app/api/v1"
+    // Using centralized ApiConfig (Canadian region in production)
+    private val apiBaseUrl: String
+        get() = com.vwatek.apply.data.api.ApiConfig.apiV1Url
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     private val userDefaults = NSUserDefaults.standardUserDefaults
     
@@ -380,7 +382,9 @@ class IosLinkedInRepository(
     private val httpClient: HttpClient
 ) : LinkedInRepository {
     
-    private val apiBaseUrl = "https://vwatek-backend-21443684777.us-central1.run.app/api/v1"
+    // Using centralized ApiConfig (Canadian region in production)
+    private val apiBaseUrl: String
+        get() = com.vwatek.apply.data.api.ApiConfig.apiV1Url
     
     override suspend fun getAuthorizationUrl(): String {
         return try {

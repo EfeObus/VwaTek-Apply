@@ -50,12 +50,13 @@ internal fun getCurrentUserId(): String? {
 
 /**
  * Get the API base URL based on current hostname
+ * Uses centralized ApiConfig (Canadian region in production)
  */
 internal fun getApiBaseUrl(): String {
     val hostname = kotlinx.browser.window.location.hostname
     return when {
         hostname == "localhost" || hostname == "127.0.0.1" -> "http://localhost:8090"
-        else -> "https://vwatek-backend-21443684777.us-central1.run.app"
+        else -> com.vwatek.apply.data.api.ApiConfig.baseUrl
     }
 }
 

@@ -98,5 +98,11 @@ fun Application.configureRouting() {
             interviewRoutes()
             aiRoutes(aiService)
         }
+        
+        // Sync routes (separate from versioned API for flexibility)
+        syncRoutes()
+        
+        // Privacy routes for PIPEDA compliance
+        privacyRoutes()
     }
 }

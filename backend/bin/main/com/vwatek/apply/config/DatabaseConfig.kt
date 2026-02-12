@@ -221,6 +221,7 @@ object DatabaseConfig {
         
         transaction {
             SchemaUtils.createMissingTablesAndColumns(
+                // Core tables
                 UsersTable,
                 ResumesTable,
                 ResumeVersionsTable,
@@ -228,7 +229,22 @@ object DatabaseConfig {
                 CoverLettersTable,
                 InterviewSessionsTable,
                 InterviewQuestionsTable,
-                SettingsTable
+                SettingsTable,
+                // Sync tables
+                DevicesTable,
+                SyncLogsTable,
+                SyncMetadataTable,
+                DeviceSyncStateTable,
+                OfflineOperationsTable,
+                SyncConflictsTable,
+                UserDataRegionsTable,
+                ChangeFeedTable,
+                // Privacy/PIPEDA tables
+                ConsentRecordsTable,
+                ConsentAuditLogTable,
+                DataAccessRequestsTable,
+                DataRetentionTable,
+                DataSharingLogTable
             )
         }
         

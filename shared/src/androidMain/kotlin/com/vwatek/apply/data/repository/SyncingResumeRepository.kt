@@ -46,8 +46,9 @@ class SyncingResumeRepository(
     
     private val _resumes = MutableStateFlow<List<Resume>>(emptyList())
     
-    // Base URL for the API - should match the web app URL
-    private val apiBaseUrl = "https://vwatek-backend-21443684777.us-central1.run.app"
+    // Base URL for the API - using centralized ApiConfig (Canadian region in production)
+    private val apiBaseUrl: String
+        get() = com.vwatek.apply.data.api.ApiConfig.baseUrl
     
     init {
         // Initial load from local database

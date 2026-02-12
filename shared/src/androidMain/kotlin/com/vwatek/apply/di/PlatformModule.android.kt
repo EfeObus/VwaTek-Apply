@@ -66,7 +66,7 @@ actual fun platformModule(): Module = module {
     }
     
     // Auth repository (must be declared before SyncingResumeRepository)
-    single<AuthRepository> { AndroidAuthRepository(get()) }
+    single<AuthRepository> { AndroidAuthRepository(get(), get()) }
     
     // Repositories using local SQLDelight database with API sync
     single<ResumeRepository> { SyncingResumeRepository(get(), get(), get()) }

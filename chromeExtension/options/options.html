@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VwaTek Apply - Settings</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+        
+        .header img {
+            width: 48px;
+            height: 48px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .card {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .card-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        
+        .card-body {
+            padding: 24px;
+        }
+        
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-info {
+            flex: 1;
+        }
+        
+        .setting-label {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .setting-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .setting-control {
+            margin-left: 24px;
+        }
+        
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            width: 48px;
+            height: 26px;
+        }
+        
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #cbd5e1;
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        
+        .toggle input:checked + .toggle-slider {
+            background: var(--primary-color);
+        }
+        
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+        
+        /* Select */
+        select {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-primary);
+            cursor: pointer;
+            min-width: 150px;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        /* Input */
+        input[type="text"],
+        input[type="url"] {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            width: 300px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        
+        .btn-danger {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .btn-danger:hover {
+            background: #fecaca;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        /* Account section */
+        .account-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .account-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .account-details h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .account-details p {
+            color: var(--text-secondary);
+        }
+        
+        /* Status badge */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+        
+        .status-connected {
+            background: #d1fae5;
+            color: #059669;
+        }
+        
+        .status-disconnected {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 40px;
+        }
+        
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 14px 20px;
+            background: #1e293b;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast-success {
+            background: #059669;
+        }
+        
+        .toast-error {
+            background: #dc2626;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="../icons/icon48.png" alt="VwaTek Apply">
+            <div>
+                <h1>VwaTek Apply Settings</h1>
+                <span class="status-badge status-connected" id="status-badge">
+                    <span>●</span> Connected
+                </span>
+            </div>
+        </div>
+        
+        <!-- Account Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Account</h2>
+                <p>Manage your VwaTek Apply account</p>
+            </div>
+            <div class="card-body">
+                <div class="account-info" id="account-info">
+                    <div class="account-avatar" id="account-avatar">U</div>
+                    <div class="account-details">
+                        <h3 id="account-name">User Name</h3>
+                        <p id="account-email">user@email.com</p>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-secondary" id="open-dashboard-btn">Open Dashboard</button>
+                    <button class="btn btn-danger" id="logout-btn">Sign Out</button>
+                </div>
+                <div id="login-prompt" class="hidden">
+                    <p style="margin-bottom: 16px; color: var(--text-secondary);">Sign in to sync your saved jobs across devices</p>
+                    <button class="btn btn-primary" id="login-btn">Sign In</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notifications Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Notifications</h2>
+                <p>Control when you receive notifications</p>
+            </div>
+            <div class="card-body">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Enable Notifications</div>
+                        <div class="setting-description">Receive reminders and updates from the extension</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle">
+                            <input type="checkbox" id="notifications-enabled" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Daily Summary</div>
+                        <div class="setting-description">Get a daily overview of your job applications</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle">
+                            <input type="checkbox" id="daily-summary" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Interview Reminders</div>
+                        <div class="setting-description">Get reminded about upcoming interviews</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle">
+                            <input type="checkbox" id="interview-reminders" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Job Boards Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Job Boards</h2>
+                <p>Customize how the extension works on job sites</p>
+            </div>
+            <div class="card-body">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Auto-detect Jobs</div>
+                        <div class="setting-description">Automatically detect job postings when browsing job sites</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle">
+                            <input type="checkbox" id="auto-detect" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Show Save Button</div>
+                        <div class="setting-description">Display the "Save to VwaTek" button on job postings</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle">
+                            <input type="checkbox" id="show-save-button" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Quick Save Confirmation</div>
+                        <div class="setting-description">Show a confirmation after quick saving a job</div>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle">
+                            <input type="checkbox" id="quick-save-confirm" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Default Province</div>
+                        <div class="setting-description">Pre-select your province when saving jobs</div>
+                    </div>
+                    <div class="setting-control">
+                        <select id="default-province">
+                            <option value="">None</option>
+                            <option value="ONTARIO">Ontario</option>
+                            <option value="QUEBEC">Quebec</option>
+                            <option value="BRITISH_COLUMBIA">British Columbia</option>
+                            <option value="ALBERTA">Alberta</option>
+                            <option value="MANITOBA">Manitoba</option>
+                            <option value="SASKATCHEWAN">Saskatchewan</option>
+                            <option value="NOVA_SCOTIA">Nova Scotia</option>
+                            <option value="NEW_BRUNSWICK">New Brunswick</option>
+                            <option value="NEWFOUNDLAND_AND_LABRADOR">Newfoundland & Labrador</option>
+                            <option value="PRINCE_EDWARD_ISLAND">Prince Edward Island</option>
+                            <option value="NORTHWEST_TERRITORIES">Northwest Territories</option>
+                            <option value="YUKON">Yukon</option>
+                            <option value="NUNAVUT">Nunavut</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advanced Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Advanced</h2>
+                <p>Advanced settings for power users</p>
+            </div>
+            <div class="card-body">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">API Server</div>
+                        <div class="setting-description">Override the default API server URL (leave empty for default)</div>
+                    </div>
+                    <div class="setting-control">
+                        <input type="url" id="api-url" placeholder="https://api.vwatek.com/apply">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <div class="setting-label">Clear Local Data</div>
+                        <div class="setting-description">Remove all locally cached data</div>
+                    </div>
+                    <div class="setting-control">
+                        <button class="btn btn-danger" id="clear-data-btn">Clear Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>VwaTek Apply v1.0.0</p>
+            <p>
+                <a href="https://vwatek.com/apply/help" target="_blank">Help</a> · 
+                <a href="https://vwatek.com/privacy" target="_blank">Privacy Policy</a> · 
+                <a href="https://vwatek.com/terms" target="_blank">Terms of Service</a>
+            </p>
+        </div>
+    </div>
+    
+    <div id="toast" class="toast hidden"></div>
+    
+    <script src="options.js" type="module"></script>
+</body>
+</html>

@@ -44,6 +44,207 @@ VwaTek Apply follows Clean Architecture principles combined with the MVI (Model-
             +------------+   +------------+   +------------+
 ```
 
+## Phase 1: Infrastructure Components (February 2026)
+
+### Observability & Monitoring
+
+```
++------------------------------------------------------------------+
+|                    Observability Stack                            |
++------------------------------------------------------------------+
+|                                                                   |
+|  +---------------------------+  +---------------------------+     |
+|  |  Firebase Crashlytics    |  |  Sentry (Web)             |     |
+|  |  (Android & iOS)         |  |  Error tracking &         |     |
+|  |  Crash reporting         |  |  performance monitoring   |     |
+|  +---------------------------+  +---------------------------+     |
+|                                                                   |
+|  +---------------------------+  +---------------------------+     |
+|  |  Shared Analytics        |  |  Backend APM              |     |
+|  |  Cross-platform events   |  |  Micrometer + Prometheus  |     |
+|  |  via AnalyticsTracker    |  |  /metrics endpoint        |     |
+|  +---------------------------+  +---------------------------+     |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Sync Architecture
+
+```
++------------------------------------------------------------------+
+|                      Sync Engine Flow                             |
++------------------------------------------------------------------+
+|                                                                   |
+|  Local Change  ──►  SyncEngine  ──►  SyncApiClient  ──►  Backend |
+|      │                  │                                    │    |
+|      │                  ▼                                    │    |
+|      │         NetworkMonitor                                │    |
+|      │         (Online/Offline)                              │    |
+|      │                  │                                    │    |
+|      ▼                  ▼                                    ▼    |
+|  SQLDelight  ◄──  Conflict Resolution  ◄──  Server Changes       |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+**Key Components:**
+- `SyncEngine` - Platform-specific sync orchestration
+- `SyncApiClient` - Backend communication for sync operations
+- `NetworkMonitor` - Real-time connectivity status
+- `SyncModels` - Change tracking data structures
+
+### Privacy & Compliance (PIPEDA)
+
+```
++------------------------------------------------------------------+
+|                    Privacy Architecture                           |
++------------------------------------------------------------------+
+|                                                                   |
+|  ConsentManager  ──►  User Preferences  ──►  PrivacyApiClient    |
+|        │                                           │              |
+|        ▼                                           ▼              |
+|  Platform Storage                           Backend Routes        |
+|  (Encrypted)                                (/api/v1/privacy/*)   |
+|        │                                           │              |
+|        ▼                                           ▼              |
+|  Consent Records                            Data Export/Delete    |
+|  (Analytics, Data, Marketing)               PIPEDA Compliance     |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+---
+
+## Phase 2: Job Tracker Components (February 2026)
+
+### Job Tracker Architecture
+
+```
++------------------------------------------------------------------+
+|                    Job Tracker Flow                               |
++------------------------------------------------------------------+
+|                                                                   |
+|   ┌───────────────┐      ┌───────────────┐      ┌─────────────┐  |
+|   │  Platform UI  │      │   Shared KMP  │      │   Backend   │  |
+|   └───────────────┘      └───────────────┘      └─────────────┘  |
+|         │                       │                      │          |
+|         ▼                       │                      │          |
+|   TrackerScreen                 │                      │          |
+|   (Android/iOS/Web)             │                      │          |
+|         │                       │                      │          |
+|         └──────────────►        │                      │          |
+|                         TrackerViewModel               │          |
+|                              │                         │          |
+|                              ▼                         │          |
+|                        TrackerUseCases ────────►JobTrackerApiClient
+|                              │                         │          |
+|                              │                         ▼          |
+|                              │                 JobTrackerRoutes   |
+|                              │                         │          |
+|                              │                         ▼          |
+|                              │                  JobTrackerTables  |
+|                                                  (PostgreSQL)     |
++------------------------------------------------------------------+
+```
+
+### TrackerViewModel Architecture (MVI Pattern)
+
+```
++------------------------------------------------------------------+
+|              TrackerViewModel State Flow                          |
++------------------------------------------------------------------+
+|                                                                   |
+|  User Action (Intent)                                             |
+|        │                                                          |
+|        ▼                                                          |
+|  ┌─────────────────────────────────────────────────────────────┐ |
+|  │                    TrackerIntent                             │ |
+|  │  LoadApplications | CreateApplication | UpdateStatus         │ |
+|  │  AddNote | AddReminder | AddInterview | DeleteApplication    │ |
+|  │  SetViewMode | SetFilterStatus | MoveToStatus               │ |
+|  └─────────────────────────────────────────────────────────────┘ |
+|        │                                                          |
+|        ▼                                                          |
+|  ┌─────────────────────────────────────────────────────────────┐ |
+|  │                  TrackerViewModel                            │ |
+|  │  - Handles intents via onIntent()                           │ |
+|  │  - Delegates to UseCases                                    │ |
+|  │  - Updates TrackerState                                      │ |
+|  └─────────────────────────────────────────────────────────────┘ |
+|        │                                                          |
+|        ▼                                                          |
+|  ┌─────────────────────────────────────────────────────────────┐ |
+|  │                    TrackerState                              │ |
+|  │  - applications: List<JobApplication>                        │ |
+|  │  - kanbanColumns: Map<ApplicationStatus, KanbanColumn>       │ |
+|  │  - selectedApplication: JobApplicationDetail?                │ |
+|  │  - stats: TrackerStats?                                      │ |
+|  │  - viewMode: TrackerViewMode (KANBAN/LIST/CALENDAR)          │ |
+|  │  - isLoading, error, filters                                │ |
+|  └─────────────────────────────────────────────────────────────┘ |
+|        │                                                          |
+|        ▼                                                          |
+|  UI Collects StateFlow and renders                                |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Use Cases Layer
+
+```
++------------------------------------------------------------------+
+|                TrackerUseCases (10 Implementations)               |
++------------------------------------------------------------------+
+|                                                                   |
+|  GetJobApplicationsUseCaseImpl ──►  apiClient.getApplications()  |
+|  GetJobApplicationByIdUseCaseImpl ──►  apiClient.getApplication()|
+|  CreateJobApplicationUseCaseImpl ──►  apiClient.createApplication|
+|  UpdateJobApplicationUseCaseImpl ──►  apiClient.updateApplication|
+|  UpdateApplicationStatusUseCaseImpl ──►  apiClient.updateStatus()|
+|  DeleteJobApplicationUseCaseImpl ──►  apiClient.deleteApplication|
+|  AddApplicationNoteUseCaseImpl ──►  apiClient.addNote()          |
+|  AddApplicationReminderUseCaseImpl ──►  apiClient.addReminder()  |
+|  AddApplicationInterviewUseCaseImpl ──►  apiClient.addInterview()|
+|  GetTrackerStatsUseCaseImpl ──►  apiClient.getStats()            |
+|                                                                   |
++------------------------------------------------------------------+
+```
+
+### Dependency Injection (Koin)
+
+```kotlin
+// Modules.kt - Tracker DI Configuration
+val sharedModule = module {
+    // API Client
+    single { JobTrackerApiClient(get()) }
+    
+    // Use Cases (interface bindings for testability)
+    factory<GetJobApplicationsUseCase> { GetJobApplicationsUseCaseImpl(get()) }
+    factory<GetJobApplicationByIdUseCase> { GetJobApplicationByIdUseCaseImpl(get()) }
+    factory<CreateJobApplicationUseCase> { CreateJobApplicationUseCaseImpl(get()) }
+    factory<UpdateJobApplicationUseCase> { UpdateJobApplicationUseCaseImpl(get()) }
+    factory<UpdateApplicationStatusUseCase> { UpdateApplicationStatusUseCaseImpl(get()) }
+    factory<DeleteJobApplicationUseCase> { DeleteJobApplicationUseCaseImpl(get()) }
+    factory<AddApplicationNoteUseCase> { AddApplicationNoteUseCaseImpl(get()) }
+    factory<AddApplicationReminderUseCase> { AddApplicationReminderUseCaseImpl(get()) }
+    factory<AddApplicationInterviewUseCase> { AddApplicationInterviewUseCaseImpl(get()) }
+    factory<GetTrackerStatsUseCase> { GetTrackerStatsUseCaseImpl(get()) }
+    
+    // ViewModel
+    factory { TrackerViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+}
+```
+
+### Platform Implementations
+
+| Platform | UI Component | ViewModel Access |
+|----------|--------------|------------------|
+| Android | `TrackerScreen.kt` (Compose) | `koinInject<TrackerViewModel>()` |
+| iOS | `TrackerView.swift` (SwiftUI) | `TrackerViewModelWrapper` → `KoinHelper.getTrackerViewModel()` |
+| Web | `TrackerScreen.kt` (Compose Web) | `GlobalContext.get().get<TrackerViewModel>()` |
+
+---
+
 ## Layer Responsibilities
 
 ### 1. Presentation Layer
@@ -146,7 +347,21 @@ shared/
 |   |-- commonMain/
 |   |   |-- kotlin/
 |   |   |   |-- com/vwatek/apply/
+|   |   |   |   |-- analytics/          # Phase 1: Analytics framework
+|   |   |   |   |   |-- Analytics.kt
+|   |   |   |   |   +-- AnalyticsTracker.kt
+|   |   |   |   |-- sync/               # Phase 1: Sync engine
+|   |   |   |   |   |-- SyncModels.kt
+|   |   |   |   |   +-- SyncEngine.kt
+|   |   |   |   |-- privacy/            # Phase 1: PIPEDA consent
+|   |   |   |   |   +-- ConsentManager.kt
+|   |   |   |   |-- network/            # Phase 1: Connectivity
+|   |   |   |   |   +-- NetworkMonitor.kt
 |   |   |   |   |-- data/
+|   |   |   |   |   |-- api/            # Phase 1: API clients
+|   |   |   |   |   |   |-- ApiConfig.kt
+|   |   |   |   |   |   |-- SyncApiClient.kt
+|   |   |   |   |   |   +-- PrivacyApiClient.kt
 |   |   |   |   |   |-- local/
 |   |   |   |   |   |   |-- dao/
 |   |   |   |   |   |   +-- entity/
@@ -522,9 +737,75 @@ data class SectionRewriteResult(
 4. **Background Processing**: Heavy computations offloaded to background threads
 5. **Memory Management**: Proper lifecycle handling for Compose states
 
+## Infrastructure Components (Phase 1)
+
+### Analytics Tracking
+
+```kotlin
+// Cross-platform analytics interface
+interface AnalyticsTracker {
+    fun trackEvent(event: AnalyticsEvent)
+    fun setUserProperty(key: String, value: String)
+    fun setUserId(userId: String?)
+}
+
+// Platform implementations:
+// - Android: Firebase Analytics
+// - iOS: Firebase Analytics  
+// - Web: Sentry/Custom analytics
+```
+
+### Network Monitoring
+
+```kotlin
+// Real-time connectivity status
+interface NetworkMonitor {
+    val networkState: StateFlow<NetworkState>
+    fun startMonitoring()
+    fun stopMonitoring()
+}
+
+data class NetworkState(
+    val status: NetworkStatus,
+    val type: NetworkType
+)
+
+enum class NetworkStatus { AVAILABLE, UNAVAILABLE, UNKNOWN }
+enum class NetworkType { WIFI, CELLULAR, ETHERNET, UNKNOWN }
+```
+
+### Backend Monitoring
+
+```kotlin
+// Ktor server monitoring plugin
+fun Application.configureMonitoring() {
+    val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    install(MicrometerMetrics) {
+        registry = meterRegistry
+    }
+    routing {
+        get("/metrics") {
+            call.respondText(meterRegistry.scrape())
+        }
+    }
+}
+```
+
+## Canadian Data Residency
+
+**Region:** `northamerica-northeast1` (Montreal, Canada)
+
+All infrastructure deployed in Canadian region for:
+- PIPEDA compliance
+- Quebec Law 25 compliance
+- Data sovereignty requirements
+- Lower latency for Canadian users
+
 ## Future Architecture Considerations
 
 - **Feature Modules**: Split into feature-specific modules for better build times
 - **Remote Config**: Dynamic feature flags for A/B testing
-- **Analytics Module**: Separate analytics tracking infrastructure
-- **Offline Support**: Enhanced offline capabilities with sync queue
+- ~~**Analytics Module**~~: ✅ Implemented in Phase 1
+- ~~**Offline Support**~~: ✅ Sync engine implemented in Phase 1
+- **Voice Interviews**: Real-time audio with Gemini Live (Phase 2)
+- **Job Board Integration**: Canadian job sites API integration (Phase 3)

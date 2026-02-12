@@ -5,6 +5,7 @@ import com.vwatek.apply.presentation.auth.AuthViewModel
 import com.vwatek.apply.presentation.resume.ResumeViewModel
 import com.vwatek.apply.presentation.coverletter.CoverLetterViewModel
 import com.vwatek.apply.presentation.interview.InterviewViewModel
+import com.vwatek.apply.presentation.tracker.TrackerViewModel
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -19,12 +20,14 @@ object KoinHelper : KoinComponent {
     private val resumeViewModel: ResumeViewModel by inject()
     private val coverLetterViewModel: CoverLetterViewModel by inject()
     private val interviewViewModel: InterviewViewModel by inject()
+    private val trackerViewModel: TrackerViewModel by inject()
     private val settingsRepository: SettingsRepository by inject()
     
     fun getAuthViewModel(): AuthViewModel = authViewModel
     fun getResumeViewModel(): ResumeViewModel = resumeViewModel
     fun getCoverLetterViewModel(): CoverLetterViewModel = coverLetterViewModel
     fun getInterviewViewModel(): InterviewViewModel = interviewViewModel
+    fun getTrackerViewModel(): TrackerViewModel = trackerViewModel
     fun getSettingsRepository(): SettingsRepository = settingsRepository
 }
 
@@ -67,6 +70,7 @@ fun getAuthViewModel(): AuthViewModel = KoinHelper.getAuthViewModel()
 fun getResumeViewModel(): ResumeViewModel = KoinHelper.getResumeViewModel()
 fun getCoverLetterViewModel(): CoverLetterViewModel = KoinHelper.getCoverLetterViewModel()
 fun getInterviewViewModel(): InterviewViewModel = KoinHelper.getInterviewViewModel()
+fun getTrackerViewModel(): TrackerViewModel = KoinHelper.getTrackerViewModel()
 fun getSettingsRepository(): SettingsRepository = KoinHelper.getSettingsRepository()
 
 // Settings helper functions for Swift

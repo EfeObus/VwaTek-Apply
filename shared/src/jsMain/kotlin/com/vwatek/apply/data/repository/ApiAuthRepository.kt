@@ -33,14 +33,13 @@ class ApiAuthRepository : AuthRepository {
         isLenient = true
     }
     
-    // Backend API URL - Use Cloud Run URL in production
+    // Backend API URL - Using centralized ApiConfig (Canadian region in production)
     private val apiBaseUrl: String
         get() {
             val hostname = window.location.hostname
             return when {
                 hostname == "localhost" || hostname == "127.0.0.1" -> "http://localhost:8090"
-                hostname.contains("storage.googleapis.com") -> "https://vwatek-backend-21443684777.us-central1.run.app"
-                else -> "https://vwatek-backend-21443684777.us-central1.run.app"
+                else -> com.vwatek.apply.data.api.ApiConfig.baseUrl
             }
         }
     

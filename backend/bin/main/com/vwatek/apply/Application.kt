@@ -19,6 +19,8 @@ fun Application.module() {
     // Configure plugins
     configureSerialization()
     configureCORS()
+    configureMonitoring()
+    configureMonitoringRoutes()
     configureRouting()
     configureStatusPages()
     configureCallLogging()
