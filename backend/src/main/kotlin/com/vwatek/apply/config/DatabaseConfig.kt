@@ -6,6 +6,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import com.vwatek.apply.db.tables.*
+import com.vwatek.apply.routes.OrganizationSettingsTable
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.Properties
@@ -230,6 +231,22 @@ object DatabaseConfig {
                 InterviewSessionsTable,
                 InterviewQuestionsTable,
                 SettingsTable,
+                // Phase 2: Job Tracker tables
+                JobApplicationsTable,
+                JobApplicationNotesTable,
+                JobApplicationRemindersTable,
+                JobApplicationInterviewsTable,
+                JobApplicationStatusHistoryTable,
+                JobApplicationDocumentsTable,
+                // Phase 3: NOC tables
+                NOCCodesTable,
+                NOCMainDutiesTable,
+                NOCEmploymentRequirementsTable,
+                NOCAdditionalInfoTable,
+                NOCSkillsTable,
+                NOCProvincialDemandTable,
+                NOCImmigrationPathwaysTable,
+                UserNOCMatchesTable,
                 // Sync tables
                 DevicesTable,
                 SyncLogsTable,
@@ -244,7 +261,37 @@ object DatabaseConfig {
                 ConsentAuditLogTable,
                 DataAccessRequestsTable,
                 DataRetentionTable,
-                DataSharingLogTable
+                DataSharingLogTable,
+                // Phase 4: Subscription tables
+                SubscriptionsTable,
+                PaymentsTable,
+                StripeCustomersTable,
+                UsageTrackingTable,
+                SubscriptionEventsTable,
+                StripeWebhookEventsTable,
+                PriceConfigurationTable,
+                PromotionsTable,
+                PromotionRedemptionsTable,
+                // Phase 4: Salary Intelligence tables
+                SalaryDataTable,
+                SalaryComparisonHistoryTable,
+                JobOffersTable,
+                NegotiationSessionsTable,
+                NegotiationMessagesTable,
+                SalaryDataImportLogTable,
+                SavedSalarySearchesTable,
+                // Phase 5: Enterprise/Organization tables
+                OrganizationsTable,
+                OrganizationSettingsTable,
+                OrganizationMembersTable,
+                OrganizationInvitationsTable,
+                OrganizationTemplatesTable,
+                OrganizationActivityLogTable,
+                LinkedInProfilesTable,
+                LinkedInAnalysisHistoryTable,
+                SSOSessionsTable,
+                AdminReportsTable,
+                OrganizationSubscriptionHistoryTable
             )
         }
         

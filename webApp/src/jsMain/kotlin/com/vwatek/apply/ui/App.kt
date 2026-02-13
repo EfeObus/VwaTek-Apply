@@ -15,8 +15,14 @@ import com.vwatek.apply.ui.screens.ResumeScreen
 import com.vwatek.apply.ui.screens.ResumeOptimizerScreen
 import com.vwatek.apply.ui.screens.CoverLetterScreen
 import com.vwatek.apply.ui.screens.InterviewScreen
+import com.vwatek.apply.ui.screens.NOCScreen
+import com.vwatek.apply.ui.screens.JobBankScreen
 import com.vwatek.apply.ui.screens.SettingsScreen
 import com.vwatek.apply.ui.screens.AuthScreen
+import com.vwatek.apply.ui.screens.TrackerScreen
+import com.vwatek.apply.ui.screens.SubscriptionScreen
+import com.vwatek.apply.ui.screens.PaywallScreen
+import com.vwatek.apply.ui.screens.SalaryInsightsScreen
 import org.jetbrains.compose.web.dom.*
 import org.koin.core.context.GlobalContext
 
@@ -26,6 +32,12 @@ enum class Screen {
     RESUME_OPTIMIZER,
     COVER_LETTERS,
     INTERVIEW,
+    TRACKER,
+    NOC,
+    JOB_BANK,
+    SALARY_INSIGHTS,
+    SUBSCRIPTION,
+    PAYWALL,
     SETTINGS,
     AUTH
 }
@@ -92,6 +104,15 @@ fun App() {
                 Screen.RESUME_OPTIMIZER -> ResumeOptimizerScreen()
                 Screen.COVER_LETTERS -> CoverLetterScreen()
                 Screen.INTERVIEW -> InterviewScreen()
+                Screen.TRACKER -> TrackerScreen()
+                Screen.NOC -> NOCScreen()
+                Screen.JOB_BANK -> JobBankScreen()
+                Screen.SALARY_INSIGHTS -> SalaryInsightsScreen()
+                Screen.SUBSCRIPTION -> SubscriptionScreen()
+                Screen.PAYWALL -> PaywallScreen(
+                    onNavigateBack = { currentScreen = Screen.DASHBOARD },
+                    onSubscriptionComplete = { currentScreen = Screen.DASHBOARD }
+                )
                 Screen.SETTINGS -> SettingsScreen()
                 Screen.AUTH -> AuthScreen(
                     onNavigateBack = { currentScreen = Screen.DASHBOARD },

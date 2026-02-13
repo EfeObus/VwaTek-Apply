@@ -22,7 +22,7 @@ import java.util.UUID
  */
 fun Route.jobTrackerRoutes() {
     authenticate("jwt") {
-        route("/api/v1/jobs") {
+        route("/tracker") {
             // Get all job applications for user
             get {
                 val userId = call.principal<JWTPrincipal>()?.subject
@@ -277,7 +277,7 @@ fun Route.jobTrackerRoutes() {
                     ?: return@patch call.respond(HttpStatusCode.Unauthorized)
                 val applicationId = call.parameters["id"]
                     ?: return@patch call.respond(HttpStatusCode.BadRequest, "Missing application ID")
-                val request = call.receive<UpdateStatusRequest>()
+                val request = call.receive<JobTrackerStatusUpdateRequest>()
                 
                 val now = Clock.System.now()
                 
@@ -625,7 +625,7 @@ data class UpdateJobApplicationRequest(
 )
 
 @Serializable
-data class UpdateStatusRequest(
+data class JobTrackerStatusUpdateRequest(
     val status: String,
     val notes: String? = null
 )

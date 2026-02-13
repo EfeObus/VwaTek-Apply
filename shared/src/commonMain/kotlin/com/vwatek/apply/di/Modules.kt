@@ -56,6 +56,10 @@ import com.vwatek.apply.presentation.coverletter.CoverLetterViewModel
 import com.vwatek.apply.presentation.interview.InterviewViewModel
 import com.vwatek.apply.presentation.auth.AuthViewModel
 import com.vwatek.apply.presentation.tracker.TrackerViewModel
+import com.vwatek.apply.data.api.NOCApiClient
+import com.vwatek.apply.presentation.noc.NOCViewModel
+import com.vwatek.apply.data.api.JobBankApiClient
+import com.vwatek.apply.presentation.jobbank.JobBankViewModel
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
@@ -127,6 +131,12 @@ val sharedModule = module {
     // Phase 2: Job Tracker API Client
     single { JobTrackerApiClient(get()) }
     
+    // Phase 3: NOC API Client
+    single { NOCApiClient(get()) }
+    
+    // Phase 3: Job Bank API Client
+    single { JobBankApiClient(get()) }
+    
     // Phase 2: Tracker Use Cases
     factory<com.vwatek.apply.presentation.tracker.GetJobApplicationsUseCase> { GetJobApplicationsUseCaseImpl(get()) }
     factory<com.vwatek.apply.presentation.tracker.GetJobApplicationByIdUseCase> { GetJobApplicationByIdUseCaseImpl(get()) }
@@ -154,4 +164,10 @@ val sharedModule = module {
             get(), get(), get(), get(), get(), get(), get(), get(), get(), get()
         )
     }
+    
+    // Phase 3: NOC ViewModel
+    factory { NOCViewModel(get()) }
+    
+    // Phase 3: Job Bank ViewModel
+    factory { JobBankViewModel(get()) }
 }

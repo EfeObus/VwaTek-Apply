@@ -34,6 +34,12 @@ data class AnswerRequest(
 )
 
 @Serializable
+data class InterviewStatusUpdateRequest(
+    val status: String,
+    val completedAt: Long? = null
+)
+
+@Serializable
 data class InterviewQuestionResponse(
     val id: String,
     val sessionId: String,
@@ -205,6 +211,26 @@ fun Route.interviewRoutes() {
             ))
         }
         
+        // Submit answer for a question (simpler route - frontend compatible)
+        put("/questions/{questionId}/answer") {
+            val questionId = call.parameters["questionId"] ?: throw IllegalArgumentException("Missing question ID")
+            val request = call.receive<AnswerRequest>()
+            
+            val updated = transaction {
+                InterviewQuestionsTable.update({ InterviewQuestionsTable.id eq questionId }) {
+                    it[userAnswer] = request.answer
+                    it[aiFeedback] = request.feedback
+                }
+            }
+            
+            if (updated == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Question not found"))
+                return@put
+            }
+            
+            call.respond(mapOf("success" to true))
+        }
+        
         // Submit answer for a question
         put("/{sessionId}/questions/{questionId}/answer") {
             val questionId = call.parameters["questionId"] ?: throw IllegalArgumentException("Missing question ID")
@@ -223,6 +249,37 @@ fun Route.interviewRoutes() {
             }
             
             call.respond(mapOf("success" to true))
+        }
+        
+        // Update interview session status (frontend compatible)
+        put("/{id}/status") {
+            val id = call.parameters["id"] ?: throw IllegalArgumentException("Missing session ID")
+            val request = call.receive<InterviewStatusUpdateRequest>()
+            val now = Clock.System.now()
+            
+            val completedAt = if (request.status == "COMPLETED" && request.completedAt != null) {
+                kotlinx.datetime.Instant.fromEpochMilliseconds(request.completedAt)
+            } else if (request.status == "COMPLETED") {
+                now
+            } else {
+                null
+            }
+            
+            val updated = transaction {
+                InterviewSessionsTable.update({ InterviewSessionsTable.id eq id }) {
+                    it[status] = request.status
+                    if (completedAt != null) {
+                        it[InterviewSessionsTable.completedAt] = completedAt
+                    }
+                }
+            }
+            
+            if (updated == 0) {
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Session not found"))
+                return@put
+            }
+            
+            call.respond(mapOf("success" to true, "status" to request.status))
         }
         
         // Complete interview session

@@ -6,6 +6,8 @@ import com.vwatek.apply.presentation.resume.ResumeViewModel
 import com.vwatek.apply.presentation.coverletter.CoverLetterViewModel
 import com.vwatek.apply.presentation.interview.InterviewViewModel
 import com.vwatek.apply.presentation.tracker.TrackerViewModel
+import com.vwatek.apply.presentation.noc.NOCViewModel
+import com.vwatek.apply.presentation.jobbank.JobBankViewModel
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -21,6 +23,8 @@ object KoinHelper : KoinComponent {
     private val coverLetterViewModel: CoverLetterViewModel by inject()
     private val interviewViewModel: InterviewViewModel by inject()
     private val trackerViewModel: TrackerViewModel by inject()
+    private val nocViewModel: NOCViewModel by inject()
+    private val jobBankViewModel: JobBankViewModel by inject()
     private val settingsRepository: SettingsRepository by inject()
     
     fun getAuthViewModel(): AuthViewModel = authViewModel
@@ -28,6 +32,8 @@ object KoinHelper : KoinComponent {
     fun getCoverLetterViewModel(): CoverLetterViewModel = coverLetterViewModel
     fun getInterviewViewModel(): InterviewViewModel = interviewViewModel
     fun getTrackerViewModel(): TrackerViewModel = trackerViewModel
+    fun getNOCViewModel(): NOCViewModel = nocViewModel
+    fun getJobBankViewModel(): JobBankViewModel = jobBankViewModel
     fun getSettingsRepository(): SettingsRepository = settingsRepository
 }
 
@@ -71,6 +77,8 @@ fun getResumeViewModel(): ResumeViewModel = KoinHelper.getResumeViewModel()
 fun getCoverLetterViewModel(): CoverLetterViewModel = KoinHelper.getCoverLetterViewModel()
 fun getInterviewViewModel(): InterviewViewModel = KoinHelper.getInterviewViewModel()
 fun getTrackerViewModel(): TrackerViewModel = KoinHelper.getTrackerViewModel()
+fun getNOCViewModel(): NOCViewModel = KoinHelper.getNOCViewModel()
+fun getJobBankViewModel(): JobBankViewModel = KoinHelper.getJobBankViewModel()
 fun getSettingsRepository(): SettingsRepository = KoinHelper.getSettingsRepository()
 
 // Settings helper functions for Swift

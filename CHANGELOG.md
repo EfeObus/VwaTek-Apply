@@ -5,6 +5,29 @@ All notable changes to VwaTek Apply will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-02-12
+
+### Added - Payment Integration
+
+#### Stripe Payment Integration
+- Live Stripe payment links for web subscriptions
+- Pro Monthly ($14.99/mo): https://buy.stripe.com/5kQ6oI0rg0vx4Im8Qb5AQ01
+- Pro Yearly ($149.99/yr): https://buy.stripe.com/aFa3cwei6fqr3EiaYj5AQ00
+- Premium Monthly ($29.99/mo): https://buy.stripe.com/3cI5kEb5U2DFfn07M75AQ03
+- Premium Yearly ($299.99/yr): https://buy.stripe.com/cNi3cw3Ds3HJ0s68Qb5AQ04
+- Webhook integration for subscription lifecycle events
+- 7-day free trial period
+- Automatic tax collection for Canadian customers
+
+#### Configuration
+- Stripe environment variables: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- Updated secrets.properties.template with Stripe configuration
+- Backend domain model updates for subscription management
+
+### Changed
+- Updated README.md with subscription links
+- Enhanced documentation with payment details
+
 ## [1.2.0] - 2026-02-11
 
 ### Added - Phase 2: Core Feature Expansion

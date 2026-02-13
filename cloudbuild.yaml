@@ -84,7 +84,7 @@ steps:
           --allow-unauthenticated \
           --add-cloudsql-instances=${_CLOUD_SQL_INSTANCE} \
           --set-env-vars="CLOUD_SQL_DATABASE=Vwatek_Apply,ENVIRONMENT=production" \
-          --set-secrets="CLOUD_SQL_USER=db-username:latest,CLOUD_SQL_PASSWORD=db-password:latest,GEMINI_API_KEY=gemini-api-key:latest" \
+          --set-secrets="CLOUD_SQL_USER=db-username:latest,CLOUD_SQL_PASSWORD=db-password:latest,GEMINI_API_KEY=gemini-api-key:latest,STRIPE_SECRET_KEY=stripe-secret-key:latest,STRIPE_WEBHOOK_SECRET=stripe-webhook-secret:latest" \
           --min-instances=0 \
           --max-instances=10 \
           --memory=1Gi \

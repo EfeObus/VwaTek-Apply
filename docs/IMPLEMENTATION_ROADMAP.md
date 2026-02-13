@@ -2,9 +2,9 @@
 
 ## Canadian Market Dominance Strategy
 
-**Document Version:** 1.4  
+**Document Version:** 1.5  
 **Created:** February 11, 2026  
-**Last Updated:** February 11, 2026  
+**Last Updated:** February 2026  
 **Target Completion:** Q4 2026  
 **Total Estimated Duration:** 9-12 months
 
@@ -119,9 +119,70 @@
 
 *Note: AddReminder UI for Web and AddInterview UI for Web/Android are available through the shared ViewModel but UI components need to be wired up.
 
-### Phase 3: Canadian Market Differentiation - 🔜 NOT STARTED
-### Phase 4: Premium & Monetization - 🔜 NOT STARTED
-### Phase 5: Scale & Enterprise - 🔜 NOT STARTED
+### Phase 3: Canadian Market Differentiation - ✅ COMPLETED
+
+### Phase 4: Premium & Monetization - ✅ COMPLETED
+
+| Task | Status | Files Created/Modified |
+|------|--------|----------------------|
+| Subscription Domain Models | ✅ Complete | `shared/.../domain/model/Subscription.kt` |
+| Salary Intelligence Models | ✅ Complete | `shared/.../domain/model/SalaryModels.kt` |
+| Enterprise/Org Models | ✅ Complete | `shared/.../domain/model/EnterpriseModels.kt` |
+| LinkedIn Optimizer Models | ✅ Complete | `shared/.../domain/model/LinkedInModels.kt` |
+| Subscription DB Tables | ✅ Complete | `backend/.../db/tables/SubscriptionTables.kt` |
+| Salary Data DB Tables | ✅ Complete | `backend/.../db/tables/SalaryDataTables.kt` |
+| Stripe Payment Service | ✅ Complete | `backend/.../services/StripeService.kt` |
+| Subscription API Routes | ✅ Complete | `backend/.../routes/SubscriptionRoutes.kt` |
+| Salary API Routes | ✅ Complete | `backend/.../routes/SalaryRoutes.kt` |
+| Subscription API Client | ✅ Complete | `shared/.../data/api/SubscriptionApiClient.kt` |
+| Salary API Client | ✅ Complete | `shared/.../data/api/SalaryApiClient.kt` |
+| Subscription Use Cases | ✅ Complete | `shared/.../domain/usecase/subscription/SubscriptionUseCases.kt` |
+| Salary Intelligence Use Cases | ✅ Complete | `shared/.../domain/usecase/salary/SalaryIntelligenceUseCases.kt` |
+| Android Subscription UI | ✅ Complete | `androidApp/.../ui/screens/SubscriptionScreen.kt` |
+| Android Paywall UI | ✅ Complete | `androidApp/.../ui/screens/PaywallScreen.kt` |
+| Android Salary Insights UI | ✅ Complete | `androidApp/.../ui/screens/SalaryInsightsScreen.kt` |
+| iOS Subscription UI | ✅ Complete | `iosApp/.../Views/SubscriptionView.swift` |
+| iOS Paywall UI | ✅ Complete | `iosApp/.../Views/PaywallView.swift` |
+| iOS Salary Insights UI | ✅ Complete | `iosApp/.../Views/SalaryInsightsView.swift` |
+| Web Subscription UI | ✅ Complete | `webApp/.../ui/screens/SubscriptionScreen.kt` |
+| Web Paywall UI | ✅ Complete | `webApp/.../ui/screens/PaywallScreen.kt` |
+| Web Salary Insights UI | ✅ Complete | `webApp/.../ui/screens/SalaryInsightsScreen.kt` |
+
+**Key Features Implemented:**
+- Three-tier subscription system: FREE, PRO ($14.99/mo), PREMIUM ($29.99/mo)
+- Feature gating with FeatureLimits per tier (resumes, cover letters, AI enhancements)
+- Stripe integration for web payments with webhook handling
+- Apple In-App Purchase integration for iOS
+- Google Play Billing integration for Android
+- Salary insights with market data and percentile analysis
+- AI negotiation coach for offer evaluation
+- Dynamic paywall components with feature-gated access
+- Billing period toggle (monthly/yearly with ~17% savings)
+
+### Phase 5: Scale & Enterprise - ✅ COMPLETED
+
+| Task | Status | Files Created/Modified |
+|------|--------|----------------------|
+| Enterprise DB Tables | ✅ Complete | `backend/.../db/tables/EnterpriseTables.kt` |
+| Organization Management | ✅ Complete | 9 tables for orgs, members, SSO, invitations |
+| SSO Configuration | ✅ Complete | SAML, OIDC, Azure AD, Okta, Google Workspace support |
+| LinkedIn Optimizer Use Cases | ✅ Complete | `shared/.../domain/usecase/linkedin/LinkedInOptimizerUseCases.kt` |
+
+**Key Features Implemented:**
+- Organization entities with settings and templates
+- Role-based access: OWNER, ADMIN, MANAGER, MEMBER
+- SSO provider configuration (SAML, OIDC, Azure AD, Okta, Google Workspace)
+- LinkedIn profile analysis with section scoring
+- LinkedIn content optimization suggestions
+- Headline generation and improvement recommendations
+
+**Legal & Compliance Documents Created:**
+- `docs/TERMS_OF_SERVICE.md` - General Terms of Service
+- `docs/PRIVACY_POLICY.md` - PIPEDA-compliant Privacy Policy
+- `docs/SUBSCRIPTION_TERMS.md` - Detailed subscription terms
+- `docs/REFUND_POLICY.md` - 30-day money-back guarantee policy
+- `docs/CANCELLATION_POLICY.md` - Self-service cancellation procedures
+- `docs/AUTO_RENEWAL_DISCLOSURE.md` - Canadian consumer law compliant disclosure
 
 ---
 

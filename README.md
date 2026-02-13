@@ -74,6 +74,17 @@ VwaTek Apply is a high-performance job application assistant built with **Kotlin
 | **Crash Reporting** | Firebase Crashlytics (mobile) and Sentry (web) for reliability |
 | **Real-time Monitoring** | Prometheus metrics for backend health monitoring |
 
+### 6. Premium Features (Phase 4 & 5 - February 2026)
+
+| Feature | Description |
+|---------|-------------|
+| **Salary Intelligence** | Canadian salary data with percentile analysis, market trends, and NOC code matching |
+| **Negotiation Coach** | AI-powered coaching for salary negotiations with personalized strategies |
+| **LinkedIn Optimizer** | Profile analysis with section-by-section improvement suggestions |
+| **Subscription Tiers** | Free, Pro ($14.99/mo), and Premium ($29.99/mo) plans |
+| **Payment Integration** | Stripe (web), Apple IAP (iOS), Google Play Billing (Android) |
+| **Enterprise Support** | Organization management with roles and SSO (SAML, OIDC, Azure AD, Okta) |
+
 ## Technical Stack
 
 ```
@@ -207,16 +218,43 @@ vwatek-apply/
 | [Security Policy](docs/SECURITY.md) | Security guidelines and PIPEDA compliance |
 | [Deployment Checklist](docs/DEPLOYMENT_CHECKLIST.md) | Cloud deployment guide |
 | [Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md) | Feature roadmap and progress |
+| [Terms of Service](docs/TERMS_OF_SERVICE.md) | Terms of service |
+| [Privacy Policy](docs/PRIVACY_POLICY.md) | PIPEDA-compliant privacy policy |
+| [Subscription Terms](docs/SUBSCRIPTION_TERMS.md) | Subscription pricing and terms |
+| [Refund Policy](docs/REFUND_POLICY.md) | 30-day money-back guarantee |
 | [FAQ](docs/FAQ.md) | Frequently asked questions |
 | [Changelog](CHANGELOG.md) | Version history and release notes |
 
 ## Roadmap
 
 - [x] **Phase 1: Foundation** - PIPEDA compliance, cross-device sync, monitoring (February 2026)
-- [ ] **Phase 2: Core Features** - Job tracker, NOC integration, voice interviews
-- [ ] **Phase 3: Canadian Market** - Job Bank integration, bilingual support
-- [ ] **Phase 4: Premium** - Subscription tiers, enterprise features
-- [ ] **Phase 5: Scale** - Team accounts, ATS partnerships
+- [x] **Phase 2: Core Features** - Job tracker, NOC integration, notifications (February 2026)
+- [x] **Phase 3: Canadian Market** - Job Bank integration, bilingual support (February 2026)
+- [x] **Phase 4: Premium** - Subscription tiers (Free/Pro/Premium), Stripe integration, salary insights, negotiation coach (February 2026)
+- [x] **Phase 5: Scale** - Enterprise/organization support, SSO integration, LinkedIn optimizer (February 2026)
+
+### Phase 4 & 5 Premium Features
+
+| Feature | Pro ($14.99/mo) | Premium ($29.99/mo) |
+|---------|-----------------|---------------------|
+| Resume versions | 15/month | Unlimited |
+| Cover letters | 20/month | Unlimited |
+| AI enhancements | 10/day | Unlimited |
+| Interview practice | 15/month | Unlimited |
+| Application tracking | Unlimited | Unlimited |
+| Salary Intelligence | ✓ | ✓ |
+| Negotiation Coach | ✗ | ✓ |
+| LinkedIn Optimizer | ✗ | ✓ |
+| Priority support | ✗ | ✓ |
+
+### Subscription Links
+
+| Plan | Monthly | Yearly (Save ~17%) |
+|------|---------|-------------------|
+| **Pro** | [$14.99/month](https://buy.stripe.com/5kQ6oI0rg0vx4Im8Qb5AQ01) | [$149.99/year](https://buy.stripe.com/aFa3cwei6fqr3EiaYj5AQ00) |
+| **Premium** | [$29.99/month](https://buy.stripe.com/3cI5kEb5U2DFfn07M75AQ03) | [$299.99/year](https://buy.stripe.com/cNi3cw3Ds3HJ0s68Qb5AQ04) |
+
+> **🎉 Demo Mode:** All Premium features are currently free during our beta period!
 
 ## Contributing
 

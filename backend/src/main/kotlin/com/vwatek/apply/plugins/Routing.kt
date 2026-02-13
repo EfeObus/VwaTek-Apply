@@ -48,7 +48,10 @@ fun Application.configureRouting() {
                     EndpointInfo("/api/v1/auth", "Authentication endpoints"),
                     EndpointInfo("/api/v1/resumes", "Resume management and AI analysis"),
                     EndpointInfo("/api/v1/cover-letters", "AI-powered cover letter generation"),
-                    EndpointInfo("/api/v1/interviews", "Interview preparation and practice")
+                    EndpointInfo("/api/v1/interviews", "Interview preparation and practice"),
+                    EndpointInfo("/api/v1/tracker", "Job application tracking"),
+                    EndpointInfo("/api/v1/noc", "NOC 2021 codes and immigration pathways"),
+                    EndpointInfo("/api/v1/jobbank", "Job Bank Canada job listings")
                 ),
                 documentation = "https://github.com/EfeObus/VwaTek-Apply"
             ))
@@ -73,7 +76,10 @@ fun Application.configureRouting() {
                     EndpointInfo("/api/v1/auth", "Authentication - login, register, logout"),
                     EndpointInfo("/api/v1/resumes", "Resume CRUD and AI optimization"),
                     EndpointInfo("/api/v1/cover-letters", "Generate tailored cover letters"),
-                    EndpointInfo("/api/v1/interviews", "Interview prep with AI feedback")
+                    EndpointInfo("/api/v1/interviews", "Interview prep with AI feedback"),
+                    EndpointInfo("/api/v1/tracker", "Track job applications"),
+                    EndpointInfo("/api/v1/noc", "Canadian NOC codes database"),
+                    EndpointInfo("/api/v1/jobbank", "Job Bank Canada integration")
                 ),
                 documentation = "https://github.com/EfeObus/VwaTek-Apply"
             ))
@@ -97,6 +103,25 @@ fun Application.configureRouting() {
             coverLetterRoutes()
             interviewRoutes()
             aiRoutes(aiService)
+            
+            // Phase 2: Job Tracker
+            jobTrackerRoutes()
+            
+            // Phase 3: NOC Codes
+            nocRoutes()
+            
+            // Phase 3: Job Bank Canada Integration
+            jobBankRoutes()
+            
+            // Phase 3: Notifications
+            notificationRoutes()
+            
+            // Phase 4: Premium & Monetization
+            subscriptionRoutes(httpClient)
+            salaryRoutes(httpClient)
+            
+            // Phase 5: Enterprise & Organizations
+            organizationRoutes()
         }
         
         // Sync routes (separate from versioned API for flexibility)

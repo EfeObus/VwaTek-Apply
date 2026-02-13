@@ -14,6 +14,12 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.material.icons.outlined.Work
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -36,7 +42,10 @@ enum class NavigationItem(
     Optimizer("optimizer", "Optimizer", Icons.Filled.Edit, Icons.Outlined.Edit),
     CoverLetter("coverletter", "Letters", Icons.Filled.Email, Icons.Outlined.Email),
     Interview("interview", "Interview", Icons.Filled.Person, Icons.Outlined.Person),
-    Profile("profile", "Profile", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle)
+    NOC("noc", "NOC", Icons.Filled.Work, Icons.Outlined.Work),
+    JobBank("jobbank", "Job Bank", Icons.Filled.Search, Icons.Outlined.Search),
+    Profile("profile", "Profile", Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle),
+    Settings("settings", "Settings", Icons.Filled.Settings, Icons.Outlined.Settings)
 }
 
 // Internal navigation destinations (for sub-screens only)
@@ -181,6 +190,9 @@ private fun ScreenContent(
         NavigationItem.Optimizer -> OptimizerScreen()
         NavigationItem.CoverLetter -> CoverLetterScreen()
         NavigationItem.Interview -> InterviewScreen()
+        NavigationItem.NOC -> NOCScreen()
+        NavigationItem.JobBank -> JobBankScreen(onBack = { onNavigateToItem(NavigationItem.Home) })
         NavigationItem.Profile -> ProfileScreen(authViewModel, authState)
+        NavigationItem.Settings -> SettingsScreen(onBack = { onNavigateToItem(NavigationItem.Home) })
     }
 }

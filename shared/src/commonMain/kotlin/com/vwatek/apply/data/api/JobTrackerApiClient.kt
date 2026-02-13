@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
 class JobTrackerApiClient(
     private val httpClient: HttpClient
 ) {
-    private val baseUrl = "${ApiConfig.apiV1Url}/jobs"
+    private val baseUrl = "${ApiConfig.apiV1Url}/tracker"
     
     // ===== Job Applications =====
     

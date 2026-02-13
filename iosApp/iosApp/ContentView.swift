@@ -55,11 +55,29 @@ struct MainTabView: View {
                 }
                 .tag(4)
             
+            NOCView()
+                .tabItem {
+                    Label("NOC", systemImage: "briefcase.fill")
+                }
+                .tag(5)
+            
+            JobBankView()
+                .tabItem {
+                    Label("Job Bank", systemImage: "magnifyingglass")
+                }
+                .tag(6)
+            
             ProfileView(viewModel: authViewModel)
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
                 }
-                .tag(5)
+                .tag(7)
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+                .tag(8)
         }
         .accentColor(.blue)
     }
@@ -77,7 +95,10 @@ struct iPadMainView: View {
         case optimizer = "Optimizer"
         case coverLetter = "Cover Letter"
         case interview = "Interview"
+        case noc = "NOC"
+        case jobBank = "Job Bank"
         case profile = "Profile"
+        case settings = "Settings"
         
         var icon: String {
             switch self {
@@ -86,7 +107,10 @@ struct iPadMainView: View {
             case .optimizer: return "wand.and.stars"
             case .coverLetter: return "envelope.fill"
             case .interview: return "mic.fill"
+            case .noc: return "briefcase.fill"
+            case .jobBank: return "magnifyingglass"
             case .profile: return "person.fill"
+            case .settings: return "gear"
             }
         }
     }
@@ -109,8 +133,14 @@ struct iPadMainView: View {
                 CoverLetterView()
             case .interview:
                 InterviewView()
+            case .noc:
+                NOCView()
+            case .jobBank:
+                JobBankView()
             case .profile:
                 ProfileView(viewModel: authViewModel)
+            case .settings:
+                SettingsView()
             case .none:
                 Text("Select a section")
             }
