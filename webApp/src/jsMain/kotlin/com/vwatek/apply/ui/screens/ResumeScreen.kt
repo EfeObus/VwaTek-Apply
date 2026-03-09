@@ -98,7 +98,7 @@ fun ResumeScreen() {
                         }
                         onClick { viewModel.onIntent(ResumeIntent.ClearAnalysis) }
                     }) {
-                        Text("✕ Close")
+                        Text(" Close")
                     }
                 }
                 
@@ -355,7 +355,7 @@ private fun ResumeCard(
                 H3(attrs = { classes("card-title") }) { Text(resume.name) }
                 when (resume.sourceType) {
                     ResumeSourceType.UPLOADED -> {
-                        Span(attrs = { classes("badge", "badge-info") }) { Text("📄 Uploaded") }
+                        Span(attrs = { classes("badge", "badge-info") }) { Text(" Uploaded") }
                     }
                     ResumeSourceType.LINKEDIN -> {
                         Span(attrs = { classes("badge", "badge-linkedin") }) { Text("in LinkedIn") }
@@ -400,13 +400,13 @@ private fun ResumeCard(
                 classes("btn", "btn-secondary")
                 onClick { onExportPdf() }
             }) {
-                Text("📄 Export PDF")
+                Text(" Export PDF")
             }
             Button(attrs = {
                 classes("btn", "btn-outline")
                 onClick { onViewVersions() }
             }) {
-                Text("📜 Versions")
+                Text(" Versions")
             }
             Button(attrs = {
                 classes("btn", "btn-outline")
@@ -440,7 +440,7 @@ private fun CreateResumeModal(
                 Button(attrs = {
                     classes("modal-close")
                     onClick { onClose() }
-                }) { Text("✕") }
+                }) { Text("") }
             }
             
             Div(attrs = { classes("modal-body") }) {
@@ -514,7 +514,7 @@ private fun AnalyzeResumeModal(
                 Button(attrs = {
                     classes("modal-close")
                     onClick { onClose() }
-                }) { Text("✕") }
+                }) { Text("") }
             }
             
             Div(attrs = { classes("modal-body") }) {
@@ -556,7 +556,7 @@ private fun AnalyzeResumeModal(
                         Span(attrs = { classes("spinner-sm", "mr-sm") })
                         Text("Analyzing...")
                     } else {
-                        Text("🔍 Analyze with AI")
+                        Text(" Analyze with AI")
                     }
                 }
             }
@@ -585,7 +585,7 @@ private fun UploadResumeModal(
                 Button(attrs = {
                     classes("modal-close")
                     onClick { onClose() }
-                }) { Text("✕") }
+                }) { Text("") }
             }
             
             Div(attrs = { classes("modal-body") }) {
@@ -599,7 +599,7 @@ private fun UploadResumeModal(
                         Button(attrs = {
                             classes("btn", "btn-sm", "ml-md")
                             onClick { error = null }
-                        }) { Text("✕") }
+                        }) { Text("") }
                     }
                 }
                 
@@ -622,17 +622,17 @@ private fun UploadResumeModal(
                         Div(attrs = { classes("file-preview") }) {
                             Div(attrs = { classes("file-icon") }) {
                                 val icon = when (fileType?.lowercase()) {
-                                    "pdf" -> "📕"
-                                    "docx", "doc" -> "📘"
-                                    "txt" -> "📄"
-                                    else -> "📁"
+                                    "pdf" -> ""
+                                    "docx", "doc" -> ""
+                                    "txt" -> ""
+                                    else -> ""
                                 }
                                 Text(icon)
                             }
                             Div(attrs = { classes("file-info") }) {
                                 Div(attrs = { classes("file-name") }) { Text(fileName!!) }
                                 Div(attrs = { classes("file-size", "text-success") }) { 
-                                    Text("✓ Content extracted successfully") 
+                                    Text(" Content extracted successfully") 
                                 }
                             }
                             Button(attrs = {
@@ -643,7 +643,7 @@ private fun UploadResumeModal(
                                     fileType = null
                                     resumeName = ""
                                 }
-                            }) { Text("✕") }
+                            }) { Text("") }
                         }
                     } else if (!isProcessing) {
                         // Upload prompt
@@ -793,7 +793,7 @@ private fun LinkedInImportModal(
                 Button(attrs = {
                     classes("modal-close")
                     onClick { onClose() }
-                }) { Text("✕") }
+                }) { Text("") }
             }
             
             Div(attrs = { classes("modal-body") }) {
@@ -1364,7 +1364,7 @@ private fun ExportPdfModal(
                 Button(attrs = {
                     classes("modal-close")
                     onClick { onClose() }
-                }) { Text("✕") }
+                }) { Text("") }
             }
             
             Div(attrs = { classes("modal-body") }) {
@@ -1380,28 +1380,28 @@ private fun ExportPdfModal(
                         FormatOption(
                             name = "Professional",
                             description = "Clean, corporate-friendly design with blue accents",
-                            emoji = "💼",
+                            emoji = "",
                             isSelected = selectedFormat == ResumeFormat.PROFESSIONAL,
                             onClick = { selectedFormat = ResumeFormat.PROFESSIONAL }
                         )
                         FormatOption(
                             name = "Modern",
                             description = "Contemporary design with purple accents",
-                            emoji = "✨",
+                            emoji = "",
                             isSelected = selectedFormat == ResumeFormat.MODERN,
                             onClick = { selectedFormat = ResumeFormat.MODERN }
                         )
                         FormatOption(
                             name = "Classic",
                             description = "Traditional serif fonts, timeless elegance",
-                            emoji = "📜",
+                            emoji = "",
                             isSelected = selectedFormat == ResumeFormat.CLASSIC,
                             onClick = { selectedFormat = ResumeFormat.CLASSIC }
                         )
                         FormatOption(
                             name = "Minimal",
                             description = "Simple, distraction-free layout",
-                            emoji = "🎯",
+                            emoji = "",
                             isSelected = selectedFormat == ResumeFormat.MINIMAL,
                             onClick = { selectedFormat = ResumeFormat.MINIMAL }
                         )
@@ -1409,7 +1409,7 @@ private fun ExportPdfModal(
                 }
                 
                 Div(attrs = { classes("alert", "alert-info", "mb-lg") }) {
-                    Text("💡 Tip: After clicking 'Export', your browser's print dialog will open. Select 'Save as PDF' as the destination to download your resume.")
+                    Text(" Tip: After clicking 'Export', your browser's print dialog will open. Select 'Save as PDF' as the destination to download your resume.")
                 }
             }
             
@@ -1421,7 +1421,7 @@ private fun ExportPdfModal(
                 Button(attrs = {
                     classes("btn", "btn-primary")
                     onClick { onExport(selectedFormat) }
-                }) { Text("📄 Export PDF") }
+                }) { Text(" Export PDF") }
             }
         }
     }
@@ -1464,17 +1464,17 @@ fun VersionHistoryModal(
     Div(attrs = { classes("modal-backdrop") }) {
         Div(attrs = { classes("modal", "modal-lg") }) {
             Div(attrs = { classes("modal-header") }) {
-                H3(attrs = { classes("modal-title") }) { Text("📜 Version History - ${resume.name}") }
+                H3(attrs = { classes("modal-title") }) { Text(" Version History - ${resume.name}") }
                 Button(attrs = {
                     classes("modal-close")
                     onClick { onClose() }
-                }) { Text("✕") }
+                }) { Text("") }
             }
             
             Div(attrs = { classes("modal-body") }) {
                 if (versions.isEmpty()) {
                     Div(attrs = { classes("empty-state", "p-lg") }) {
-                        Div(attrs = { classes("empty-state-icon") }) { Text("📜") }
+                        Div(attrs = { classes("empty-state-icon") }) { Text("") }
                         H3(attrs = { classes("mb-sm") }) { Text("No Versions Yet") }
                         P(attrs = { classes("text-secondary") }) {
                             Text("Edit your resume to start creating version history. Each save will create a new version you can restore later.")

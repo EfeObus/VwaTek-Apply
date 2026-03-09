@@ -31,11 +31,6 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     
-    // API Keys
-    var geminiApiKey by remember { mutableStateOf("") }
-    var openAiApiKey by remember { mutableStateOf("") }
-    var showApiKeys by remember { mutableStateOf(false) }
-    
     // Notification preferences
     var pushNotifications by remember { mutableStateOf(true) }
     var emailNotifications by remember { mutableStateOf(true) }
@@ -54,8 +49,6 @@ fun SettingsScreen(
     var isLoading by remember { mutableStateOf(true) }
     
     LaunchedEffect(Unit) {
-        geminiApiKey = settingsRepository.getSetting("gemini_api_key") ?: ""
-        openAiApiKey = settingsRepository.getSetting("openai_api_key") ?: ""
         pushNotifications = settingsRepository.getSetting("push_notifications") != "false"
         emailNotifications = settingsRepository.getSetting("email_notifications") != "false"
         interviewReminders = settingsRepository.getSetting("interview_reminders") != "false"
@@ -107,27 +100,6 @@ fun SettingsScreen(
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
             ) {
-                // AI Configuration Section
-                SettingsSection(title = "AI Configuration") {
-                    // Gemini API Key
-                    SettingsItem(
-                        icon = Icons.Default.Key,
-                        title = "Gemini API Key",
-                        subtitle = if (geminiApiKey.isNotEmpty()) "••••••••${geminiApiKey.takeLast(4)}" else "Not configured",
-                        onClick = { showApiKeys = true }
-                    )
-                    
-                    // OpenAI API Key
-                    SettingsItem(
-                        icon = Icons.Default.Key,
-                        title = "OpenAI API Key (Backup)",
-                        subtitle = if (openAiApiKey.isNotEmpty()) "••••••••${openAiApiKey.takeLast(4)}" else "Not configured",
-                        onClick = { showApiKeys = true }
-                    )
-                }
-                
-                HorizontalDivider()
-                
                 // Language Section
                 SettingsSection(title = "Language") {
                     SettingsItemSwitch(
@@ -294,62 +266,6 @@ fun SettingsScreen(
                 Spacer(Modifier.height(32.dp))
             }
         }
-    }
-    
-    // API Keys Dialog
-    if (showApiKeys) {
-        AlertDialog(
-            onDismissRequest = { showApiKeys = false },
-            title = { Text("AI API Keys") },
-            text = {
-                Column {
-                    Text(
-                        text = "Enter your API keys to enable AI features. Gemini is the primary engine.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    Spacer(Modifier.height(16.dp))
-                    
-                    OutlinedTextField(
-                        value = geminiApiKey,
-                        onValueChange = { geminiApiKey = it },
-                        label = { Text("Gemini API Key") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                    
-                    Spacer(Modifier.height(8.dp))
-                    
-                    OutlinedTextField(
-                        value = openAiApiKey,
-                        onValueChange = { openAiApiKey = it },
-                        label = { Text("OpenAI API Key (Optional)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        saveSetting("gemini_api_key", geminiApiKey)
-                        saveSetting("openai_api_key", openAiApiKey)
-                        showApiKeys = false
-                        scope.launch {
-                            snackbarHostState.showSnackbar("API keys saved")
-                        }
-                    }
-                ) {
-                    Text("Save")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showApiKeys = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
     }
 }
 

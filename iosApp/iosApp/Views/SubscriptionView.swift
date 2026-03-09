@@ -254,10 +254,10 @@ struct SubscriptionView: View {
             ComparisonRow(feature: "AI enhancements", free: "5/day", pro: "20/day", premium: "∞")
             ComparisonRow(feature: "Interview practice", free: "3/mo", pro: "10/mo", premium: "∞")
             ComparisonRow(feature: "Application tracker", free: "10", pro: "∞", premium: "∞")
-            ComparisonRow(feature: "Salary insights", free: "✗", pro: "✓", premium: "✓")
-            ComparisonRow(feature: "Negotiation coach", free: "✗", pro: "✗", premium: "✓")
-            ComparisonRow(feature: "LinkedIn optimizer", free: "✗", pro: "✗", premium: "✓")
-            ComparisonRow(feature: "Priority support", free: "✗", pro: "✗", premium: "✓")
+            ComparisonRow(feature: "Salary insights", free: "", pro: "", premium: "")
+            ComparisonRow(feature: "Negotiation coach", free: "", pro: "", premium: "")
+            ComparisonRow(feature: "LinkedIn optimizer", free: "", pro: "", premium: "")
+            ComparisonRow(feature: "Priority support", free: "", pro: "", premium: "")
         }
     }
     
@@ -514,15 +514,15 @@ struct ComparisonRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(free)
                 .font(.caption)
-                .foregroundColor(free == "✗" ? .secondary : .primary)
+                .foregroundColor(free == "" ? .secondary : .primary)
                 .frame(width: 50)
             Text(pro)
                 .font(.caption)
-                .foregroundColor(pro == "✓" ? .accentColor : .primary)
+                .foregroundColor(pro == "" ? .accentColor : .primary)
                 .frame(width: 50)
             Text(premium)
                 .font(.caption)
-                .foregroundColor((premium == "✓" || premium == "∞") ? .accentColor : .primary)
+                .foregroundColor((premium == "" || premium == "∞") ? .accentColor : .primary)
                 .fontWeight(premium == "∞" ? .bold : .regular)
                 .frame(width: 60)
         }

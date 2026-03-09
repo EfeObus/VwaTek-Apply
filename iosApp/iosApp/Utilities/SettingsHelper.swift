@@ -111,10 +111,6 @@ class SettingsHelper {
 extension SettingsHelper {
     
     struct Keys {
-        // API Keys
-        static let geminiApiKey = "gemini_api_key"
-        static let openAiApiKey = "openai_api_key"
-        
         // Locale
         static let locale = "locale"
         

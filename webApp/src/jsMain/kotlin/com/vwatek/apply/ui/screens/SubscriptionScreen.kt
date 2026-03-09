@@ -70,7 +70,7 @@ fun SubscriptionScreen() {
                 }
             }) {
                 Div(attrs = { classes("flex", "align-center", "gap-md") }) {
-                    Span(attrs = { style { property("font-size", "24px") } }) { Text("⭐") }
+                    Span(attrs = { style { property("font-size", "24px") } }) { Text("") }
                     Div {
                         Div(attrs = { 
                             style { 
@@ -201,10 +201,10 @@ fun SubscriptionScreen() {
                     ComparisonRow("AI enhancements", "5/day", "20/day", "Unlimited")
                     ComparisonRow("Interview practice", "3/mo", "10/mo", "Unlimited")
                     ComparisonRow("Application tracker", "10", "Unlimited", "Unlimited")
-                    ComparisonRow("Salary insights", "✗", "✓", "✓", hasCheckmark = true)
-                    ComparisonRow("Negotiation coach", "✗", "✗", "✓", hasCheckmark = true)
-                    ComparisonRow("LinkedIn optimizer", "✗", "✗", "✓", hasCheckmark = true)
-                    ComparisonRow("Priority support", "✗", "✗", "✓", hasCheckmark = true)
+                    ComparisonRow("Salary insights", "", "", "", hasCheckmark = true)
+                    ComparisonRow("Negotiation coach", "", "", "", hasCheckmark = true)
+                    ComparisonRow("LinkedIn optimizer", "", "", "", hasCheckmark = true)
+                    ComparisonRow("Priority support", "", "", "", hasCheckmark = true)
                 }
             }
         }
@@ -318,33 +318,33 @@ private fun PricingCard(
         // Features list
         Ul(attrs = { classes("features-list") }) {
             FeatureListItem(
-                icon = "📄",
+                icon = "",
                 text = "${if (limits.resumeVersionsPerMonth == Int.MAX_VALUE) "Unlimited" else limits.resumeVersionsPerMonth} resume versions/month"
             )
             FeatureListItem(
-                icon = "✉️",
+                icon = "",
                 text = "${if (limits.coverLettersPerMonth == Int.MAX_VALUE) "Unlimited" else limits.coverLettersPerMonth} cover letters/month"
             )
             FeatureListItem(
-                icon = "✨",
+                icon = "",
                 text = "${if (limits.aiEnhancementsPerDay == Int.MAX_VALUE) "Unlimited" else limits.aiEnhancementsPerDay} AI enhancements/day"
             )
             FeatureListItem(
-                icon = "🎤",
+                icon = "",
                 text = "${if (limits.interviewSessionsPerMonth == Int.MAX_VALUE) "Unlimited" else limits.interviewSessionsPerMonth} interview sessions/month"
             )
             
             if (limits.salaryInsightsAccess) {
-                FeatureListItem(icon = "💰", text = "Salary insights & benchmarks")
+                FeatureListItem(icon = "", text = "Salary insights & benchmarks")
             }
             if (limits.negotiationCoachAccess) {
-                FeatureListItem(icon = "🧠", text = "AI negotiation coach")
+                FeatureListItem(icon = "", text = "AI negotiation coach")
             }
             if (limits.linkedInOptimizerAccess) {
-                FeatureListItem(icon = "👤", text = "LinkedIn profile optimizer")
+                FeatureListItem(icon = "", text = "LinkedIn profile optimizer")
             }
             if (tier == SubscriptionTier.PREMIUM) {
-                FeatureListItem(icon = "⭐", text = "Priority support")
+                FeatureListItem(icon = "", text = "Priority support")
             }
         }
         
@@ -387,23 +387,23 @@ private fun ComparisonRow(
 ) {
     Tr {
         Td { Text(feature) }
-        Td(attrs = { classes(buildList { add("text-center"); if (free == "✗") add("text-muted") }) }) { 
-            if (hasCheckmark && free == "✓") {
-                Span(attrs = { classes("checkmark") }) { Text("✓") }
+        Td(attrs = { classes(buildList { add("text-center"); if (free == "") add("text-muted") }) }) { 
+            if (hasCheckmark && free == "") {
+                Span(attrs = { classes("checkmark") }) { Text("") }
             } else {
                 Text(free)
             }
         }
-        Td(attrs = { classes(buildList { add("text-center"); if (pro == "✓") add("text-success") }) }) {
-            if (hasCheckmark && pro == "✓") {
-                Span(attrs = { classes("checkmark", "text-success") }) { Text("✓") }
+        Td(attrs = { classes(buildList { add("text-center"); if (pro == "") add("text-success") }) }) {
+            if (hasCheckmark && pro == "") {
+                Span(attrs = { classes("checkmark", "text-success") }) { Text("") }
             } else {
                 Text(pro)
             }
         }
-        Td(attrs = { classes(buildList { add("text-center"); if (premium == "✓" || premium == "Unlimited") add("text-success"); add("font-bold") }) }) {
-            if (hasCheckmark && premium == "✓") {
-                Span(attrs = { classes("checkmark", "text-success") }) { Text("✓") }
+        Td(attrs = { classes(buildList { add("text-center"); if (premium == "" || premium == "Unlimited") add("text-success"); add("font-bold") }) }) {
+            if (hasCheckmark && premium == "") {
+                Span(attrs = { classes("checkmark", "text-success") }) { Text("") }
             } else {
                 Text(premium)
             }

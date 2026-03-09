@@ -252,7 +252,7 @@ private fun LoginForm(
                 classes("btn", "btn-sm")
                 onClick { onClearError() }
             }) {
-                Text("✕")
+                Text("")
             }
         }
     }

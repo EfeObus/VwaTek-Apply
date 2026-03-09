@@ -241,7 +241,7 @@ fun HomeScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "💡 Pro Tip",
+                        text = " Pro Tip",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.primary
                     )

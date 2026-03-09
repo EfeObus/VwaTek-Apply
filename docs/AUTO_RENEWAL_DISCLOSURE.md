@@ -15,11 +15,11 @@
 
 **When you subscribe to VwaTek Apply:**
 
-1. ✅ Your subscription will **automatically renew** at the end of each billing period
-2. ✅ We will **charge your payment method** on file at renewal
-3. ✅ The renewal charge will be at the **then-current price**
-4. ✅ You can **cancel anytime** before renewal to stop future charges
-5. ✅ We will send you **reminder notices** before annual renewals
+1.  Your subscription will **automatically renew** at the end of each billing period
+2.  We will **charge your payment method** on file at renewal
+3.  The renewal charge will be at the **then-current price**
+4.  You can **cancel anytime** before renewal to stop future charges
+5.  We will send you **reminder notices** before annual renewals
 
 ---
 
@@ -232,11 +232,11 @@ For questions about auto-renewal or billing:
 
 ## Acknowledgment
 
-☐ I have read and understand this Auto-Renewal Disclosure
+ I have read and understand this Auto-Renewal Disclosure
 
-☐ I agree that my subscription will automatically renew until I cancel
+ I agree that my subscription will automatically renew until I cancel
 
-☐ I authorize VwaTek to charge my payment method for renewal fees
+ I authorize VwaTek to charge my payment method for renewal fees
 
 *(This acknowledgment is obtained electronically during the subscription checkout process)*
 

@@ -349,13 +349,13 @@ VwaTek Apply is designed with privacy by default:
 
 | Requirement | Status | Implementation |
 |-------------|--------|----------------|
-| Data stored in Canada | ✅ Complete | Montreal (northamerica-northeast1) |
-| Consent before collection | ✅ Complete | ConsentManager with opt-in |
-| Right to access data | ✅ Complete | Data export API |
-| Right to delete data | ✅ Complete | Account deletion API |
-| Consent withdrawal | ✅ Complete | Revoke consent feature |
-| Privacy policy | ✅ Complete | In-app and web |
-| Breach notification | ✅ Complete | 72-hour notification process |
+| Data stored in Canada |  Complete | Montreal (northamerica-northeast1) |
+| Consent before collection |  Complete | ConsentManager with opt-in |
+| Right to access data |  Complete | Data export API |
+| Right to delete data |  Complete | Account deletion API |
+| Consent withdrawal |  Complete | Revoke consent feature |
+| Privacy policy |  Complete | In-app and web |
+| Breach notification |  Complete | 72-hour notification process |
 
 ### Data Retention
 

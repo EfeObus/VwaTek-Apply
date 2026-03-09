@@ -135,7 +135,7 @@ fun OrganizationScreen() {
                     }
                     onClick { viewModel.onIntent(OrganizationIntent.ClearError) }
                 }) {
-                    Text("✕")
+                    Text("")
                 }
             }
         }
@@ -173,7 +173,7 @@ fun OrganizationScreen() {
                         property("font-size", "64px")
                         property("margin-bottom", "16px")
                     }
-                }) { Text("🏢") }
+                }) { Text("") }
                 H3(attrs = {
                     style { property("margin", "0 0 8px 0") }
                 }) { Text("No Organizations Yet") }
@@ -275,7 +275,7 @@ private fun WebOrganizationCard(organization: OrganizationDto, onClick: () -> Un
                     justifyContent(JustifyContent.Center)
                     property("font-size", "20px")
                 }
-            }) { Text("🏢") }
+            }) { Text("") }
             Div {
                 Div(attrs = {
                     style {
@@ -312,8 +312,8 @@ private fun WebOrganizationCard(organization: OrganizationDto, onClick: () -> Un
                 property("color", "var(--text-secondary, #6b7280)")
             }
         }) {
-            Span { Text("👥 ${organization.memberCount} members") }
-            Span { Text("📋 ${organization.subscriptionTier}") }
+            Span { Text(" ${organization.memberCount} members") }
+            Span { Text(" ${organization.subscriptionTier}") }
         }
     }
 }
@@ -469,7 +469,7 @@ private fun WebMemberRow(member: MemberDto, onRemove: () -> Unit) {
             property("gap", "12px")
         }
     }) {
-        Span(attrs = { style { property("font-size", "24px") } }) { Text("👤") }
+        Span(attrs = { style { property("font-size", "24px") } }) { Text("") }
         Div(attrs = { style { property("flex", "1") } }) {
             Div(attrs = { style { property("font-weight", "500") } }) {
                 Text(member.email ?: member.name ?: "Unknown")

@@ -19,8 +19,6 @@ fun SettingsScreen() {
     val settingsRepository = remember { GlobalContext.get().get<SettingsRepository>() }
     val scope = remember { CoroutineScope(Dispatchers.Main) }
     
-    var geminiApiKey by remember { mutableStateOf("") }
-    var openAiApiKey by remember { mutableStateOf("") }
     var savedMessage by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -44,15 +42,6 @@ fun SettingsScreen() {
     
     // Load existing settings
     LaunchedEffect(Unit) {
-        val existingGeminiKey = settingsRepository.getSetting("gemini_api_key")
-        val existingOpenAiKey = settingsRepository.getSetting("openai_api_key")
-        if (existingGeminiKey != null) {
-            geminiApiKey = existingGeminiKey
-        }
-        if (existingOpenAiKey != null) {
-            openAiApiKey = existingOpenAiKey
-        }
-        
         // Load notification preferences
         emailNotifications = settingsRepository.getSetting("email_notifications") != "false"
         pushNotifications = settingsRepository.getSetting("push_notifications") != "false"
@@ -135,101 +124,6 @@ fun SettingsScreen() {
                 Span(attrs = { style { property("margin-left", "12px") } }) { Text("Loading settings...") }
             }
         } else {
-        // API Configuration Card
-        Div(attrs = { classes("card", "mb-lg") }) {
-            H3(attrs = { classes("card-title", "mb-md") }) { Text("AI API Configuration") }
-            
-            P(attrs = { classes("text-secondary", "mb-lg") }) {
-                Text("Configure your AI API keys. Gemini is the primary AI engine. OpenAI serves as a fallback if Gemini fails.")
-            }
-            
-            // Gemini API Key
-            Div(attrs = { classes("form-group", "mb-lg") }) {
-                Label(attrs = { classes("form-label") }) { Text("Gemini API Key (Primary)") }
-                Input(InputType.Password) {
-                    classes("form-input")
-                    placeholder("Enter your Gemini API key")
-                    value(geminiApiKey)
-                    onInput { geminiApiKey = it.value }
-                }
-                P(attrs = { classes("form-helper") }) {
-                    Text("Get your API key from ")
-                    A(href = "https://aistudio.google.com/", attrs = {
-                        attr("target", "_blank")
-                        attr("rel", "noopener noreferrer")
-                    }) {
-                        Text("Google AI Studio")
-                    }
-                }
-            }
-            
-            // OpenAI API Key
-            Div(attrs = { classes("form-group", "mb-lg") }) {
-                Label(attrs = { classes("form-label") }) { Text("OpenAI API Key (Fallback)") }
-                Input(InputType.Password) {
-                    classes("form-input")
-                    placeholder("Enter your OpenAI API key (optional)")
-                    value(openAiApiKey)
-                    onInput { openAiApiKey = it.value }
-                }
-                P(attrs = { classes("form-helper") }) {
-                    Text("Get your API key from ")
-                    A(href = "https://platform.openai.com/api-keys", attrs = {
-                        attr("target", "_blank")
-                        attr("rel", "noopener noreferrer")
-                    }) {
-                        Text("OpenAI Platform")
-                    }
-                    Text(" - Used as fallback if Gemini API fails")
-                }
-            }
-            
-            // API Key Status
-            Div(attrs = { classes("mb-lg") }) {
-                H4(attrs = { classes("mb-sm") }) { Text("Status") }
-                Div(attrs = { classes("flex", "gap-lg") }) {
-                    Div(attrs = { classes("flex", "items-center", "gap-sm") }) {
-                        Span(attrs = {
-                            classes(if (geminiApiKey.isNotBlank()) "status-dot-success" else "status-dot-error")
-                        })
-                        Text("Gemini: ${if (geminiApiKey.isNotBlank()) "Configured" else "Not configured"}")
-                    }
-                    Div(attrs = { classes("flex", "items-center", "gap-sm") }) {
-                        Span(attrs = {
-                            classes(if (openAiApiKey.isNotBlank()) "status-dot-success" else "status-dot-warning")
-                        })
-                        Text("OpenAI: ${if (openAiApiKey.isNotBlank()) "Configured" else "Not configured (optional)"}")
-                    }
-                }
-            }
-            
-            Button(attrs = {
-                classes("btn", "btn-primary")
-                onClick {
-                    scope.launch {
-                        if (geminiApiKey.isNotBlank()) {
-                            settingsRepository.setSetting("gemini_api_key", geminiApiKey)
-                        }
-                        if (openAiApiKey.isNotBlank()) {
-                            settingsRepository.setSetting("openai_api_key", openAiApiKey)
-                        }
-                        savedMessage = "API keys saved successfully"
-                        kotlinx.browser.window.setTimeout({
-                            savedMessage = null
-                        }, 3000)
-                    }
-                }
-            }) {
-                Text("Save API Keys")
-            }
-            
-            savedMessage?.let { message ->
-                P(attrs = { classes("text-success", "mt-md") }) {
-                    Text(message)
-                }
-            }
-        }
-        
         // Notifications Card
         Div(attrs = { classes("card", "mb-lg") }) {
             H3(attrs = { classes("card-title", "mb-md") }) { Text("Notifications") }
@@ -458,7 +352,7 @@ fun SettingsScreen() {
             Div(attrs = { classes("mb-md") }) {
                 H4(attrs = { classes("mb-sm") }) { Text("API Communication") }
                 P(attrs = { classes("text-secondary", "text-sm") }) {
-                    Text("When using AI features, only the necessary content is sent to Google's Gemini API for processing. Your API key is stored securely in your browser.")
+                    Text("When using AI features, only the necessary content is sent to our secure backend for processing. AI API keys are managed server-side and never stored in your browser.")
                 }
             }
             

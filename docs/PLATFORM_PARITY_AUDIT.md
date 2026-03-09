@@ -84,36 +84,36 @@ The shared module uses two naming patterns for state holders:
 | **Intent-based** (`sealed class *Intent`) | AuthViewModel, ResumeViewModel, CoverLetterViewModel, InterviewViewModel, TrackerViewModel, OrganizationViewModel | — |
 | **Direct method** (public suspend funs) | NOCViewModel, JobBankViewModel | LinkedInOptimizerManager, SalaryIntelligenceManager, SubscriptionManager, SettingsRepository |
 
-⚠️ This inconsistency propagates to all 3 platforms.
+ This inconsistency propagates to all 3 platforms.
 
 ---
 
 ## 3. Screen-by-Screen Comparison Matrix
 
 ### Legend
-- ✅ = Implemented
-- ⚠️ = Partial / Issues
-- ❌ = Missing
+-  = Implemented
+-  = Partial / Issues
+-  = Missing
 - N/A = Not applicable
 
 | # | Feature Screen | Android | iOS | Web | Notes |
 |---|---------------|:-------:|:---:|:---:|-------|
-| 1 | **Home / Dashboard** | ✅ HomeScreen (328L) | ✅ HomeView (349L) | ✅ DashboardScreen (373L) | All display welcome + quick stats |
-| 2 | **Resume Management** | ✅ ResumeScreen (1,182L) | ✅ ResumeView (599L) | ✅ ResumeScreen (1,557L) | Web has most code; Android/Web inline version history |
-| 3 | **Resume Optimizer (ATS)** | ✅ OptimizerScreen (1,547L) | ✅ OptimizerView (1,161L) | ✅ ResumeOptimizerScreen (1,061L) | Full ATS analysis + grammar + impact bullets on all |
-| 4 | **Cover Letter** | ✅ CoverLetterScreen (604L) | ✅ CoverLetterView (604L) | ✅ CoverLetterScreen (457L) | Generate + list + delete on all |
-| 5 | **Interview Prep** | ✅ InterviewScreen (902L) | ✅ InterviewView (533L) | ✅ InterviewScreen (635L) | Start session, Q&A, STAR coaching |
-| 6 | **NOC Codes** | ✅ NOCScreen (780L) | ✅ NOCView (555L) | ✅ NOCScreen (528L) | Search + details + immigration pathways |
-| 7 | **Job Bank** | ✅ JobBankScreen (673L) | ✅ JobBankView (474L) | ✅ JobBankScreen (426L) | Search + filters + trending + outlook |
-| 8 | **Job Tracker** | ✅ TrackerScreen (1,745L) | ✅ TrackerView (1,106L) | ✅ TrackerScreen (1,440L) | CRUD + status pipeline + stats |
-| 9 | **Salary Insights** | ✅ SalaryInsightsScreen (670L) | ✅ SalaryInsightsView (686L) | ✅ SalaryInsightsScreen (548L) | Insights + offer eval + negotiation |
-| 10 | **LinkedIn Optimizer** | ✅ LinkedInOptimizerScreen (489L) | ✅ LinkedInOptimizerView (439L) | ✅ LinkedInOptimizerScreen (518L) | Profile analysis + section scores |
-| 11 | **Organization** | ✅ OrganizationScreen (500L) | ✅ OrganizationView (422L) | ✅ OrganizationScreen (779L) | Create org + members + templates |
-| 12 | **Subscription** | ✅ SubscriptionScreen (645L) | ✅ SubscriptionView (535L) | ✅ SubscriptionScreen (489L) | Tier display + manage/cancel |
-| 13 | **Paywall** | ✅ PaywallScreen (500L) | ✅ PaywallView (427L) | ✅ PaywallScreen (493L) | Feature gate + upgrade CTA |
-| 14 | **Profile** | ✅ ProfileScreen (1,202L) | ✅ ProfileView (842L) | ⚠️ (in SettingsScreen) | Web merges profile into settings |
-| 15 | **Settings** | ✅ SettingsScreen (589L) | ✅ SettingsView (298L) | ✅ SettingsScreen (570L) | Theme + language + notifications |
-| 16 | **Auth** | ✅ AuthScreen (671L) | ✅ AuthView (592L) | ✅ AuthScreen (912L) | Login + register + OAuth |
+| 1 | **Home / Dashboard** |  HomeScreen (328L) |  HomeView (349L) |  DashboardScreen (373L) | All display welcome + quick stats |
+| 2 | **Resume Management** |  ResumeScreen (1,182L) |  ResumeView (599L) |  ResumeScreen (1,557L) | Web has most code; Android/Web inline version history |
+| 3 | **Resume Optimizer (ATS)** |  OptimizerScreen (1,547L) |  OptimizerView (1,161L) |  ResumeOptimizerScreen (1,061L) | Full ATS analysis + grammar + impact bullets on all |
+| 4 | **Cover Letter** |  CoverLetterScreen (604L) |  CoverLetterView (604L) |  CoverLetterScreen (457L) | Generate + list + delete on all |
+| 5 | **Interview Prep** |  InterviewScreen (902L) |  InterviewView (533L) |  InterviewScreen (635L) | Start session, Q&A, STAR coaching |
+| 6 | **NOC Codes** |  NOCScreen (780L) |  NOCView (555L) |  NOCScreen (528L) | Search + details + immigration pathways |
+| 7 | **Job Bank** |  JobBankScreen (673L) |  JobBankView (474L) |  JobBankScreen (426L) | Search + filters + trending + outlook |
+| 8 | **Job Tracker** |  TrackerScreen (1,745L) |  TrackerView (1,106L) |  TrackerScreen (1,440L) | CRUD + status pipeline + stats |
+| 9 | **Salary Insights** |  SalaryInsightsScreen (670L) |  SalaryInsightsView (686L) |  SalaryInsightsScreen (548L) | Insights + offer eval + negotiation |
+| 10 | **LinkedIn Optimizer** |  LinkedInOptimizerScreen (489L) |  LinkedInOptimizerView (439L) |  LinkedInOptimizerScreen (518L) | Profile analysis + section scores |
+| 11 | **Organization** |  OrganizationScreen (500L) |  OrganizationView (422L) |  OrganizationScreen (779L) | Create org + members + templates |
+| 12 | **Subscription** |  SubscriptionScreen (645L) |  SubscriptionView (535L) |  SubscriptionScreen (489L) | Tier display + manage/cancel |
+| 13 | **Paywall** |  PaywallScreen (500L) |  PaywallView (427L) |  PaywallScreen (493L) | Feature gate + upgrade CTA |
+| 14 | **Profile** |  ProfileScreen (1,202L) |  ProfileView (842L) |  (in SettingsScreen) | Web merges profile into settings |
+| 15 | **Settings** |  SettingsScreen (589L) |  SettingsView (298L) |  SettingsScreen (570L) | Theme + language + notifications |
+| 16 | **Auth** |  AuthScreen (671L) |  AuthView (592L) |  AuthScreen (912L) | Login + register + OAuth |
 
 ### iOS-Only Extra Views (no Android/Web equivalents)
 
@@ -134,18 +134,18 @@ These are **modal/sheet extractions** of functionality that Android and Web hand
 
 | Shared ViewModel/Manager | Android | iOS Wrapper | Web |
 |--------------------------|---------|-------------|-----|
-| `AuthViewModel` | ✅ (param, not injected) | ✅ `AuthViewModelWrapper` (170L) | ✅ via Koin |
-| `ResumeViewModel` | ✅ `koinInject()` | ✅ `ResumeViewModelWrapper` (186L) | ✅ via Koin |
-| `CoverLetterViewModel` | ✅ `koinInject()` | ✅ `CoverLetterViewModelWrapper` (83L) | ✅ via Koin |
-| `InterviewViewModel` | ✅ `koinInject()` | ✅ `InterviewViewModelWrapper` (111L) | ✅ via Koin |
-| `TrackerViewModel` | ✅ `koinInject()` | ✅ `TrackerViewModelWrapper` (236L) | ✅ via Koin |
-| `NOCViewModel` | ✅ `koinInject()` | ✅ `NOCViewModelWrapper` (326L) | ✅ via Koin |
-| `JobBankViewModel` | ✅ `koinInject()` | ✅ `JobBankViewModelWrapper` (236L) | ✅ via Koin |
-| `OrganizationViewModel` | ✅ `koinInject()` | ✅ `OrganizationViewModelWrapper` (100L) | ✅ via Koin |
-| `LinkedInOptimizerManager` | ✅ `koinInject()` | ✅ `LinkedInOptimizerViewModelWrapper` (126L) | ✅ via Koin |
-| `SalaryIntelligenceManager` | ✅ `koinInject()` | ✅ `SalaryIntelligenceManagerWrapper` (168L) | ✅ via Koin |
-| `SubscriptionManager` | ✅ `koinInject()` | ✅ `SubscriptionManagerWrapper` (138L) | ✅ via Koin |
-| `SettingsRepository` | ✅ `koinInject()` | ✅ `SettingsHelper.shared` (no wrapper) | ✅ via Koin |
+| `AuthViewModel` |  (param, not injected) |  `AuthViewModelWrapper` (170L) |  via Koin |
+| `ResumeViewModel` |  `koinInject()` |  `ResumeViewModelWrapper` (186L) |  via Koin |
+| `CoverLetterViewModel` |  `koinInject()` |  `CoverLetterViewModelWrapper` (83L) |  via Koin |
+| `InterviewViewModel` |  `koinInject()` |  `InterviewViewModelWrapper` (111L) |  via Koin |
+| `TrackerViewModel` |  `koinInject()` |  `TrackerViewModelWrapper` (236L) |  via Koin |
+| `NOCViewModel` |  `koinInject()` |  `NOCViewModelWrapper` (326L) |  via Koin |
+| `JobBankViewModel` |  `koinInject()` |  `JobBankViewModelWrapper` (236L) |  via Koin |
+| `OrganizationViewModel` |  `koinInject()` |  `OrganizationViewModelWrapper` (100L) |  via Koin |
+| `LinkedInOptimizerManager` |  `koinInject()` |  `LinkedInOptimizerViewModelWrapper` (126L) |  via Koin |
+| `SalaryIntelligenceManager` |  `koinInject()` |  `SalaryIntelligenceManagerWrapper` (168L) |  via Koin |
+| `SubscriptionManager` |  `koinInject()` |  `SubscriptionManagerWrapper` (138L) |  via Koin |
+| `SettingsRepository` |  `koinInject()` |  `SettingsHelper.shared` (no wrapper) |  via Koin |
 
 ### 4.2 Intent Pattern Adoption
 
@@ -157,17 +157,17 @@ These are **modal/sheet extractions** of functionality that Android and Web hand
 | InterviewViewModel | 10 | 10 | — |
 | TrackerViewModel | 13 | 22 | — |
 | OrganizationViewModel | 12 | 10 | — |
-| NOCViewModel | 23 | — | ✅ (direct) |
-| JobBankViewModel | 20 | — | ✅ (direct) |
-| LinkedInOptimizerManager | N/A | — | ✅ (manager) |
-| SalaryIntelligenceManager | N/A | — | ✅ (manager) |
-| SubscriptionManager | N/A | — | ✅ (manager) |
+| NOCViewModel | 23 | — |  (direct) |
+| JobBankViewModel | 20 | — |  (direct) |
+| LinkedInOptimizerManager | N/A | — |  (manager) |
+| SalaryIntelligenceManager | N/A | — |  (manager) |
+| SubscriptionManager | N/A | — |  (manager) |
 
 ### 4.3 iOS KoinHelper Accessors
 
 12 accessors in `KoinHelper.kt` (iosMain) + 11 top-level Swift-friendly functions. All shared VMs/Managers are accessible from iOS.
 
-⚠️ `getOrganizationViewModel()` exists in `KoinHelper` but does **not** have a corresponding top-level Swift-friendly function (the other 11 do).
+ `getOrganizationViewModel()` exists in `KoinHelper` but does **not** have a corresponding top-level Swift-friendly function (the other 11 do).
 
 ---
 
@@ -177,22 +177,22 @@ These are **modal/sheet extractions** of functionality that Android and Web hand
 
 | Screen | Android | iOS | Web |
 |--------|:-------:|:---:|:---:|
-| HomeScreen / Dashboard | ✅ | — | ✅ |
-| ResumeScreen | ✅ | ✅ | ✅ |
-| OptimizerScreen | ✅ | ❌ | ✅ |
-| CoverLetterScreen | ✅ | ✅ | ✅ |
-| InterviewScreen | ✅ | ✅ | ✅ |
-| NOCScreen | ✅ | ✅ | ✅ |
-| JobBankScreen | ✅ | ✅ | ✅ |
-| TrackerScreen | ✅ | ✅ | ✅ |
-| SalaryInsightsScreen | ✅ | ❌ | ✅ |
-| LinkedInOptimizerScreen | ❌ | ❌ | ✅ |
-| OrganizationScreen | ✅ | ✅ | ✅ |
-| SubscriptionScreen | ✅ | ✅ | ✅ |
-| PaywallScreen | ❌ | ❌ | ❌ |
-| ProfileScreen | ✅ | ✅ | N/A |
-| SettingsScreen | ✅ | ✅ | ✅ |
-| AuthScreen | ❌ | ❌ | ✅ |
+| HomeScreen / Dashboard |  | — |  |
+| ResumeScreen |  |  |  |
+| OptimizerScreen |  |  |  |
+| CoverLetterScreen |  |  |  |
+| InterviewScreen |  |  |  |
+| NOCScreen |  |  |  |
+| JobBankScreen |  |  |  |
+| TrackerScreen |  |  |  |
+| SalaryInsightsScreen |  |  |  |
+| LinkedInOptimizerScreen |  |  |  |
+| OrganizationScreen |  |  |  |
+| SubscriptionScreen |  |  |  |
+| PaywallScreen |  |  |  |
+| ProfileScreen |  |  | N/A |
+| SettingsScreen |  |  |  |
+| AuthScreen |  |  |  |
 | **Coverage** | **81% (13/16)** | **69% (11/16)** | **87% (13/15)** |
 
 #### Parity Gaps (error handling)
@@ -206,22 +206,22 @@ These are **modal/sheet extractions** of functionality that Android and Web hand
 
 | Screen | Android | iOS | Web |
 |--------|:-------:|:---:|:---:|
-| HomeScreen / Dashboard | ❌ | ❌ | ❌ |
-| ResumeScreen | ✅ | ✅ | ✅ |
-| OptimizerScreen | ✅ | ✅ | ✅ |
-| CoverLetterScreen | ✅ | ✅ | ✅ |
-| InterviewScreen | ✅ | ✅ | ✅ |
-| NOCScreen | ✅ | ✅ | ✅ |
-| JobBankScreen | ✅ | ✅ | ✅ |
-| TrackerScreen | ✅ | ✅ | ✅ |
-| SalaryInsightsScreen | ✅ | ✅ | ✅ |
-| LinkedInOptimizerScreen | ✅ | ✅ | ✅ |
-| OrganizationScreen | ✅ | ✅ | ✅ |
-| SubscriptionScreen | ✅ | ✅ | ✅ |
-| PaywallScreen | ❌ | ❌ | ❌ |
-| ProfileScreen | ✅ | ✅ | N/A |
-| SettingsScreen | ✅ | ✅ | ✅ |
-| AuthScreen | ✅ | ✅ | ❌ |
+| HomeScreen / Dashboard |  |  |  |
+| ResumeScreen |  |  |  |
+| OptimizerScreen |  |  |  |
+| CoverLetterScreen |  |  |  |
+| InterviewScreen |  |  |  |
+| NOCScreen |  |  |  |
+| JobBankScreen |  |  |  |
+| TrackerScreen |  |  |  |
+| SalaryInsightsScreen |  |  |  |
+| LinkedInOptimizerScreen |  |  |  |
+| OrganizationScreen |  |  |  |
+| SubscriptionScreen |  |  |  |
+| PaywallScreen |  |  |  |
+| ProfileScreen |  |  | N/A |
+| SettingsScreen |  |  |  |
+| AuthScreen |  |  |  |
 | **Coverage** | **88% (14/16)** | **88% (14/16)** | **73% (11/15)** |
 
 #### Parity Gaps (loading states)
@@ -233,20 +233,20 @@ These are **modal/sheet extractions** of functionality that Android and Web hand
 
 | Screen | Android | iOS | Web |
 |--------|:-------:|:---:|:---:|
-| HomeScreen / Dashboard | ❌ | ❌ | ❌ |
-| ResumeScreen | ✅ | ✅ | ✅ |
-| OptimizerScreen | ❌ | ❌ | ✅ |
-| CoverLetterScreen | ✅ | ✅ | ✅ |
-| InterviewScreen | ❌ | ✅ | ✅ |
-| NOCScreen | ✅ | ✅ | ❌ |
-| JobBankScreen | ✅ | ✅ | ❌ |
-| TrackerScreen | ❌ | ✅ | ✅ |
-| SalaryInsightsScreen | ✅ | ✅ | ✅ |
-| LinkedInOptimizerScreen | ❌ | ✅ | ❌ |
-| OrganizationScreen | ✅ | ✅ | ✅ |
+| HomeScreen / Dashboard |  |  |  |
+| ResumeScreen |  |  |  |
+| OptimizerScreen |  |  |  |
+| CoverLetterScreen |  |  |  |
+| InterviewScreen |  |  |  |
+| NOCScreen |  |  |  |
+| JobBankScreen |  |  |  |
+| TrackerScreen |  |  |  |
+| SalaryInsightsScreen |  |  |  |
+| LinkedInOptimizerScreen |  |  |  |
+| OrganizationScreen |  |  |  |
 | SubscriptionScreen | N/A | N/A | N/A |
 | PaywallScreen | N/A | N/A | N/A |
-| ProfileScreen | ❌ | ❌ | N/A |
+| ProfileScreen |  |  | N/A |
 | SettingsScreen | N/A | N/A | N/A |
 | AuthScreen | N/A | N/A | N/A |
 | **Coverage (applicable)** | **50% (6/12)** | **75% (9/12)** | **55% (6/11)** |
@@ -265,7 +265,7 @@ These are **modal/sheet extractions** of functionality that Android and Web hand
 
 ### 6.1 Navigation Destinations
 
-All 3 platforms: **14 destinations** — FULL PARITY ✅
+All 3 platforms: **14 destinations** — FULL PARITY 
 
 | # | Destination | Android | iOS | Web |
 |---|-------------|---------|-----|-----|
@@ -290,23 +290,23 @@ Web additionally has `Screen.PAYWALL` and `Screen.AUTH` as non-sidebar internal 
 
 | URI | Android | iOS | Web |
 |-----|:-------:|:---:|:---:|
-| `vwatekapply://home` | ✅ | ✅ | `#dashboard` |
-| `vwatekapply://resume` | ✅ | ✅ | `#resumes` |
-| `vwatekapply://optimizer` | ✅ | ✅ | `#optimizer` |
-| `vwatekapply://coverletter` | ✅ | ✅ | `#coverletters` |
-| `vwatekapply://interview` | ✅ | ✅ | `#interview` |
-| `vwatekapply://noc` | ✅ | ✅ | `#noc` |
-| `vwatekapply://jobbank` | ✅ | ✅ | `#jobbank` |
-| `vwatekapply://tracker` | ✅ | ✅ | `#tracker` |
-| `vwatekapply://salary` | ✅ | ✅ | `#salary` |
-| `vwatekapply://linkedin` | ✅ | ✅ | `#linkedin` |
-| `vwatekapply://organization` | ✅ | ✅ | `#organization` |
-| `vwatekapply://subscription` | ✅ | ✅ | `#subscription` |
-| `vwatekapply://profile` | ✅ | ✅ | `#profile` |
-| `vwatekapply://settings` | ✅ | ✅ | `#settings` |
+| `vwatekapply://home` |  |  | `#dashboard` |
+| `vwatekapply://resume` |  |  | `#resumes` |
+| `vwatekapply://optimizer` |  |  | `#optimizer` |
+| `vwatekapply://coverletter` |  |  | `#coverletters` |
+| `vwatekapply://interview` |  |  | `#interview` |
+| `vwatekapply://noc` |  |  | `#noc` |
+| `vwatekapply://jobbank` |  |  | `#jobbank` |
+| `vwatekapply://tracker` |  |  | `#tracker` |
+| `vwatekapply://salary` |  |  | `#salary` |
+| `vwatekapply://linkedin` |  |  | `#linkedin` |
+| `vwatekapply://organization` |  |  | `#organization` |
+| `vwatekapply://subscription` |  |  | `#subscription` |
+| `vwatekapply://profile` |  |  | `#profile` |
+| `vwatekapply://settings` |  |  | `#settings` |
 | **Total** | **14** | **14** | **14** |
 
-Deep linking parity: **FULL PARITY ✅**
+Deep linking parity: **FULL PARITY **
 
 ---
 
@@ -316,190 +316,190 @@ Deep linking parity: **FULL PARITY ✅**
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| Email login | ✅ | ✅ | ✅ |
-| Email registration | ✅ | ✅ | ✅ |
-| Google Sign-In | ✅ | ✅ | ✅ |
-| Apple Sign-In | — | ⚠️ Bug | — |
-| LinkedIn Sign-In | ✅ | ✅ | ✅ |
-| Password reset | ✅ | ✅ | ✅ |
-| Email verification | ✅ | ✅ | ✅ |
-| Error display | ❌ | ❌ | ✅ |
-| Loading indicator | ✅ | ✅ | ❌ |
+| Email login |  |  |  |
+| Email registration |  |  |  |
+| Google Sign-In |  |  |  |
+| Apple Sign-In | — |  Bug | — |
+| LinkedIn Sign-In |  |  |  |
+| Password reset |  |  |  |
+| Email verification |  |  |  |
+| Error display |  |  |  |
+| Loading indicator |  |  |  |
 
-⚠️ iOS Apple Sign-In reuses `AuthIntent.GoogleSignIn` — see [Section 9](#9-known-bugs--issues).
+ iOS Apple Sign-In reuses `AuthIntent.GoogleSignIn` — see [Section 9](#9-known-bugs--issues).
 
 ### 7.2 Resume Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| List resumes | ✅ | ✅ | ✅ |
-| Create resume | ✅ | ✅ | ✅ |
-| Edit resume | ✅ | ✅ | ✅ |
-| Delete resume | ✅ | ✅ | ✅ |
-| File upload (PDF/DOCX) | ✅ | ✅ | ✅ |
-| LinkedIn import | ✅ | ✅ | ✅ |
-| Version history | ✅ | ✅ (sheet) | ✅ |
-| Empty state | ✅ | ✅ | ✅ |
-| Error handling | ✅ | ✅ | ✅ |
-| Loading state | ✅ | ✅ | ✅ |
+| List resumes |  |  |  |
+| Create resume |  |  |  |
+| Edit resume |  |  |  |
+| Delete resume |  |  |  |
+| File upload (PDF/DOCX) |  |  |  |
+| LinkedIn import |  |  |  |
+| Version history |  |  (sheet) |  |
+| Empty state |  |  |  |
+| Error handling |  |  |  |
+| Loading state |  |  |  |
 
 ### 7.3 Optimizer Screen (ATS Analysis)
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| Overall ATS score | ✅ | ✅ | ✅ |
-| Section scores (format/keyword/structure/readability) | ✅ | ✅ | ✅ |
-| Issue list (HIGH/MED/LOW severity) | ✅ | ✅ | ✅ |
-| Recommendations | ✅ | ✅ | ✅ |
-| Impact bullets (XYZ format) | ✅ | ✅ | ✅ |
-| Grammar analysis | ✅ | ✅ | ✅ |
-| Section rewrite | ✅ | ✅ | ✅ |
-| Error handling | ✅ | ❌ | ✅ |
-| Loading state | ✅ | ✅ | ✅ |
-| Empty state | ❌ | ❌ | ✅ |
+| Overall ATS score |  |  |  |
+| Section scores (format/keyword/structure/readability) |  |  |  |
+| Issue list (HIGH/MED/LOW severity) |  |  |  |
+| Recommendations |  |  |  |
+| Impact bullets (XYZ format) |  |  |  |
+| Grammar analysis |  |  |  |
+| Section rewrite |  |  |  |
+| Error handling |  |  |  |
+| Loading state |  |  |  |
+| Empty state |  |  |  |
 
 ### 7.4 Cover Letter Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| List cover letters | ✅ | ✅ | ✅ |
-| Generate from resume + job | ✅ | ✅ | ✅ |
-| Tone selection | ✅ | ✅ | ✅ |
-| Delete | ✅ | ✅ | ✅ |
-| Error/Loading/Empty | ✅/✅/✅ | ✅/✅/✅ | ✅/✅/✅ |
+| List cover letters |  |  |  |
+| Generate from resume + job |  |  |  |
+| Tone selection |  |  |  |
+| Delete |  |  |  |
+| Error/Loading/Empty | // | // | // |
 
 ### 7.5 Interview Prep Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| Start session | ✅ | ✅ | ✅ |
-| Question & answer | ✅ | ✅ | ✅ |
-| AI feedback | ✅ | ✅ | ✅ |
-| STAR coaching | ✅ | ✅ (sheet) | ✅ |
-| Session history | ✅ | ✅ | ✅ |
-| Delete session | ✅ | ✅ | ✅ |
-| Error handling | ✅ | ✅ | ✅ |
-| Loading state | ✅ | ✅ | ✅ |
-| Empty state | ❌ | ✅ | ✅ |
+| Start session |  |  |  |
+| Question & answer |  |  |  |
+| AI feedback |  |  |  |
+| STAR coaching |  |  (sheet) |  |
+| Session history |  |  |  |
+| Delete session |  |  |  |
+| Error handling |  |  |  |
+| Loading state |  |  |  |
+| Empty state |  |  |  |
 
 ### 7.6 NOC Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| Search by title/code | ✅ | ✅ | ✅ |
-| Bilingual (EN/FR) | ✅ | ✅ | ✅ |
-| TEER level info | ✅ | ✅ | ✅ |
-| Main duties | ✅ | ✅ | ✅ |
-| Employment requirements | ✅ | ✅ | ✅ |
-| Immigration pathways | ✅ | ✅ | ✅ |
-| Provincial demand | ✅ | ✅ | ✅ |
-| NOC fit analysis | ✅ | ✅ | ✅ |
-| Error/Loading/Empty | ✅/✅/✅ | ✅/✅/✅ | ✅/✅/❌ |
+| Search by title/code |  |  |  |
+| Bilingual (EN/FR) |  |  |  |
+| TEER level info |  |  |  |
+| Main duties |  |  |  |
+| Employment requirements |  |  |  |
+| Immigration pathways |  |  |  |
+| Provincial demand |  |  |  |
+| NOC fit analysis |  |  |  |
+| Error/Loading/Empty | // | // | // |
 
 ### 7.7 Job Bank Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| Keyword search | ✅ | ✅ | ✅ |
-| Location filter | ✅ | ✅ | ✅ |
-| Province filter | ✅ | ✅ | ✅ |
-| NOC code filter | ✅ | ✅ | ✅ |
-| Trending jobs | ✅ | ✅ | ✅ |
-| Job details | ✅ | ✅ | ✅ |
-| Job outlook | ✅ | ✅ | ✅ |
-| Bilingual (EN/FR) | ✅ | ✅ | ✅ |
-| Pagination | ✅ | ✅ | ✅ |
-| Error/Loading/Empty | ✅/✅/✅ | ✅/✅/✅ | ✅/✅/❌ |
+| Keyword search |  |  |  |
+| Location filter |  |  |  |
+| Province filter |  |  |  |
+| NOC code filter |  |  |  |
+| Trending jobs |  |  |  |
+| Job details |  |  |  |
+| Job outlook |  |  |  |
+| Bilingual (EN/FR) |  |  |  |
+| Pagination |  |  |  |
+| Error/Loading/Empty | // | // | // |
 
 ### 7.8 Tracker Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| Application list | ✅ | ✅ | ✅ |
-| Create application | ✅ | ✅ | ✅ |
-| Edit application | ✅ | ✅ | ✅ |
-| Delete application | ✅ | ✅ | ✅ |
-| Status pipeline (13 statuses) | ✅ | ✅ | ✅ |
-| Status change | ✅ | ✅ | ✅ |
-| Notes | ✅ | ✅ | ✅ |
-| Reminders | ✅ | ✅ | ✅ |
-| Interviews | ✅ | ✅ | ✅ |
-| Statistics dashboard | ✅ | ✅ | ✅ |
-| Calendar view | ⚠️ "Coming soon" | ⚠️ Placeholder | ⚠️ "Coming soon" |
-| Search & filter | ✅ | ✅ | ✅ |
-| Error/Loading/Empty | ✅/✅/❌ | ✅/✅/✅ | ✅/✅/✅ |
+| Application list |  |  |  |
+| Create application |  |  |  |
+| Edit application |  |  |  |
+| Delete application |  |  |  |
+| Status pipeline (13 statuses) |  |  |  |
+| Status change |  |  |  |
+| Notes |  |  |  |
+| Reminders |  |  |  |
+| Interviews |  |  |  |
+| Statistics dashboard |  |  |  |
+| Calendar view |  "Coming soon" |  Placeholder |  "Coming soon" |
+| Search & filter |  |  |  |
+| Error/Loading/Empty | // | // | // |
 
 ### 7.9 Salary Insights Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| Salary lookup | ✅ | ✅ | ✅ |
-| Provincial comparison | ✅ | ✅ | ✅ |
-| Market trends | ✅ | ✅ | ✅ |
-| Offer evaluation | ✅ | ✅ | ✅ |
-| Negotiation coach | ✅ | ✅ | ✅ |
-| Error/Loading/Empty | ✅/✅/✅ | ❌/✅/✅ | ✅/✅/✅ |
+| Salary lookup |  |  |  |
+| Provincial comparison |  |  |  |
+| Market trends |  |  |  |
+| Offer evaluation |  |  |  |
+| Negotiation coach |  |  |  |
+| Error/Loading/Empty | // | // | // |
 
 ### 7.10 LinkedIn Optimizer Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| Profile import | ✅ | ✅ (sheet) | ✅ |
-| Manual entry | ✅ | ✅ | ✅ |
-| Profile analysis | ✅ | ✅ | ✅ |
-| Section scores | ✅ | ✅ | ✅ |
-| Improvements list | ✅ | ✅ | ✅ |
-| Keyword analysis | ✅ | ✅ | ✅ |
-| Analysis history | ✅ | ✅ | ✅ |
-| Error/Loading/Empty | ❌/✅/❌ | ❌/✅/✅ | ✅/✅/❌ |
+| Profile import |  |  (sheet) |  |
+| Manual entry |  |  |  |
+| Profile analysis |  |  |  |
+| Section scores |  |  |  |
+| Improvements list |  |  |  |
+| Keyword analysis |  |  |  |
+| Analysis history |  |  |  |
+| Error/Loading/Empty | // | // | // |
 
 ### 7.11 Organization Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| List organizations | ✅ | ✅ | ✅ |
-| Create organization | ✅ | ✅ | ✅ |
-| View members | ✅ | ✅ | ✅ |
-| Invite members | ✅ | ✅ | ✅ |
-| Remove members | ✅ | ✅ | ✅ |
-| Accept invitation | ✅ | ✅ | ✅ |
-| Templates | ✅ | ✅ | ✅ |
-| Industry field | ✅ | ✅ | ✅ |
-| Error/Loading/Empty | ✅/✅/✅ | ✅/✅/✅ | ✅/✅/✅ |
+| List organizations |  |  |  |
+| Create organization |  |  |  |
+| View members |  |  |  |
+| Invite members |  |  |  |
+| Remove members |  |  |  |
+| Accept invitation |  |  |  |
+| Templates |  |  |  |
+| Industry field |  |  |  |
+| Error/Loading/Empty | // | // | // |
 
 ### 7.12 Subscription & Paywall
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| Tier display (Free/Pro/Premium) | ✅ | ✅ | ✅ |
-| Feature comparison | ✅ | ✅ | ✅ |
-| Monthly/Yearly toggle | ✅ | ✅ | ✅ |
-| Checkout | ⚠️ TODO | ✅ (Apple IAP) | ✅ (Stripe) |
-| Manage billing | ⚠️ TODO | ✅ | ✅ (Stripe Portal) |
-| Cancel subscription | ✅ | ✅ | ✅ |
-| Currency (CAD/CA$) | ✅ | ✅ | ⚠️ CheckoutModal uses USD |
+| Tier display (Free/Pro/Premium) |  |  |  |
+| Feature comparison |  |  |  |
+| Monthly/Yearly toggle |  |  |  |
+| Checkout |  TODO |  (Apple IAP) |  (Stripe) |
+| Manage billing |  TODO |  |  (Stripe Portal) |
+| Cancel subscription |  |  |  |
+| Currency (CAD/CA$) |  |  |  CheckoutModal uses USD |
 
 ### 7.13 Settings Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| Theme toggle (Dark/Light) | ✅ | ✅ | ✅ |
-| Language (EN/FR) | ✅ | ✅ | ✅ |
-| Notification preferences | ✅ | ✅ | ✅ |
-| Account deletion | ✅ | ✅ | ✅ |
-| Logout | ✅ | ✅ | ✅ |
-| Error handling | ✅ | ✅ | ✅ |
+| Theme toggle (Dark/Light) |  |  |  |
+| Language (EN/FR) |  |  |  |
+| Notification preferences |  |  |  |
+| Account deletion |  |  |  |
+| Logout |  |  |  |
+| Error handling |  |  |  |
 
 ### 7.14 Profile Screen
 
 | Feature | Android | iOS | Web |
 |---------|:-------:|:---:|:---:|
-| View profile | ✅ | ✅ | ✅ (in Settings) |
-| Edit profile | ✅ | ✅ | ✅ |
-| Profile image | ✅ | ✅ | ✅ |
-| Address fields | ✅ | ✅ | ✅ |
-| Error handling | ✅ | ✅ | N/A |
-| Loading state | ✅ | ✅ | N/A |
+| View profile |  |  |  (in Settings) |
+| Edit profile |  |  |  |
+| Profile image |  |  |  |
+| Address fields |  |  |  |
+| Error handling |  |  | N/A |
+| Loading state |  |  | N/A |
 
 ---
 
@@ -509,22 +509,22 @@ Deep linking parity: **FULL PARITY ✅**
 
 | Tier | Period | Price | Android | iOS | Web |
 |------|--------|------:|:-------:|:---:|:---:|
-| Pro | Monthly | CA$14.99 | ✅ | ✅ | ✅ |
-| Pro | Yearly | CA$149.99 | ✅ | ✅ | ✅ |
-| Premium | Monthly | CA$29.99 | ✅ | ✅ | ✅ |
-| Premium | Yearly | CA$299.99 | ✅ | ✅ | ✅ |
+| Pro | Monthly | CA$14.99 |  |  |  |
+| Pro | Yearly | CA$149.99 |  |  |  |
+| Premium | Monthly | CA$29.99 |  |  |  |
+| Premium | Yearly | CA$299.99 |  |  |  |
 
 ### 8.2 Currency Display
 
 | Location | Currency | Symbol | Status |
 |----------|----------|--------|--------|
-| Android PaywallScreen | CAD | CA$ | ✅ |
-| Android SubscriptionScreen | CAD | CA$ | ✅ |
-| iOS PaywallView | CAD | CA$ | ✅ |
-| iOS SubscriptionView | CAD | CA$ | ✅ |
-| Web PaywallScreen | CAD | CA$ | ✅ |
-| Web SubscriptionScreen (cards) | CAD | CA$ | ✅ |
-| **Web CheckoutModal** | **USD** | **$** | **❌ BUG** |
+| Android PaywallScreen | CAD | CA$ |  |
+| Android SubscriptionScreen | CAD | CA$ |  |
+| iOS PaywallView | CAD | CA$ |  |
+| iOS SubscriptionView | CAD | CA$ |  |
+| Web PaywallScreen | CAD | CA$ |  |
+| Web SubscriptionScreen (cards) | CAD | CA$ |  |
+| **Web CheckoutModal** | **USD** | **$** | ** BUG** |
 
 ### 8.3 Shared Pricing Source
 
@@ -560,28 +560,28 @@ Deep linking parity: **FULL PARITY ✅**
 
 | Screen | Android | iOS | Web |
 |--------|:-------:|:---:|:---:|
-| LinkedInOptimizerScreen | ❌ | ❌ | ✅ |
-| OptimizerScreen | ✅ | ❌ | ✅ |
-| SalaryInsightsScreen | ✅ | ❌ | ✅ |
-| AuthScreen | ❌ | ❌ | ✅ |
+| LinkedInOptimizerScreen |  |  |  |
+| OptimizerScreen |  |  |  |
+| SalaryInsightsScreen |  |  |  |
+| AuthScreen |  |  |  |
 
 ### 10.3 Missing Empty States
 
 | Screen | Android | iOS | Web |
 |--------|:-------:|:---:|:---:|
-| InterviewScreen | ❌ | ✅ | ✅ |
-| TrackerScreen | ❌ | ✅ | ✅ |
-| NOCScreen | ✅ | ✅ | ❌ |
-| JobBankScreen | ✅ | ✅ | ❌ |
-| LinkedInOptimizerScreen | ❌ | ✅ | ❌ |
-| OptimizerScreen | ❌ | ❌ | ✅ |
+| InterviewScreen |  |  |  |
+| TrackerScreen |  |  |  |
+| NOCScreen |  |  |  |
+| JobBankScreen |  |  |  |
+| LinkedInOptimizerScreen |  |  |  |
+| OptimizerScreen |  |  |  |
 
 ### 10.4 Missing Loading States
 
 | Screen | Android | iOS | Web |
 |--------|:-------:|:---:|:---:|
-| HomeScreen / DashboardScreen | ❌ | ❌ | ❌ |
-| AuthScreen | ✅ | ✅ | ❌ |
+| HomeScreen / DashboardScreen |  |  |  |
+| AuthScreen |  |  |  |
 
 ### 10.5 i18n Gaps
 

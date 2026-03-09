@@ -25,7 +25,7 @@ steps:
       - |
         chmod +x gradlew
         ./gradlew :backend:build -x test --no-daemon
-        echo "✅ Backend build complete"
+        echo " Backend build complete"
 
   # ============================================
   # Stage 2: Run Tests
@@ -48,9 +48,9 @@ steps:
     args:
       - '-c'
       - |
-        echo "🔍 Running dependency vulnerability scan..."
+        echo " Running dependency vulnerability scan..."
         ./gradlew :backend:dependencyCheckAnalyze --no-daemon || true
-        echo "✅ Dependency scan complete (results in build/reports)"
+        echo " Dependency scan complete (results in build/reports)"
     waitFor: ['build-backend']
 
   # ============================================
@@ -120,7 +120,7 @@ steps:
           --cpu=2 \
           --port=8080 \
           --timeout=300s
-        echo "✅ Backend deployed to Cloud Run"
+        echo " Backend deployed to Cloud Run"
     waitFor: ['docker-push-sha']
 
   # ============================================
@@ -137,9 +137,9 @@ steps:
         sleep 30
         response=$$(curl -s -o /dev/null -w "%{http_code}" "$$BACKEND_URL/health")
         if [ "$$response" = "200" ]; then
-          echo "✅ Backend health check passed"
+          echo " Backend health check passed"
         else
-          echo "⚠️ Health check returned $$response"
+          echo " Health check returned $$response"
         fi
     waitFor: ['deploy-backend']
 
@@ -153,7 +153,7 @@ steps:
       - '-c'
       - |
         ./gradlew :webApp:jsBrowserDistribution --no-daemon
-        echo "✅ Frontend build complete"
+        echo " Frontend build complete"
     waitFor: ['build-backend']
 
   # ============================================
@@ -174,7 +174,7 @@ steps:
         # Set no-cache for HTML
         gsutil -m setmeta -h "Cache-Control:no-cache, no-store" gs://${_FRONTEND_BUCKET}/index.html
         
-        echo "✅ Frontend deployed to Cloud Storage"
+        echo " Frontend deployed to Cloud Storage"
     waitFor: ['build-frontend', 'deploy-backend']
 
   # ============================================
@@ -188,7 +188,7 @@ steps:
       - |
         # Invalidate CDN cache if load balancer exists
         gcloud compute url-maps invalidate-cdn-cache vwatek-lb --path="/*" 2>/dev/null || echo "No CDN to invalidate"
-        echo "✅ Cache invalidation complete"
+        echo " Cache invalidation complete"
     waitFor: ['deploy-frontend']
 
 images:

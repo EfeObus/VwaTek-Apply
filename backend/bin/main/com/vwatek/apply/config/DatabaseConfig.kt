@@ -93,7 +93,7 @@ object DatabaseConfig {
                 connectViaTcp()
             }
         } catch (e: Exception) {
-            logger.error("❌ Cloud SQL connection failed: ${e.message}")
+            logger.error(" Cloud SQL connection failed: ${e.message}")
             dataSource?.close()
             dataSource = null
             false
@@ -131,7 +131,7 @@ object DatabaseConfig {
         }
         
         isCloudConnected = true
-        logger.info("✅ Successfully connected to Google Cloud SQL via Unix socket!")
+        logger.info(" Successfully connected to Google Cloud SQL via Unix socket!")
         return true
     }
     
@@ -154,7 +154,7 @@ object DatabaseConfig {
         }
         
         isCloudConnected = true
-        logger.info("✅ Successfully connected to Google Cloud SQL via TCP!")
+        logger.info(" Successfully connected to Google Cloud SQL via TCP!")
         return true
     }
     
@@ -179,10 +179,10 @@ object DatabaseConfig {
             }
             
             isCloudConnected = false
-            logger.info("✅ Successfully connected to local MySQL!")
+            logger.info(" Successfully connected to local MySQL!")
             true
         } catch (e: Exception) {
-            logger.error("❌ Local MySQL connection failed: ${e.message}")
+            logger.error(" Local MySQL connection failed: ${e.message}")
             dataSource?.close()
             dataSource = null
             false
@@ -309,7 +309,7 @@ object DatabaseConfig {
             )
         }
         
-        logger.info("✅ Database migrations completed!")
+        logger.info(" Database migrations completed!")
     }
     
     fun isUsingCloudSQL(): Boolean = isCloudConnected

@@ -140,7 +140,7 @@ class SubscriptionManager(
         /**
          * Demo mode expiry message (shown in UI)
          */
-        const val DEMO_MODE_MESSAGE = "🎉 Demo Mode: Enjoy all Premium features free during our beta!"
+        const val DEMO_MODE_MESSAGE = " Demo Mode: Enjoy all Premium features free during our beta!"
         
         /**
          * Configure demo mode

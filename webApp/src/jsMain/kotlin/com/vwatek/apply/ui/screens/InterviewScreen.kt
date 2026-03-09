@@ -517,7 +517,7 @@ private fun StartInterviewModal(
                                     property("font-size", "0.85rem")
                                 }
                             }) {
-                                Text("✓ ${resume.name} - Questions will be tailored to your experience")
+                                Text(" ${resume.name} - Questions will be tailored to your experience")
                             }
                         }
                     }

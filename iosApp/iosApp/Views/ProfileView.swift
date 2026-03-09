@@ -790,7 +790,7 @@ struct AboutSheet: View {
                     Spacer()
                     
                     // Footer
-                    Text("Made with ❤️ for job seekers everywhere")
+                    Text("Made with  for job seekers everywhere")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.bottom)

@@ -71,6 +71,43 @@ data class GetInterviewFeedbackResponse(
     val feedback: String
 )
 
+@Serializable
+data class StarCoachingRequest(
+    val experience: String,
+    val jobContext: String
+)
+
+@Serializable
+data class ATSAnalysisRequest(
+    val resumeContent: String,
+    val jobDescription: String? = null
+)
+
+@Serializable
+data class ImpactBulletsRequest(
+    val experiences: List<String>,
+    val jobContext: String
+)
+
+@Serializable
+data class GrammarAnalysisRequest(
+    val text: String
+)
+
+@Serializable
+data class RewriteSectionRequest(
+    val sectionType: String,
+    val sectionContent: String,
+    val targetRole: String? = null,
+    val targetIndustry: String? = null,
+    val style: String = "professional"
+)
+
+@Serializable
+data class AITextResponse(
+    val result: String
+)
+
 fun Route.aiRoutes(aiService: AIService) {
     authenticate("jwt") {
         route("/ai") {
@@ -149,6 +186,67 @@ fun Route.aiRoutes(aiService: AIService) {
                 call.respond(GetInterviewFeedbackResponse(feedback = feedback))
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "Feedback generation failed")))
+            }
+        }
+        
+        // STAR method coaching
+        post("/star-coaching") {
+            try {
+                val request = call.receive<StarCoachingRequest>()
+                val result = aiService.getStarCoaching(request.experience, request.jobContext)
+                call.respond(AITextResponse(result = result))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "STAR coaching failed")))
+            }
+        }
+        
+        // ATS analysis
+        post("/ats-analysis") {
+            try {
+                val request = call.receive<ATSAnalysisRequest>()
+                val result = aiService.performATSAnalysis(request.resumeContent, request.jobDescription)
+                call.respond(AITextResponse(result = result))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "ATS analysis failed")))
+            }
+        }
+        
+        // Impact bullets
+        post("/impact-bullets") {
+            try {
+                val request = call.receive<ImpactBulletsRequest>()
+                val result = aiService.generateImpactBullets(request.experiences, request.jobContext)
+                call.respond(AITextResponse(result = result))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "Impact bullets generation failed")))
+            }
+        }
+        
+        // Grammar and tone analysis
+        post("/grammar-analysis") {
+            try {
+                val request = call.receive<GrammarAnalysisRequest>()
+                val result = aiService.analyzeGrammarAndTone(request.text)
+                call.respond(AITextResponse(result = result))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "Grammar analysis failed")))
+            }
+        }
+        
+        // Rewrite resume section
+        post("/rewrite-section") {
+            try {
+                val request = call.receive<RewriteSectionRequest>()
+                val result = aiService.rewriteResumeSection(
+                    sectionType = request.sectionType,
+                    sectionContent = request.sectionContent,
+                    targetRole = request.targetRole,
+                    targetIndustry = request.targetIndustry,
+                    style = request.style
+                )
+                call.respond(AITextResponse(result = result))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "Section rewrite failed")))
             }
         }
     }

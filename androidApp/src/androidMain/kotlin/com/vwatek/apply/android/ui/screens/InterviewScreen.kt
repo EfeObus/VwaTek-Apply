@@ -831,7 +831,7 @@ private fun StarResponseContent(
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = "💡 Improvement Suggestions",
+                text = " Improvement Suggestions",
                 style = MaterialTheme.typography.titleSmall
             )
             

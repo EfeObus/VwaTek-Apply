@@ -130,10 +130,10 @@ object DatabaseConfig {
             dataSource = HikariDataSource(config)
             Database.connect(dataSource!!)
             transaction { exec("SELECT 1") }
-            logger.info("✅ Connected to PostgreSQL via DATABASE_URL")
+            logger.info(" Connected to PostgreSQL via DATABASE_URL")
             true
         } catch (e: Exception) {
-            logger.error("❌ DATABASE_URL connection failed: ${e.message}")
+            logger.error(" DATABASE_URL connection failed: ${e.message}")
             dataSource?.close()
             dataSource = null
             false
@@ -165,10 +165,10 @@ object DatabaseConfig {
             dataSource = HikariDataSource(config)
             Database.connect(dataSource!!)
             transaction { exec("SELECT 1") }
-            logger.info("✅ Connected to PostgreSQL at $host:$port")
+            logger.info(" Connected to PostgreSQL at $host:$port")
             true
         } catch (e: Exception) {
-            logger.error("❌ PostgreSQL connection to $host:$port failed: ${e.message}")
+            logger.error(" PostgreSQL connection to $host:$port failed: ${e.message}")
             dataSource?.close()
             dataSource = null
             false
@@ -263,7 +263,7 @@ object DatabaseConfig {
             )
         }
         
-        logger.info("✅ Database migrations completed!")
+        logger.info(" Database migrations completed!")
     }
     
     fun close() {

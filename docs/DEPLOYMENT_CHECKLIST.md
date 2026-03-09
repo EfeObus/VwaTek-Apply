@@ -2,84 +2,84 @@
 
 ## Pre-Deployment Checklist Status
 
-### ✅ Google Cloud Setup
+###  Google Cloud Setup
 
 | Item | Status | Details |
 |------|--------|---------|
-| GCP Project | ✅ Complete | `vwatek-apply` (Project ID: 21443684777) |
-| Authentication | ✅ Complete | Logged in as `talk2efeprogress@gmail.com` |
-| APIs Enabled | ✅ Complete | All required APIs enabled || **Region** | ✅ Complete | **Canadian region: northamerica-northeast1 (Montreal)** |
-### ✅ APIs Enabled
+| GCP Project |  Complete | `vwatek-apply` (Project ID: 21443684777) |
+| Authentication |  Complete | Logged in as `talk2efeprogress@gmail.com` |
+| APIs Enabled |  Complete | All required APIs enabled || **Region** |  Complete | **Canadian region: northamerica-northeast1 (Montreal)** |
+###  APIs Enabled
 
 | API | Status |
 |-----|--------|
-| Cloud Run | ✅ Enabled |
-| Cloud Build | ✅ Enabled |
-| Secret Manager | ✅ Enabled |
-| Cloud SQL Admin | ✅ Enabled |
-| Container Registry | ✅ Enabled |
-| Resource Manager | ✅ Enabled |
-| IAM | ✅ Enabled |
-| VPC Access | ✅ Enabled |
-| Compute Engine | ✅ Enabled |
+| Cloud Run |  Enabled |
+| Cloud Build |  Enabled |
+| Secret Manager |  Enabled |
+| Cloud SQL Admin |  Enabled |
+| Container Registry |  Enabled |
+| Resource Manager |  Enabled |
+| IAM |  Enabled |
+| VPC Access |  Enabled |
+| Compute Engine |  Enabled |
 
-### ✅ Secret Manager Secrets
+###  Secret Manager Secrets
 
 | Secret Name | Status | Description |
 |-------------|--------|-------------|
-| `db-username` | ✅ Created | Database username (root) |
-| `db-password` | ✅ Created | Database password |
-| `gemini-api-key` | ✅ Created | Gemini AI API key |
+| `db-username` |  Created | Database username (root) |
+| `db-password` |  Created | Database password |
+| `gemini-api-key` |  Created | Gemini AI API key |
 
-### ✅ Service Accounts
+###  Service Accounts
 
 | Service Account | Status | Purpose |
 |-----------------|--------|---------|
-| `vwatek-cloudrun-sa` | ✅ Created | Cloud Run service runtime |
-| `vwatek-cicd-sa` | ✅ Created | CI/CD pipeline automation |
+| `vwatek-cloudrun-sa` |  Created | Cloud Run service runtime |
+| `vwatek-cicd-sa` |  Created | CI/CD pipeline automation |
 
-### ✅ IAM Roles Assigned
+###  IAM Roles Assigned
 
 #### vwatek-cloudrun-sa (Cloud Run Service)
-- ✅ `roles/cloudsql.client` - Access Cloud SQL
-- ✅ `roles/secretmanager.secretAccessor` - Read secrets
+-  `roles/cloudsql.client` - Access Cloud SQL
+-  `roles/secretmanager.secretAccessor` - Read secrets
 
 #### vwatek-cicd-sa (CI/CD Pipeline)
-- ✅ `roles/run.admin` - Deploy Cloud Run services
-- ✅ `roles/storage.admin` - Manage Cloud Storage
-- ✅ `roles/cloudbuild.builds.builder` - Run Cloud Build
-- ✅ `roles/iam.serviceAccountUser` - Use service accounts
-- ✅ `roles/secretmanager.secretAccessor` - Read secrets
-- ✅ `roles/cloudsql.client` - Access Cloud SQL
+-  `roles/run.admin` - Deploy Cloud Run services
+-  `roles/storage.admin` - Manage Cloud Storage
+-  `roles/cloudbuild.builds.builder` - Run Cloud Build
+-  `roles/iam.serviceAccountUser` - Use service accounts
+-  `roles/secretmanager.secretAccessor` - Read secrets
+-  `roles/cloudsql.client` - Access Cloud SQL
 
-### ✅ Network Configuration
+###  Network Configuration
 
 | Item | Status | Details |
 |------|--------|---------|
-| VPC Network | ✅ Using `default` | Standard GCP VPC |
-| VPC Connector | ✅ Created | `vwatek-connector` (northamerica-northeast1) |
-| IP Range | ✅ Configured | `10.8.0.0/28` |
-| Cloud SQL Auth Network | ✅ Configured | `142.114.123.165/32` |
-| **Canadian Data Residency** | ✅ Configured | All data in Montreal, QC |
+| VPC Network |  Using `default` | Standard GCP VPC |
+| VPC Connector |  Created | `vwatek-connector` (northamerica-northeast1) |
+| IP Range |  Configured | `10.8.0.0/28` |
+| Cloud SQL Auth Network |  Configured | `142.114.123.165/32` |
+| **Canadian Data Residency** |  Configured | All data in Montreal, QC |
 
-### ✅ Cloud Storage
+###  Cloud Storage
 
 | Bucket | Status | Purpose |
 |--------|--------|---------|
-| `vwatek-apply-web` | ✅ Created | Frontend static hosting |
+| `vwatek-apply-web` |  Created | Frontend static hosting |
 
-### ✅ Cloud SQL Database
+###  Cloud SQL Database
 
 | Item | Status | Details |
 |------|--------|---------|
-| Instance | ✅ Running | `vwatekapply` |
-| Region | ✅ Configured | `northamerica-northeast1` (Montreal, Canada) |
-| IP Address | ✅ Assigned | `34.134.196.247` |
-| Database | ✅ Created | `Vwatek_Apply` |
-| SSL | ✅ Required | SSL mode enabled |
-| Tables | ✅ Migrated | 12 tables created (including Phase 1 sync/privacy tables) |
+| Instance |  Running | `vwatekapply` |
+| Region |  Configured | `northamerica-northeast1` (Montreal, Canada) |
+| IP Address |  Assigned | `34.134.196.247` |
+| Database |  Created | `Vwatek_Apply` |
+| SSL |  Required | SSL mode enabled |
+| Tables |  Migrated | 12 tables created (including Phase 1 sync/privacy tables) |
 
-### ✅ Phase 1 Tables (February 2026)
+###  Phase 1 Tables (February 2026)
 
 | Table | Purpose |
 |-------|----------|
@@ -89,28 +89,28 @@
 | `data_export_requests` | User data export requests |
 | `deletion_requests` | Account deletion requests |
 
-### ✅ CI/CD Configuration Files
+###  CI/CD Configuration Files
 
 | File | Status | Purpose |
 |------|--------|---------|
-| `.github/workflows/ci.yml` | ✅ Created | Continuous Integration |
-| `.github/workflows/cd.yml` | ✅ Created | Continuous Deployment |
-| `.github/workflows/release.yml` | ✅ Created | Release Management |
-| `cloudbuild.yaml` | ✅ Created | Google Cloud Build |
-| `backend/Dockerfile` | ✅ Created | Container image build |
-| `backend/cloudrun-service.yaml` | ✅ Updated | Cloud Run service config |
-| `deploy.sh` | ✅ Created | Manual deployment script |
+| `.github/workflows/ci.yml` |  Created | Continuous Integration |
+| `.github/workflows/cd.yml` |  Created | Continuous Deployment |
+| `.github/workflows/release.yml` |  Created | Release Management |
+| `cloudbuild.yaml` |  Created | Google Cloud Build |
+| `backend/Dockerfile` |  Created | Container image build |
+| `backend/cloudrun-service.yaml` |  Updated | Cloud Run service config |
+| `deploy.sh` |  Created | Manual deployment script |
 
-### ✅ Infrastructure as Code
+###  Infrastructure as Code
 
 | File | Status | Purpose |
 |------|--------|---------|
-| `infrastructure/terraform/main.tf` | ✅ Created | Terraform IaC |
-| `infrastructure/terraform/terraform.tfvars.example` | ✅ Created | Variable template |
+| `infrastructure/terraform/main.tf` |  Created | Terraform IaC |
+| `infrastructure/terraform/terraform.tfvars.example` |  Created | Variable template |
 
 ---
 
-## ⚠️ Manual Steps Required
+##  Manual Steps Required
 
 ### 1. GitHub Repository Secrets
 

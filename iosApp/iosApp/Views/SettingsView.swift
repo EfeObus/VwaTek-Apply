@@ -4,10 +4,6 @@ import shared
 /// Settings View for iOS
 /// Manages app preferences, API keys, and user settings
 struct SettingsView: View {
-    @State private var geminiApiKey: String = ""
-    @State private var openAiApiKey: String = ""
-    @State private var showApiKeySheet = false
-    
     // Notification preferences
     @State private var pushNotifications = true
     @State private var emailNotifications = true
@@ -35,33 +31,6 @@ struct SettingsView: View {
                     ProgressView()
                 } else {
                     Form {
-                        // AI Configuration
-                        Section("AI Configuration") {
-                            Button {
-                                showApiKeySheet = true
-                            } label: {
-                                HStack {
-                                    Label("Gemini API Key", systemImage: "key")
-                                    Spacer()
-                                    Text(geminiApiKey.isEmpty ? "Not set" : "••••\(geminiApiKey.suffix(4))")
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .foregroundColor(.primary)
-                            
-                            Button {
-                                showApiKeySheet = true
-                            } label: {
-                                HStack {
-                                    Label("OpenAI API Key", systemImage: "key")
-                                    Spacer()
-                                    Text(openAiApiKey.isEmpty ? "Not set" : "••••\(openAiApiKey.suffix(4))")
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .foregroundColor(.primary)
-                        }
-                        
                         // Language
                         Section("Language") {
                             Toggle(isOn: $useFrench) {
@@ -206,9 +175,6 @@ struct SettingsView: View {
             .onAppear {
                 loadSettings()
             }
-            .sheet(isPresented: $showApiKeySheet) {
-                apiKeySheet
-            }
             .alert("Export Data", isPresented: $showExportAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Export") {
@@ -233,51 +199,9 @@ struct SettingsView: View {
         }
     }
     
-    // MARK: - API Key Sheet
-    
-    private var apiKeySheet: some View {
-        NavigationView {
-            Form {
-                Section {
-                    Text("Enter your API keys to enable AI features. Gemini is the primary engine, OpenAI is optional backup.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                Section("Gemini API Key (Primary)") {
-                    SecureField("Enter Gemini API Key", text: $geminiApiKey)
-                        .textContentType(.password)
-                }
-                
-                Section("OpenAI API Key (Optional)") {
-                    SecureField("Enter OpenAI API Key", text: $openAiApiKey)
-                        .textContentType(.password)
-                }
-            }
-            .navigationTitle("API Keys")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        showApiKeySheet = false
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        saveSetting(key: "gemini_api_key", value: geminiApiKey)
-                        saveSetting(key: "openai_api_key", value: openAiApiKey)
-                        showApiKeySheet = false
-                    }
-                }
-            }
-        }
-    }
-    
     // MARK: - Settings Persistence
     
     private func loadSettings() {
-        geminiApiKey = SettingsHelper.shared.getSetting(key: "gemini_api_key") ?? ""
-        openAiApiKey = SettingsHelper.shared.getSetting(key: "openai_api_key") ?? ""
         pushNotifications = SettingsHelper.shared.getSetting(key: "push_notifications") != "false"
         emailNotifications = SettingsHelper.shared.getSetting(key: "email_notifications") != "false"
         interviewReminders = SettingsHelper.shared.getSetting(key: "interview_reminders") != "false"

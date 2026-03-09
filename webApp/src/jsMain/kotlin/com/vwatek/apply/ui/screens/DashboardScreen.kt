@@ -354,7 +354,7 @@ private fun GettingStartedCard(
             }
         }) {
             if (isCompleted) {
-                Text("✓")
+                Text("")
             } else {
                 Text("$stepNumber")
             }

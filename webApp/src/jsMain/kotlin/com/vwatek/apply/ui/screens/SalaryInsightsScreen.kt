@@ -93,7 +93,7 @@ fun SalaryInsightsScreen() {
                     Div(attrs = { classes("form-group") }) {
                         Label(attrs = { classes("form-label") }) { Text("Job Title") }
                         Div(attrs = { classes("input-with-icon") }) {
-                            Span(attrs = { classes("input-icon") }) { Text("💼") }
+                            Span(attrs = { classes("input-icon") }) { Text("") }
                             Input(InputType.Text) {
                                 classes("form-input")
                                 placeholder("e.g., Software Engineer")
@@ -106,7 +106,7 @@ fun SalaryInsightsScreen() {
                     Div(attrs = { classes("form-group") }) {
                         Label(attrs = { classes("form-label") }) { Text("Company") }
                         Div(attrs = { classes("input-with-icon") }) {
-                            Span(attrs = { classes("input-icon") }) { Text("🏢") }
+                            Span(attrs = { classes("input-icon") }) { Text("") }
                             Input(InputType.Text) {
                                 classes("form-input")
                                 placeholder("e.g., Shopify")
@@ -119,7 +119,7 @@ fun SalaryInsightsScreen() {
                     Div(attrs = { classes("form-group") }) {
                         Label(attrs = { classes("form-label") }) { Text("Base Salary (CAD)") }
                         Div(attrs = { classes("input-with-icon") }) {
-                            Span(attrs = { classes("input-icon") }) { Text("💰") }
+                            Span(attrs = { classes("input-icon") }) { Text("") }
                             Input(InputType.Number) {
                                 classes("form-input")
                                 placeholder("e.g., 120000")
@@ -132,7 +132,7 @@ fun SalaryInsightsScreen() {
                     Div(attrs = { classes("form-group") }) {
                         Label(attrs = { classes("form-label") }) { Text("Province") }
                         Div(attrs = { classes("input-with-icon") }) {
-                            Span(attrs = { classes("input-icon") }) { Text("🗺️") }
+                            Span(attrs = { classes("input-icon") }) { Text("") }
                             Input(InputType.Text) {
                                 classes("form-input")
                                 placeholder("e.g., Ontario")
@@ -167,7 +167,7 @@ fun SalaryInsightsScreen() {
                         scope.launch { salaryManager.evaluateOffer(offer) }
                     }
                 }) {
-                    Span { Text("📊") }
+                    Span { Text("") }
                     Text(" Evaluate Offer")
                 }
             }
@@ -181,7 +181,7 @@ fun SalaryInsightsScreen() {
                     Div(attrs = { classes("form-group") }) {
                         Label(attrs = { classes("form-label") }) { Text("Job Title") }
                         Div(attrs = { classes("input-with-icon") }) {
-                            Span(attrs = { classes("input-icon") }) { Text("💼") }
+                            Span(attrs = { classes("input-icon") }) { Text("") }
                             Input(InputType.Text) {
                                 classes("form-input")
                                 placeholder("e.g., Software Engineer")
@@ -195,7 +195,7 @@ fun SalaryInsightsScreen() {
                     Div(attrs = { classes("form-group") }) {
                         Label(attrs = { classes("form-label") }) { Text("Province") }
                         Div(attrs = { classes("input-with-icon") }) {
-                            Span(attrs = { classes("input-icon") }) { Text("🗺️") }
+                            Span(attrs = { classes("input-icon") }) { Text("") }
                             Input(InputType.Text) {
                                 classes("form-input")
                                 placeholder("e.g., Ontario")
@@ -209,7 +209,7 @@ fun SalaryInsightsScreen() {
                     Div(attrs = { classes("form-group") }) {
                         Label(attrs = { classes("form-label") }) { Text("City (optional)") }
                         Div(attrs = { classes("input-with-icon") }) {
-                            Span(attrs = { classes("input-icon") }) { Text("🏙️") }
+                            Span(attrs = { classes("input-icon") }) { Text("") }
                             Input(InputType.Text) {
                                 classes("form-input")
                                 placeholder("e.g., Toronto")
@@ -223,7 +223,7 @@ fun SalaryInsightsScreen() {
                     Div(attrs = { classes("form-group") }) {
                         Label(attrs = { classes("form-label") }) { Text("Years of Experience (optional)") }
                         Div(attrs = { classes("input-with-icon") }) {
-                            Span(attrs = { classes("input-icon") }) { Text("⏱️") }
+                            Span(attrs = { classes("input-icon") }) { Text("⏱") }
                             Input(InputType.Number) {
                                 classes("form-input")
                                 placeholder("e.g., 5")
@@ -252,7 +252,7 @@ fun SalaryInsightsScreen() {
                         }
                     }
                 }) {
-                    Span { Text("🔍") }
+                    Span { Text("") }
                     Text(" Get Salary Insights")
                 }
             }
@@ -280,7 +280,7 @@ fun SalaryInsightsScreen() {
             is SalaryInsightsState.Idle -> {
                 // Empty state
                 Div(attrs = { classes("empty-state", "text-center") }) {
-                    Div(attrs = { classes("empty-icon") }) { Text(if (showOfferTab) "📊" else "💰") }
+                    Div(attrs = { classes("empty-icon") }) { Text(if (showOfferTab) "" else "") }
                     H3 { Text(if (showOfferTab) "Evaluate a Job Offer" else "Search for Salary Data") }
                     P(attrs = { classes("text-secondary") }) {
                         Text(
@@ -349,10 +349,10 @@ private fun SalaryResults(
             classes("flex", "align-center", "gap-sm", "mt-md")
         }) {
             val trendEmoji = when (insights.marketTrend) {
-                MarketTrend.INCREASING -> "📈"
-                MarketTrend.STABLE -> "➡️"
-                MarketTrend.DECREASING -> "📉"
-                else -> "➡️"
+                MarketTrend.INCREASING -> ""
+                MarketTrend.STABLE -> ""
+                MarketTrend.DECREASING -> ""
+                else -> ""
             }
             Span { Text(trendEmoji) }
             Span(attrs = { classes("text-secondary", "text-sm") }) {
@@ -407,7 +407,7 @@ private fun SalaryResults(
             Ul(attrs = { classes("recommendations-list") }) {
                 insights.recommendations.forEach { recommendation ->
                     Li {
-                        Span(attrs = { classes("recommendation-icon") }) { Text("⭐") }
+                        Span(attrs = { classes("recommendation-icon") }) { Text("") }
                         Text(recommendation)
                     }
                 }
@@ -461,7 +461,7 @@ private fun OfferEvaluationResults(evaluation: OfferEvaluation) {
             Ul(attrs = { classes("insights-list") }) {
                 evaluation.strengths.forEach { strength ->
                     Li {
-                        Span(attrs = { classes("insight-icon") }) { Text("✅") }
+                        Span(attrs = { classes("insight-icon") }) { Text("") }
                         Text(strength)
                     }
                 }
@@ -476,7 +476,7 @@ private fun OfferEvaluationResults(evaluation: OfferEvaluation) {
             Ul(attrs = { classes("insights-list") }) {
                 evaluation.concerns.forEach { concern ->
                     Li {
-                        Span(attrs = { classes("insight-icon") }) { Text("⚠️") }
+                        Span(attrs = { classes("insight-icon") }) { Text("") }
                         Text(concern)
                     }
                 }

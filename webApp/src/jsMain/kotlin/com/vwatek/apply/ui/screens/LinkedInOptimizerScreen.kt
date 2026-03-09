@@ -194,7 +194,7 @@ private fun AnalyzeTabContent(
                         }) { Text("Strengths") }
                         Ul {
                             analysis.strengths.forEach { strength ->
-                                Li(attrs = { classes("mb-xs") }) { Text("✅ $strength") }
+                                Li(attrs = { classes("mb-xs") }) { Text(" $strength") }
                             }
                         }
                     }
@@ -212,7 +212,7 @@ private fun AnalyzeTabContent(
                         analysis.improvements.forEach { improvement ->
                             Div(attrs = { classes("mb-sm") }) {
                                 P(attrs = { style { property("font-weight", "600") } }) {
-                                    Text("⚠️ ${improvement.issue}")
+                                    Text(" ${improvement.issue}")
                                 }
                                 P(attrs = { classes("text-secondary") }) {
                                     Text(improvement.suggestion)

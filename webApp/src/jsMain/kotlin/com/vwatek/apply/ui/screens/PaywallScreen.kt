@@ -81,7 +81,7 @@ fun PaywallModal(
                 
                 // Tier badge
                 Div(attrs = { classes("tier-badge", "mb-lg") }) {
-                    Span(attrs = { classes("icon") }) { Text("🔒") }
+                    Span(attrs = { classes("icon") }) { Text("") }
                     Span { Text("Requires ${requiredTier.name} plan") }
                 }
                 
@@ -110,7 +110,7 @@ fun PaywallModal(
                 Ul(attrs = { classes("benefits-list", "mb-lg") }) {
                     featureInfo.benefits.forEach { benefit ->
                         Li {
-                            Span(attrs = { classes("checkmark") }) { Text("✓") }
+                            Span(attrs = { classes("checkmark") }) { Text("") }
                             Text(benefit)
                         }
                     }
@@ -152,7 +152,7 @@ fun PaywallBanner(
     val featureInfo = getFeatureInfo(feature)
     
     Div(attrs = { classes("paywall-banner") }) {
-        Div(attrs = { classes("banner-icon") }) { Text("🔒") }
+        Div(attrs = { classes("banner-icon") }) { Text("") }
         Div(attrs = { classes("banner-content") }) {
             H4 { Text(featureInfo.title) }
             P(attrs = { classes("text-secondary", "text-sm") }) {
@@ -195,7 +195,7 @@ fun FeatureGatedContent(
                     classes("btn", "btn-primary")
                     onClick { onUpgradeClick() }
                 }) {
-                    Span { Text("🔒") }
+                    Span { Text("") }
                     Text(" Upgrade to ${requiredTier.name}")
                 }
             }
@@ -216,7 +216,7 @@ private fun getFeatureInfo(feature: PremiumFeature): FeatureInfo {
         PremiumFeature.SALARY_INSIGHTS -> FeatureInfo(
             title = "Salary Insights",
             description = "Get real-time salary data and market comparisons for your target roles",
-            icon = "💰",
+            icon = "",
             benefits = listOf(
                 "Real-time salary benchmarks",
                 "Cost of living adjustments",
@@ -227,7 +227,7 @@ private fun getFeatureInfo(feature: PremiumFeature): FeatureInfo {
         PremiumFeature.NEGOTIATION_COACH -> FeatureInfo(
             title = "AI Negotiation Coach",
             description = "Get personalized negotiation strategies powered by AI",
-            icon = "🧠",
+            icon = "",
             benefits = listOf(
                 "Personalized negotiation scripts",
                 "Counter-offer strategies",
@@ -238,7 +238,7 @@ private fun getFeatureInfo(feature: PremiumFeature): FeatureInfo {
         PremiumFeature.LINKEDIN_OPTIMIZER -> FeatureInfo(
             title = "LinkedIn Optimizer",
             description = "Optimize your LinkedIn profile to attract more recruiters",
-            icon = "👤",
+            icon = "",
             benefits = listOf(
                 "Profile analysis & scoring",
                 "AI-optimized headlines",
@@ -249,7 +249,7 @@ private fun getFeatureInfo(feature: PremiumFeature): FeatureInfo {
         PremiumFeature.UNLIMITED_APPLICATIONS -> FeatureInfo(
             title = "Unlimited Applications",
             description = "Track unlimited job applications without restrictions",
-            icon = "💼",
+            icon = "",
             benefits = listOf(
                 "Unlimited application tracking",
                 "Advanced analytics",
@@ -260,7 +260,7 @@ private fun getFeatureInfo(feature: PremiumFeature): FeatureInfo {
         PremiumFeature.UNLIMITED_AI_ENHANCEMENTS -> FeatureInfo(
             title = "Unlimited AI Enhancements",
             description = "Use AI to enhance your documents without daily limits",
-            icon = "✨",
+            icon = "",
             benefits = listOf(
                 "Unlimited AI suggestions",
                 "Priority AI processing",
@@ -271,7 +271,7 @@ private fun getFeatureInfo(feature: PremiumFeature): FeatureInfo {
         PremiumFeature.UNLIMITED_RESUMES -> FeatureInfo(
             title = "Unlimited Resumes",
             description = "Create unlimited resume versions for different roles",
-            icon = "📄",
+            icon = "",
             benefits = listOf(
                 "Unlimited resume versions",
                 "Role-specific optimization",
@@ -282,7 +282,7 @@ private fun getFeatureInfo(feature: PremiumFeature): FeatureInfo {
         PremiumFeature.UNLIMITED_COVER_LETTERS -> FeatureInfo(
             title = "Unlimited Cover Letters",
             description = "Generate unlimited cover letters tailored to each job",
-            icon = "✉️",
+            icon = "",
             benefits = listOf(
                 "Unlimited cover letters",
                 "Company-specific tailoring",
@@ -293,7 +293,7 @@ private fun getFeatureInfo(feature: PremiumFeature): FeatureInfo {
         PremiumFeature.UNLIMITED_INTERVIEWS -> FeatureInfo(
             title = "Unlimited Interview Practice",
             description = "Practice interviews with AI without session limits",
-            icon = "🎤",
+            icon = "",
             benefits = listOf(
                 "Unlimited practice sessions",
                 "Industry-specific questions",
@@ -443,7 +443,7 @@ fun PaywallScreen(
                             }) {
                                 Span(attrs = { 
                                     style { property("color", "var(--success-color)") }
-                                }) { Text("✓") }
+                                }) { Text("") }
                                 Text(feature)
                             }
                         }

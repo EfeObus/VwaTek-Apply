@@ -288,6 +288,133 @@ class AIService(private val httpClient: HttpClient) {
         return generateContent(prompt)
     }
     
+    suspend fun getStarCoaching(experience: String, jobContext: String): String {
+        val prompt = buildString {
+            appendLine("You are a STAR method interview coaching expert.")
+            appendLine()
+            appendLine("Help structure the following experience using the STAR method.")
+            appendLine()
+            appendLine("--- BEGIN EXPERIENCE ---")
+            appendLine(sanitizeInput(experience))
+            appendLine("--- END EXPERIENCE ---")
+            appendLine()
+            appendLine("JOB CONTEXT: ${sanitizeInput(jobContext)}")
+            appendLine()
+            appendLine("Respond in JSON format:")
+            appendLine("""{"situation": "<text>", "task": "<text>", "action": "<text>", "result": "<text>", "suggestions": [<improvement tips>]}""")
+        }
+        return generateContent(prompt)
+    }
+
+    suspend fun performATSAnalysis(resumeContent: String, jobDescription: String?): String {
+        val prompt = buildString {
+            appendLine("You are an expert ATS (Applicant Tracking System) analyst and resume optimization specialist.")
+            appendLine()
+            appendLine("Perform a comprehensive ATS compatibility analysis on the following resume.")
+            appendLine("Evaluate:")
+            appendLine("1. FORMATTING: Check for ATS-unfriendly elements")
+            appendLine("2. STRUCTURE: Verify proper section organization")
+            appendLine("3. KEYWORDS: Analyze keyword density and relevance")
+            appendLine("4. READABILITY: Check for clear, scannable content")
+            appendLine("5. IMPACT: Identify bullet points that could use X-Y-Z format")
+            appendLine("6. GRAMMAR & TONE: Check for professional language and consistency")
+            appendLine()
+            appendLine("--- BEGIN RESUME ---")
+            appendLine(sanitizeInput(resumeContent))
+            appendLine("--- END RESUME ---")
+            if (jobDescription != null) {
+                appendLine()
+                appendLine("--- BEGIN TARGET JOB DESCRIPTION ---")
+                appendLine(sanitizeInput(jobDescription))
+                appendLine("--- END TARGET JOB DESCRIPTION ---")
+            }
+            appendLine()
+            appendLine("Respond ONLY with valid JSON in this exact format:")
+            appendLine("""{
+  "overallScore": <0-100>,
+  "formattingScore": <0-100>,
+  "keywordScore": <0-100>,
+  "structureScore": <0-100>,
+  "readabilityScore": <0-100>,
+  "formattingIssues": [{"severity": "HIGH|MEDIUM|LOW", "category": "<category>", "description": "<issue>", "suggestion": "<fix>"}],
+  "structureIssues": [{"severity": "HIGH|MEDIUM|LOW", "category": "<category>", "description": "<issue>", "suggestion": "<fix>"}],
+  "keywordDensity": {"<keyword>": <count>},
+  "recommendations": [{"priority": <1-5>, "category": "<category>", "title": "<title>", "description": "<details>", "impact": "<expected improvement>"}],
+  "impactBullets": [{"original": "<current bullet>", "improved": "<rewritten with metrics>", "xyzFormat": {"accomplished": "<X>", "measuredBy": "<Y>", "byDoing": "<Z>"}}],
+  "grammarIssues": [{"original": "<text>", "corrected": "<fixed text>", "explanation": "<why>", "type": "GRAMMAR|SPELLING|TONE|CLARITY|REDUNDANCY"}]
+}""")
+        }
+        return generateContent(prompt)
+    }
+
+    suspend fun generateImpactBullets(experiences: List<String>, jobContext: String): String {
+        val prompt = buildString {
+            appendLine("You are an expert resume writer specializing in high-impact achievement statements.")
+            appendLine()
+            appendLine("Transform the following experience bullet points into powerful X-Y-Z format statements:")
+            appendLine("'Accomplished [X] as measured by [Y], by doing [Z]'")
+            appendLine()
+            appendLine("JOB CONTEXT: ${sanitizeInput(jobContext)}")
+            appendLine()
+            appendLine("BULLET POINTS TO IMPROVE:")
+            experiences.forEachIndexed { index, exp ->
+                appendLine("${index + 1}. ${sanitizeInput(exp)}")
+            }
+            appendLine()
+            appendLine("Respond ONLY with valid JSON array:")
+            appendLine("""[{"original": "<original text>", "improved": "<X-Y-Z format>", "accomplished": "<X>", "measuredBy": "<Y>", "byDoing": "<Z>"}]""")
+        }
+        return generateContent(prompt)
+    }
+
+    suspend fun analyzeGrammarAndTone(text: String): String {
+        val prompt = buildString {
+            appendLine("You are a professional editor specializing in resume and business writing.")
+            appendLine()
+            appendLine("Analyze the following text for grammar, spelling, tone, and clarity issues.")
+            appendLine()
+            appendLine("--- BEGIN TEXT ---")
+            appendLine(sanitizeInput(text))
+            appendLine("--- END TEXT ---")
+            appendLine()
+            appendLine("Respond ONLY with valid JSON array:")
+            appendLine("""[{"original": "<problematic text>", "corrected": "<fixed version>", "explanation": "<why this change>", "type": "GRAMMAR|SPELLING|TONE|CLARITY|REDUNDANCY"}]""")
+        }
+        return generateContent(prompt)
+    }
+
+    suspend fun rewriteResumeSection(
+        sectionType: String,
+        sectionContent: String,
+        targetRole: String?,
+        targetIndustry: String?,
+        style: String
+    ): String {
+        val prompt = buildString {
+            appendLine("You are an expert resume writer and career coach.")
+            appendLine()
+            appendLine("Rewrite the following resume section to be more impactful and ATS-optimized.")
+            appendLine()
+            appendLine("SECTION TYPE: ${sanitizeInput(sectionType)}")
+            if (!targetRole.isNullOrBlank()) appendLine("TARGET ROLE: ${sanitizeInput(targetRole)}")
+            if (!targetIndustry.isNullOrBlank()) appendLine("TARGET INDUSTRY: ${sanitizeInput(targetIndustry)}")
+            appendLine("WRITING STYLE: ${sanitizeInput(style)}")
+            appendLine()
+            appendLine("--- BEGIN ORIGINAL CONTENT ---")
+            appendLine(sanitizeInput(sectionContent))
+            appendLine("--- END ORIGINAL CONTENT ---")
+            appendLine()
+            appendLine("Respond ONLY with valid JSON:")
+            appendLine("""{
+  "rewrittenContent": "<the improved section content>",
+  "changes": ["<list of key changes made>"],
+  "keywords": ["<relevant keywords added>"],
+  "tips": ["<additional tips for this section>"]
+}""")
+        }
+        return generateContent(prompt)
+    }
+
     private fun parseAnalysisResponse(response: String): ResumeAnalysisResult {
         val jsonString = extractJson(response)
         return try {

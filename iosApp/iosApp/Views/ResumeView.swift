@@ -185,7 +185,7 @@ struct ResumeRow: View {
                         .font(.headline)
                     
                     if resume.sourceType == .uploaded {
-                        Text("📄 Uploaded")
+                        Text(" Uploaded")
                             .font(.caption2)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)

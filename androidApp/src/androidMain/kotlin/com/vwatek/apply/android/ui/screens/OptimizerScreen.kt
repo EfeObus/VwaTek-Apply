@@ -498,7 +498,7 @@ private fun ATSScoreContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "💡 Optimization Tips",
+                        text = " Optimization Tips",
                         style = MaterialTheme.typography.titleSmall
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -1167,7 +1167,7 @@ private fun SectionRewriterContent(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "✍️ Writing Tips",
+                        text = " Writing Tips",
                         style = MaterialTheme.typography.titleSmall
                     )
                     Spacer(modifier = Modifier.height(8.dp))

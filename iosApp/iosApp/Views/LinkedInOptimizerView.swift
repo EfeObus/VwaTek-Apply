@@ -174,7 +174,7 @@ struct LinkedInOptimizerView: View {
                 
                 ForEach(analysis.strengths, id: \.self) { strength in
                     HStack(alignment: .top) {
-                        Text("✅")
+                        Text("")
                         Text(strength)
                             .font(.body)
                     }
@@ -196,7 +196,7 @@ struct LinkedInOptimizerView: View {
                 
                 ForEach(Array(analysis.improvements.enumerated()), id: \.offset) { _, improvement in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("⚠️ \(improvement.issue)")
+                        Text(" \(improvement.issue)")
                             .font(.body)
                             .fontWeight(.medium)
                         Text(improvement.suggestion)

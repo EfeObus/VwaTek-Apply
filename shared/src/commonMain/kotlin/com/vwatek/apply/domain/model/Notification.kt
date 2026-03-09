@@ -62,17 +62,17 @@ enum class NotificationType {
     
     val icon: String
         get() = when (this) {
-            APPLICATION_REMINDER -> "📋"
-            INTERVIEW_REMINDER -> "📅"
-            FOLLOW_UP_REMINDER -> "📧"
-            STATUS_CHANGE -> "🔄"
+            APPLICATION_REMINDER -> ""
+            INTERVIEW_REMINDER -> ""
+            FOLLOW_UP_REMINDER -> ""
+            STATUS_CHANGE -> ""
             DEADLINE_APPROACHING -> "⏰"
-            PRACTICE_REMINDER -> "🎯"
-            SESSION_SCHEDULED -> "📆"
-            DOCUMENT_READY -> "📄"
-            OPTIMIZATION_COMPLETE -> "✨"
-            WEEKLY_SUMMARY -> "📊"
-            TIPS_AND_ADVICE -> "💡"
+            PRACTICE_REMINDER -> ""
+            SESSION_SCHEDULED -> ""
+            DOCUMENT_READY -> ""
+            OPTIMIZATION_COMPLETE -> ""
+            WEEKLY_SUMMARY -> ""
+            TIPS_AND_ADVICE -> ""
             FEATURE_UPDATE -> "🆕"
         }
 }

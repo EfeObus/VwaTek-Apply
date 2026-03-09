@@ -37,15 +37,15 @@ object FlywayMigration {
             val result = flyway.migrate()
             
             if (result.migrationsExecuted > 0) {
-                logger.info("✅ Flyway: ${result.migrationsExecuted} migration(s) applied successfully")
+                logger.info(" Flyway: ${result.migrationsExecuted} migration(s) applied successfully")
                 result.migrations.forEach { migration ->
                     logger.info("  Applied: ${migration.version} - ${migration.description}")
                 }
             } else {
-                logger.info("✅ Flyway: Database is up to date (no pending migrations)")
+                logger.info(" Flyway: Database is up to date (no pending migrations)")
             }
         } catch (e: Exception) {
-            logger.error("❌ Flyway migration failed: ${e.message}", e)
+            logger.error(" Flyway migration failed: ${e.message}", e)
             throw e
         }
     }

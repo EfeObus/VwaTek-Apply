@@ -128,7 +128,7 @@ fun ResumeOptimizerScreen() {
             }
         }) {
             Div(attrs = { style { property("display", "flex"); property("align-items", "flex-start"); property("gap", "12px") } }) {
-                Span(attrs = { style { property("font-size", "1.5rem") } }) { Text("ℹ️") }
+                Span(attrs = { style { property("font-size", "1.5rem") } }) { Text("ℹ") }
                 Div {
                     H4(attrs = { classes("mb-xs"); style { property("color", "var(--primary-color, #3b82f6)") } }) {
                         Text("How it works")
@@ -234,7 +234,7 @@ fun ResumeOptimizerScreen() {
                     if (state.isATSAnalyzing) {
                         Text("⏳ Analyzing...")
                     } else {
-                        Text("🔍 Analyze & Optimize")
+                        Text(" Analyze & Optimize")
                     }
                 }
             }
@@ -245,7 +245,7 @@ fun ResumeOptimizerScreen() {
                     // Empty State
                     Div(attrs = { classes("empty-state") }) {
                         Div(attrs = { classes("empty-state-icon") }) {
-                            Text("📊")
+                            Text("")
                         }
                         H3(attrs = { classes("mb-sm") }) {
                             Text("No Analysis Yet")
@@ -270,7 +270,7 @@ fun ResumeOptimizerScreen() {
                         OptimizationResults(currentAnalysis, targetKeywords, resumeContent)
                     } else {
                         Div(attrs = { classes("alert", "alert-warning") }) {
-                            Text("⚠️ Analysis failed. Please check your API key settings and try again.")
+                            Text(" Analysis failed. Please check your API key settings and try again.")
                         }
                     }
             }
@@ -279,22 +279,22 @@ fun ResumeOptimizerScreen() {
         // Quick Tips Section
         Div(attrs = { classes("card", "mt-xl") }) {
             H3(attrs = { classes("card-title", "mb-md") }) {
-                Text("💡 Quick Optimization Tips")
+                Text(" Quick Optimization Tips")
             }
             
             Div(attrs = { classes("grid", "grid-cols-3", "gap-md") }) {
                 QuickTipCard(
-                    icon = "📝",
+                    icon = "",
                     title = "Use Keywords",
                     description = "Include keywords from the job description naturally throughout your resume"
                 )
                 QuickTipCard(
-                    icon = "📊",
+                    icon = "",
                     title = "Quantify Results",
                     description = "Use the X-Y-Z format: Accomplished [X] as measured by [Y] by doing [Z]"
                 )
                 QuickTipCard(
-                    icon = "🎯",
+                    icon = "",
                     title = "Tailor Content",
                     description = "Customize your resume for each job application to maximize relevance"
                 )
@@ -307,7 +307,7 @@ fun ResumeOptimizerScreen() {
                 // Left Panel - Input Section
                 Div(attrs = { classes("card") }) {
                     H3(attrs = { classes("card-title", "mb-md") }) {
-                        Text("✍️ Section Rewriter")
+                        Text(" Section Rewriter")
                     }
                     P(attrs = { classes("text-secondary", "mb-lg") }) {
                         Text("Rewrite any section of your resume with AI-powered suggestions for improved impact")
@@ -434,7 +434,7 @@ fun ResumeOptimizerScreen() {
                         if (state.isRewritingSection) {
                             Text("⏳ Rewriting...")
                         } else {
-                            Text("✨ Rewrite Section")
+                            Text(" Rewrite Section")
                         }
                     }
                 }
@@ -447,7 +447,7 @@ fun ResumeOptimizerScreen() {
                         // Empty State
                         Div(attrs = { classes("empty-state") }) {
                             Div(attrs = { classes("empty-state-icon") }) {
-                                Text("✍️")
+                                Text("")
                             }
                             H3(attrs = { classes("mb-sm") }) {
                                 Text("Ready to Rewrite")
@@ -474,22 +474,22 @@ fun ResumeOptimizerScreen() {
             // Section Tips
             Div(attrs = { classes("card", "mt-xl") }) {
                 H3(attrs = { classes("card-title", "mb-md") }) {
-                    Text("💡 Section Writing Tips")
+                    Text(" Section Writing Tips")
                 }
                 
                 Div(attrs = { classes("grid", "grid-cols-3", "gap-md") }) {
                     QuickTipCard(
-                        icon = "🎯",
+                        icon = "",
                         title = "Be Specific",
                         description = "Include specific achievements, metrics, and quantifiable results in your experience section"
                     )
                     QuickTipCard(
-                        icon = "📏",
+                        icon = "",
                         title = "Keep it Concise",
                         description = "Summaries should be 3-5 lines. Each bullet point should be one impactful sentence"
                     )
                     QuickTipCard(
-                        icon = "🔄",
+                        icon = "",
                         title = "Use Action Verbs",
                         description = "Start bullets with strong verbs: Led, Developed, Improved, Achieved, Spearheaded"
                     )
@@ -512,7 +512,7 @@ private fun SectionRewriteResults(result: SectionRewriteResult, viewModel: Resum
         Div(attrs = { classes("mb-lg") }) {
             Div(attrs = { classes("flex", "justify-between", "items-center", "mb-md") }) {
                 H4(attrs = { classes("m-0") }) {
-                    Text("📝 Rewritten Content")
+                    Text(" Rewritten Content")
                 }
                 Button(attrs = {
                     classes("btn", "btn-secondary", "btn-sm")
@@ -521,7 +521,7 @@ private fun SectionRewriteResults(result: SectionRewriteResult, viewModel: Resum
                         kotlinx.browser.window.navigator.clipboard.writeText(result.rewrittenContent)
                     }
                 }) {
-                    Text("📋 Copy")
+                    Text(" Copy")
                 }
             }
             Div(attrs = { 
@@ -543,7 +543,7 @@ private fun SectionRewriteResults(result: SectionRewriteResult, viewModel: Resum
         if (result.changes.isNotEmpty()) {
             Div(attrs = { classes("mb-lg") }) {
                 H4(attrs = { classes("mb-md") }) {
-                    Text("🔄 Changes Made")
+                    Text(" Changes Made")
                 }
                 Ul(attrs = { classes("changes-list") }) {
                     result.changes.forEach { change: String ->
@@ -559,7 +559,7 @@ private fun SectionRewriteResults(result: SectionRewriteResult, viewModel: Resum
         if (result.keywords.isNotEmpty()) {
             Div(attrs = { classes("mb-lg") }) {
                 H4(attrs = { classes("mb-md") }) {
-                    Text("🔑 Keywords Incorporated")
+                    Text(" Keywords Incorporated")
                 }
                 Div(attrs = { classes("flex", "flex-wrap", "gap-sm") }) {
                     result.keywords.forEach { keyword: String ->
@@ -575,7 +575,7 @@ private fun SectionRewriteResults(result: SectionRewriteResult, viewModel: Resum
         if (result.tips.isNotEmpty()) {
             Div {
                 H4(attrs = { classes("mb-md") }) {
-                    Text("💡 Additional Tips")
+                    Text(" Additional Tips")
                 }
                 result.tips.forEach { tip: String ->
                     Div(attrs = { classes("tip-item", "mb-sm") }) {
@@ -598,7 +598,7 @@ private fun SectionRewriteResults(result: SectionRewriteResult, viewModel: Resum
                     viewModel.onIntent(ResumeIntent.ClearSectionRewrite)
                 }
             }) {
-                Text("🗑️ Clear Results")
+                Text(" Clear Results")
             }
         }
     }
@@ -645,7 +645,7 @@ private fun OptimizationResults(
         // Score Breakdown
         Div(attrs = { classes("mb-lg") }) {
             H4(attrs = { classes("mb-md") }) {
-                Text("📈 Score Breakdown")
+                Text(" Score Breakdown")
             }
             
             ScoreBar("Formatting", analysis.formattingScore)
@@ -658,7 +658,7 @@ private fun OptimizationResults(
         if (targetKeywords.isNotBlank()) {
             Div(attrs = { classes("mb-lg") }) {
                 H4(attrs = { classes("mb-md") }) {
-                    Text("🔑 Keyword Match Analysis")
+                    Text(" Keyword Match Analysis")
                 }
                 
                 val keywords = targetKeywords.split(",").map { kw -> kw.trim().lowercase() }.filter { kw -> kw.isNotEmpty() }
@@ -670,7 +670,7 @@ private fun OptimizationResults(
                         Span(attrs = {
                             classes("badge", if (found) "badge-success" else "badge-error")
                         }) {
-                            Text("${if (found) "✓" else "✗"} $keyword")
+                            Text("${if (found) "" else ""} $keyword")
                         }
                     }
                 }
@@ -689,7 +689,7 @@ private fun OptimizationResults(
         if (allIssues.isNotEmpty()) {
             Div(attrs = { classes("mb-lg") }) {
                 H4(attrs = { classes("mb-md") }) {
-                    Text("⚠️ Issues Found (${allIssues.size})")
+                    Text(" Issues Found (${allIssues.size})")
                 }
                 
                 allIssues.take(5).forEach { issue: ATSIssue ->
@@ -708,7 +708,7 @@ private fun OptimizationResults(
         if (analysis.recommendations.isNotEmpty()) {
             Div {
                 H4(attrs = { classes("mb-md") }) {
-                    Text("✨ Recommendations")
+                    Text(" Recommendations")
                 }
                 
                 analysis.recommendations.take(5).forEach { rec: ATSRecommendation ->
@@ -754,7 +754,7 @@ private fun IssueCard(issue: ATSIssue) {
         }
         if (issue.suggestion.isNotBlank()) {
             Div(attrs = { classes("text-success", "text-sm", "mt-xs") }) {
-                Text("💡 ${issue.suggestion}")
+                Text(" ${issue.suggestion}")
             }
         }
     }
@@ -838,7 +838,7 @@ private fun GrammarCheckTab(viewModel: ResumeViewModel, state: com.vwatek.apply.
                     property("display", "flex"); property("align-items", "center"); property("gap", "8px"); property("margin-bottom", "16px")
                 }
             }) {
-                Span(attrs = { style { property("font-size", "1.5rem") } }) { Text("✅") }
+                Span(attrs = { style { property("font-size", "1.5rem") } }) { Text("") }
                 H3(attrs = { classes("m-0") }) { Text("Grammar & Tone Check") }
             }
             P(attrs = { classes("text-secondary", "mb-lg") }) {
@@ -860,7 +860,7 @@ private fun GrammarCheckTab(viewModel: ResumeViewModel, state: com.vwatek.apply.
                 onClick { viewModel.onIntent(ResumeIntent.AnalyzeGrammar(grammarText)) }
                 if (grammarText.isBlank() || state.isAnalyzingGrammar) attr("disabled", "true")
             }) {
-                if (state.isAnalyzingGrammar) Text("⏳ Analyzing...") else Text("✅ Check Grammar")
+                if (state.isAnalyzingGrammar) Text("⏳ Analyzing...") else Text(" Check Grammar")
             }
         }
         
@@ -868,7 +868,7 @@ private fun GrammarCheckTab(viewModel: ResumeViewModel, state: com.vwatek.apply.
         Div(attrs = { classes("card") }) {
             if (state.grammarIssues.isEmpty() && !state.isAnalyzingGrammar) {
                 Div(attrs = { classes("empty-state") }) {
-                    Div(attrs = { classes("empty-state-icon") }) { Text("📝") }
+                    Div(attrs = { classes("empty-state-icon") }) { Text("") }
                     H3(attrs = { classes("mb-sm") }) { Text("No Results Yet") }
                     P(attrs = { classes("text-secondary") }) { Text("Enter text and click 'Check Grammar' to analyze.") }
                 }
@@ -916,11 +916,11 @@ private fun WebGrammarIssueCard(issue: GrammarIssue) {
         }
         Div(attrs = { style { property("margin-bottom", "6px") } }) {
             Span(attrs = { style { property("color", "var(--error-color, #ef4444)"); property("text-decoration", "line-through") } }) {
-                Text("❌ ${issue.original}")
+                Text(" ${issue.original}")
             }
         }
         Div(attrs = { style { property("margin-bottom", "6px"); property("font-weight", "500") } }) {
-            Text("✅ ${issue.corrected}")
+            Text(" ${issue.corrected}")
         }
         P(attrs = { classes("text-secondary", "text-sm", "m-0") }) {
             Text(issue.explanation)
@@ -943,7 +943,7 @@ private fun ImpactBulletsTab(viewModel: ResumeViewModel, state: com.vwatek.apply
                     property("display", "flex"); property("align-items", "center"); property("gap", "8px"); property("margin-bottom", "16px")
                 }
             }) {
-                Span(attrs = { style { property("font-size", "1.5rem") } }) { Text("⚡") }
+                Span(attrs = { style { property("font-size", "1.5rem") } }) { Text("") }
                 H3(attrs = { classes("m-0") }) { Text("Impact Bullets Generator") }
             }
             P(attrs = { classes("text-secondary", "mb-lg") }) {
@@ -979,7 +979,7 @@ private fun ImpactBulletsTab(viewModel: ResumeViewModel, state: com.vwatek.apply
                 }
                 if (experienceText.isBlank() || state.isGeneratingBullets) attr("disabled", "true")
             }) {
-                if (state.isGeneratingBullets) Text("⏳ Generating...") else Text("⚡ Generate Impact Bullets")
+                if (state.isGeneratingBullets) Text("⏳ Generating...") else Text(" Generate Impact Bullets")
             }
         }
         
@@ -987,7 +987,7 @@ private fun ImpactBulletsTab(viewModel: ResumeViewModel, state: com.vwatek.apply
         Div(attrs = { classes("card") }) {
             if (state.impactBullets.isEmpty() && !state.isGeneratingBullets) {
                 Div(attrs = { classes("empty-state") }) {
-                    Div(attrs = { classes("empty-state-icon") }) { Text("⚡") }
+                    Div(attrs = { classes("empty-state-icon") }) { Text("") }
                     H3(attrs = { classes("mb-sm") }) { Text("No Bullets Yet") }
                     P(attrs = { classes("text-secondary") }) { Text("Enter experiences and click 'Generate' to create impact bullets.") }
                 }
@@ -1030,7 +1030,7 @@ private fun WebImpactBulletCard(bullet: ImpactBullet) {
                 classes("btn", "btn-secondary", "btn-sm")
                 onClick { kotlinx.browser.window.navigator.clipboard.writeText(bullet.improved) }
                 style { property("flex-shrink", "0"); property("margin-left", "8px") }
-            }) { Text("📋") }
+            }) { Text("") }
         }
         // XYZ Breakdown
         bullet.xyzFormat?.let { xyz ->

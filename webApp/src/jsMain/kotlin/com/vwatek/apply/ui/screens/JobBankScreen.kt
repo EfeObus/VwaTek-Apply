@@ -221,7 +221,7 @@ fun JobBankScreen() {
                         }
                     } else if (state.trendingJobs.isEmpty()) {
                         Div(attrs = { classes("card", "p-xl", "text-center") }) {
-                            Div(attrs = { classes("text-4xl", "mb-md") }) { Text("📋") }
+                            Div(attrs = { classes("text-4xl", "mb-md") }) { Text("") }
                             H3 { Text("No Trending Jobs Available") }
                             P(attrs = { classes("text-secondary") }) {
                                 Text("Check back later for trending job listings.")
@@ -246,7 +246,7 @@ fun JobBankScreen() {
                 // Empty state
                 if (!state.isSearching && !state.hasSearchResults && !state.showTrending) {
                     Div(attrs = { classes("card", "p-xl", "text-center") }) {
-                        Div(attrs = { classes("text-4xl", "mb-md") }) { Text("🍁") }
+                        Div(attrs = { classes("text-4xl", "mb-md") }) { Text("") }
                         H3 { Text("Search Job Bank Canada") }
                         P(attrs = { classes("text-secondary") }) {
                             Text("Enter a job title, keyword, or location to search thousands of job listings from the Government of Canada Job Bank.")
@@ -269,7 +269,7 @@ fun JobBankScreen() {
                     )
                 } else {
                     Div(attrs = { classes("card", "p-lg", "text-center", "text-secondary") }) {
-                        Div(attrs = { classes("text-3xl", "mb-md") }) { Text("📋") }
+                        Div(attrs = { classes("text-3xl", "mb-md") }) { Text("") }
                         P { Text("Select a job to view details") }
                     }
                 }
@@ -299,20 +299,20 @@ private fun JobCard(
                 classes("btn", "btn-icon", "btn-ghost")
                 onClick { it.stopPropagation() }
             }) {
-                Text("🔖")
+                Text("")
             }
         }
         
         // Location and salary
         Div(attrs = { classes("flex", "gap-md", "mt-sm", "text-sm", "text-secondary") }) {
             Div(attrs = { classes("flex", "items-center", "gap-xs") }) {
-                Text("📍")
+                Text("")
                 Text(job.location.displayName)
             }
             
             job.salary?.let { salary ->
                 Div(attrs = { classes("flex", "items-center", "gap-xs") }) {
-                    Text("💰")
+                    Text("")
                     Text(salary.displayRange)
                 }
             }
@@ -348,27 +348,27 @@ private fun JobDetailsPanel(
         // Location and salary
         Div(attrs = { classes("space-y-sm", "mb-md") }) {
             Div(attrs = { classes("flex", "items-center", "gap-sm") }) {
-                Text("📍")
+                Text("")
                 Text(job.location.displayName)
             }
             
             job.salary?.let { salary ->
                 Div(attrs = { classes("flex", "items-center", "gap-sm") }) {
-                    Text("💰")
+                    Text("")
                     Text(salary.displayRange)
                 }
             }
             
             job.nocCode?.let { noc ->
                 Div(attrs = { classes("flex", "items-center", "gap-sm") }) {
-                    Text("🏷️")
+                    Text("")
                     Text("NOC Code: $noc")
                 }
             }
             
             job.vacancies.let { count ->
                 Div(attrs = { classes("flex", "items-center", "gap-sm") }) {
-                    Text("👥")
+                    Text("")
                     Text("$count vacancy${if (count > 1) "ies" else ""}")
                 }
             }
@@ -414,7 +414,7 @@ private fun JobDetailsPanel(
                 classes("btn", "btn-outline", "flex-1")
                 onClick { onSave() }
             }) {
-                Text("🔖 Save")
+                Text(" Save")
             }
             
             Button(attrs = {

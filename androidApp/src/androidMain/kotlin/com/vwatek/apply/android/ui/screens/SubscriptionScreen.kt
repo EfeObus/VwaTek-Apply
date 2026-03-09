@@ -596,10 +596,10 @@ private fun FeatureComparisonSection() {
             ComparisonRow("AI enhancements", "5/day", "20/day", "∞")
             ComparisonRow("Interview practice", "3/mo", "10/mo", "∞")
             ComparisonRow("Application tracker", "10", "∞", "∞")
-            ComparisonRow("Salary insights", "✗", "✓", "✓")
-            ComparisonRow("Negotiation coach", "✗", "✗", "✓")
-            ComparisonRow("LinkedIn optimizer", "✗", "✗", "✓")
-            ComparisonRow("Priority support", "✗", "✗", "✓")
+            ComparisonRow("Salary insights", "", "", "")
+            ComparisonRow("Negotiation coach", "", "", "")
+            ComparisonRow("LinkedIn optimizer", "", "", "")
+            ComparisonRow("Priority support", "", "", "")
         }
     }
 }
@@ -627,7 +627,7 @@ private fun ComparisonRow(
             text = free,
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
-            color = if (free == "✗") MaterialTheme.colorScheme.onSurfaceVariant 
+            color = if (free == "") MaterialTheme.colorScheme.onSurfaceVariant 
                     else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
@@ -635,7 +635,7 @@ private fun ComparisonRow(
             text = pro,
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
-            color = if (pro == "✓") MaterialTheme.colorScheme.primary 
+            color = if (pro == "") MaterialTheme.colorScheme.primary 
                     else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
@@ -643,7 +643,7 @@ private fun ComparisonRow(
             text = premium,
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
-            color = if (premium == "✓" || premium == "∞") MaterialTheme.colorScheme.primary 
+            color = if (premium == "" || premium == "∞") MaterialTheme.colorScheme.primary 
                     else MaterialTheme.colorScheme.onSurface,
             fontWeight = if (premium == "∞") FontWeight.Bold else FontWeight.Normal,
             modifier = Modifier.weight(1f)

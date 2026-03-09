@@ -395,18 +395,18 @@ Base URL: [ApiConfig.kt](shared/src/commonMain/kotlin/com/vwatek/apply/data/api/
 
 | API Client | Sends Auth? | Backend Expects | Result |
 |------------|-------------|-----------------|--------|
-| Auth (register/login/google) | None | None | ✅ Works |
-| Auth (updateProfile) | Bearer + X-User-Id | Bearer + X-User-Id | ✅ Works |
-| Resume (SyncingResumeRepository) | X-User-Id only | X-User-Id | ✅ Works |
+| Auth (register/login/google) | None | None |  Works |
+| Auth (updateProfile) | Bearer + X-User-Id | Bearer + X-User-Id |  Works |
+| Resume (SyncingResumeRepository) | X-User-Id only | X-User-Id |  Works |
 | **Job Tracker (JobTrackerApiClient)** | **None** | **JWT** | **BROKEN — 401 on all calls** |
 | **Subscription (SubscriptionApiClient)** | **None** | **X-User-Id** | **BROKEN — no user context** |
 | **Salary (SalaryApiClient)** | **None** | **X-User-Id** | **BROKEN — no user context** |
 | **Organization (OrganizationApiClient)** | **None** | **requireAuth() (broken)** | **BROKEN — double failure** |
 | **LinkedIn (LinkedInApiClientImpl)** | **None** | **Unknown** | **Likely broken** |
-| NOC (NOCApiClient) | None | None | ✅ Works |
-| Job Bank (JobBankApiClient) | None | None | ✅ Works |
-| Sync (SyncApiClient) | Bearer token | JWT | ✅ Works |
-| Privacy (PrivacyApiClient) | Bearer token | JWT ("auth-jwt") | ✅ Works |
+| NOC (NOCApiClient) | None | None |  Works |
+| Job Bank (JobBankApiClient) | None | None |  Works |
+| Sync (SyncApiClient) | Bearer token | JWT |  Works |
+| Privacy (PrivacyApiClient) | Bearer token | JWT ("auth-jwt") |  Works |
 
 ### 4.3 Token Format Mismatch (CRITICAL)
 
@@ -423,7 +423,7 @@ Base URL: [ApiConfig.kt](shared/src/commonMain/kotlin/com/vwatek/apply/data/api/
 
 | Platform | Storage | Encryption | Issue |
 |----------|---------|-----------|-------|
-| Android | EncryptedSharedPreferences | AES-256 ✅ | None |
+| Android | EncryptedSharedPreferences | AES-256  | None |
 | iOS | **NSUserDefaults** | **None** | **HIGH — should use Keychain** |
 | Web | localStorage | None (inherent to web) | Acceptable for web (use HttpOnly cookies for better security) |
 
@@ -431,7 +431,7 @@ Base URL: [ApiConfig.kt](shared/src/commonMain/kotlin/com/vwatek/apply/data/api/
 
 | Feature | Android | iOS | Web |
 |---------|---------|-----|-----|
-| Resumes | SQLDelight + sync ✅ | SQLDelight + sync ✅ | API-only, no cache |
+| Resumes | SQLDelight + sync  | SQLDelight + sync  | API-only, no cache |
 | Cover Letters | Local-only, no sync | Local-only, no sync | API-only |
 | Interviews | Local-only, no sync | Local-only, no sync | API-only |
 | Job Tracker | API-only | API-only | API-only |
@@ -473,12 +473,12 @@ Base URL: [ApiConfig.kt](shared/src/commonMain/kotlin/com/vwatek/apply/data/api/
 
 | File | Gitignored | In Git History |
 |------|-----------|---------------|
-| `secrets.properties` | ✅ Yes | No ✅ |
-| `local.properties` | ✅ Yes | No ✅ |
-| `google-services.json` | ✅ Yes (placeholder only) | No ✅ |
-| `config.js` | ✅ Yes | No ✅ |
-| `.env*` | ✅ Yes | No ✅ |
-| `GoogleService-Info.plist` | ✅ Yes | No ✅ |
+| `secrets.properties` |  Yes | No  |
+| `local.properties` |  Yes | No  |
+| `google-services.json` |  Yes (placeholder only) | No  |
+| `config.js` |  Yes | No  |
+| `.env*` |  Yes | No  |
+| `GoogleService-Info.plist` |  Yes | No  |
 
 ### 5.3 Backend Environment Variables
 
@@ -491,7 +491,7 @@ Base URL: [ApiConfig.kt](shared/src/commonMain/kotlin/com/vwatek/apply/data/api/
 | `STRIPE_WEBHOOK_SECRET` | env | `""` | **Not in Cloud Run secrets config** |
 | `SMTP_PASSWORD` | env | `""` | **Not in Cloud Run secrets config** |
 | `LINKEDIN_CLIENT_ID/SECRET` | env | `""` | **Not in Cloud Run secrets config** |
-| DB credentials | GCP Secret Manager | — | ✅ Properly managed |
+| DB credentials | GCP Secret Manager | — |  Properly managed |
 
 ---
 
@@ -554,12 +554,12 @@ Base URL: [ApiConfig.kt](shared/src/commonMain/kotlin/com/vwatek/apply/data/api/
 ### 6.5 Client-Side Schema Gap
 
 The SQLDelight schema only covers Phase 1 tables:
-- ✅ Resume, ResumeAnalysis, CoverLetter, InterviewSession, InterviewQuestion, Settings
-- ❌ Job Tracker (6 tables) — **not in client DB**
-- ❌ Notifications (4 tables) — **not in client DB**
-- ❌ Sync (8 tables) — **not in client DB**
-- ❌ Salary (4+ tables) — **not in client DB**
-- ❌ Organization (10 tables) — **not in client DB**
+-  Resume, ResumeAnalysis, CoverLetter, InterviewSession, InterviewQuestion, Settings
+-  Job Tracker (6 tables) — **not in client DB**
+-  Notifications (4 tables) — **not in client DB**
+-  Sync (8 tables) — **not in client DB**
+-  Salary (4+ tables) — **not in client DB**
+-  Organization (10 tables) — **not in client DB**
 
 ### 6.6 Migration Strategy
 
@@ -582,7 +582,7 @@ The SQLDelight schema only covers Phase 1 tables:
 |---|-------|----------|---------|
 | BLD-01 | **Container runs as root** — no `USER` directive in Dockerfile | **HIGH** | [Dockerfile.backend](Dockerfile.backend) |
 | BLD-02 | **No .dockerignore** — entire repo sent as Docker context including secrets files | **HIGH** | Project root |
-| BLD-03 | Multi-stage build ✅, Alpine base ✅, health check ✅ | OK | |
+| BLD-03 | Multi-stage build , Alpine base , health check  | OK | |
 
 ### 7.2 CI/CD ([cloudbuild.yaml](cloudbuild.yaml))
 
@@ -606,12 +606,12 @@ The SQLDelight schema only covers Phase 1 tables:
 
 | Check | Status |
 |-------|--------|
-| SPA routing | ✅ |
-| API proxy to Cloud Run | ✅ |
-| Security headers (X-Frame-Options, X-Content-Type-Options) | ✅ |
+| SPA routing |  |
+| API proxy to Cloud Run |  |
+| Security headers (X-Frame-Options, X-Content-Type-Options) |  |
 | Missing `Content-Security-Policy` header | **MEDIUM** |
 | Missing `Strict-Transport-Security` header | **LOW** |
-| Cache control (JS/CSS 1yr) | ✅ |
+| Cache control (JS/CSS 1yr) |  |
 
 ### 7.5 Terraform
 
@@ -619,8 +619,8 @@ The SQLDelight schema only covers Phase 1 tables:
 |---|-------|----------|---------|
 | BLD-12 | **State backend commented out** — using local state only; must be remote for team collaboration | **HIGH** | [main.tf L20-23](infrastructure/terraform/main.tf#L20-L23) |
 | BLD-13 | Storage bucket CORS `origin = ["*"]` — open to any origin | **MEDIUM** | [main.tf L197](infrastructure/terraform/main.tf#L197) |
-| BLD-14 | Canadian data residency configuration ✅ (Montreal region, PITR backup) | OK | |
-| BLD-15 | Global load balancer with geo-routing ✅ | OK | |
+| BLD-14 | Canadian data residency configuration  (Montreal region, PITR backup) | OK | |
+| BLD-15 | Global load balancer with geo-routing  | OK | |
 
 ---
 
@@ -630,44 +630,44 @@ The SQLDelight schema only covers Phase 1 tables:
 
 | Shared ViewModel | Android | iOS | Web | Notes |
 |-----------------|---------|-----|-----|-------|
-| AuthViewModel | ✅ Direct Koin inject | ✅ AuthViewModelWrapper | ✅ Direct Koin | |
-| ResumeViewModel | ✅ | ✅ ResumeViewModelWrapper | ✅ | |
-| CoverLetterViewModel | ✅ | ✅ CoverLetterViewModelWrapper | ✅ | |
-| InterviewViewModel | ✅ | ✅ InterviewViewModelWrapper | ✅ | |
-| TrackerViewModel | ✅ | ✅ TrackerViewModelWrapper | ✅ | |
-| NOCViewModel | ✅ | ✅ NOCViewModelWrapper | ✅ | |
-| JobBankViewModel | ✅ | ✅ JobBankViewModelWrapper | ✅ | |
-| SalaryIntelligenceManager | ✅ | ✅ SalaryIntelligenceManagerWrapper | ✅ | |
-| LinkedInOptimizerManager | ✅ | ✅ LinkedInOptimizerViewModelWrapper | ✅ | |
-| OrganizationViewModel | ✅ | ✅ OrganizationViewModelWrapper | ✅ | |
-| SubscriptionManager | ✅ | ✅ SubscriptionManagerWrapper | ✅ | |
-| SettingsRepository | ✅ | ❌ **Local @State only** | ✅ | iOS gap |
+| AuthViewModel |  Direct Koin inject |  AuthViewModelWrapper |  Direct Koin | |
+| ResumeViewModel |  |  ResumeViewModelWrapper |  | |
+| CoverLetterViewModel |  |  CoverLetterViewModelWrapper |  | |
+| InterviewViewModel |  |  InterviewViewModelWrapper |  | |
+| TrackerViewModel |  |  TrackerViewModelWrapper |  | |
+| NOCViewModel |  |  NOCViewModelWrapper |  | |
+| JobBankViewModel |  |  JobBankViewModelWrapper |  | |
+| SalaryIntelligenceManager |  |  SalaryIntelligenceManagerWrapper |  | |
+| LinkedInOptimizerManager |  |  LinkedInOptimizerViewModelWrapper |  | |
+| OrganizationViewModel |  |  OrganizationViewModelWrapper |  | |
+| SubscriptionManager |  |  SubscriptionManagerWrapper |  | |
+| SettingsRepository |  |  **Local @State only** |  | iOS gap |
 
 ### 8.2 Feature Status by Platform
 
 | Feature | Android | iOS | Web | Backend |
 |---------|---------|-----|-----|---------|
-| Auth (email/password) | ✅ | ✅ | ✅ | ✅ |
-| Auth (Google) | ✅ | ✅ | ✅ | ✅ |
-| Auth (Apple) | ❌ | ✅ | ❌ | ❌ (no endpoint) |
-| Auth (LinkedIn) | ✅ | ✅ | ✅ | ✅ |
-| Resume CRUD | ✅ + sync | ✅ + sync | ✅ API-only | ✅ |
-| Resume ATS Analysis | ✅ | ✅ | ✅ | ✅ |
-| Cover Letter Generation | ✅ | ✅ | ✅ | ✅ |
-| Interview Practice | ✅ | ✅ | ✅ | ✅ |
-| Job Tracker | ✅ UI | ✅ UI | ✅ UI | ✅ (but client auth broken) |
-| NOC Search | ✅ | ✅ | ✅ | ✅ |
-| Job Bank Search | ✅ | ✅ | ✅ | ✅ |
-| Salary Insights | ✅ + paywall | ✅ + paywall | ✅ + paywall | ✅ (but client auth broken) |
-| LinkedIn Optimizer | ✅ | ✅ | ✅ | ✅ (but client auth broken) |
-| Organization/Enterprise | ✅ UI | ✅ UI | ✅ UI | ❌ Auth broken |
-| Subscription/Billing | ✅ UI | ✅ UI | ✅ UI | ✅ (but client auth broken) |
-| Notifications | ❌ No client | ❌ No client | ❌ No client | ❌ Routes double-prefixed |
-| Sync/Offline | Partial (resumes only) | Partial (resumes only) | ❌ None | ❌ Auth broken |
-| Privacy/GDPR | ✅ | ✅ | ✅ | ✅ |
-| PDF Export | ❌ | ✅ | ❌ | N/A |
-| STAR Coaching | ❌ | ✅ | ❌ | N/A |
-| Version History | ❌ | ✅ | ❌ | ✅ Backend support |
+| Auth (email/password) |  |  |  |  |
+| Auth (Google) |  |  |  |  |
+| Auth (Apple) |  |  |  |  (no endpoint) |
+| Auth (LinkedIn) |  |  |  |  |
+| Resume CRUD |  + sync |  + sync |  API-only |  |
+| Resume ATS Analysis |  |  |  |  |
+| Cover Letter Generation |  |  |  |  |
+| Interview Practice |  |  |  |  |
+| Job Tracker |  UI |  UI |  UI |  (but client auth broken) |
+| NOC Search |  |  |  |  |
+| Job Bank Search |  |  |  |  |
+| Salary Insights |  + paywall |  + paywall |  + paywall |  (but client auth broken) |
+| LinkedIn Optimizer |  |  |  |  (but client auth broken) |
+| Organization/Enterprise |  UI |  UI |  UI |  Auth broken |
+| Subscription/Billing |  UI |  UI |  UI |  (but client auth broken) |
+| Notifications |  No client |  No client |  No client |  Routes double-prefixed |
+| Sync/Offline | Partial (resumes only) | Partial (resumes only) |  None |  Auth broken |
+| Privacy/GDPR |  |  |  |  |
+| PDF Export |  |  |  | N/A |
+| STAR Coaching |  |  |  | N/A |
+| Version History |  |  |  |  Backend support |
 
 ### 8.3 Deep Linking
 
@@ -792,57 +792,57 @@ The SQLDelight schema only covers Phase 1 tables:
 
 ## 10. Recommended Fix Priority
 
-### Phase 1 — CRITICAL Security Fixes (Immediate) ✅ COMPLETED
+### Phase 1 — CRITICAL Security Fixes (Immediate)  COMPLETED
 
-1. ✅ **Fix authentication architecture** — Implemented proper JWT token generation in AuthRoutes (HMAC256-signed JWTs with userId, email, audience, issuer, expiry claims replacing UUID tokens)
-2. ✅ **Add auth token to API clients** — Added `getAuthToken` constructor param + `applyAuth()` helper to JobTrackerApiClient, SubscriptionApiClient, SalaryApiClient, OrganizationApiClient. Added `getAuthToken()` to AuthRepository interface + all 4 platform implementations. Wired via Koin DI.
-3. ✅ **Remove `anyHost()` from CORS** — Whitelisted specific production domains only (Firebase Hosting, Cloud Run, GCS, localhost). Removed `X-User-Id` from allowed headers.
-4. ✅ **Remove API keys from config.js** — Removed `initializeDefaultApiKeys()` from web Main.kt, updated config.js.template to document that AI keys stay server-side only.
-5. ✅ **Add `authenticate("jwt")` wrapper** — Added to Organization routes, AI routes, Sync routes (in Routing.kt), Privacy routes (in Routing.kt). Migrated Subscription, Salary, Resume, CoverLetter, Interview routes from X-User-Id header to JWT auth via new `requireUserId()` helper.
-6. ✅ **Fix notification routes double-prefix** — Changed from `route("/api/v1/notifications")` to `route("/notifications")` since already mounted inside `/api/v1`.
-7. ✅ **Restrict Cloud SQL authorized_networks** — Disabled public IP (`ipv4_enabled = false`), removed `0.0.0.0/0` authorized_networks. Access via private VPC only.
-8. ✅ **Add web auth guard** — Added `LaunchedEffect` in App.kt that redirects unauthenticated users to auth screen. Updated `showAuthScreen` logic.
-9. **Rotate all exposed secrets** — _Manual operation required. Rotate: Stripe keys, Gemini key, OpenAI key, DB password, LinkedIn secret, SMTP password._ ⚠️
+1.  **Fix authentication architecture** — Implemented proper JWT token generation in AuthRoutes (HMAC256-signed JWTs with userId, email, audience, issuer, expiry claims replacing UUID tokens)
+2.  **Add auth token to API clients** — Added `getAuthToken` constructor param + `applyAuth()` helper to JobTrackerApiClient, SubscriptionApiClient, SalaryApiClient, OrganizationApiClient. Added `getAuthToken()` to AuthRepository interface + all 4 platform implementations. Wired via Koin DI.
+3.  **Remove `anyHost()` from CORS** — Whitelisted specific production domains only (Firebase Hosting, Cloud Run, GCS, localhost). Removed `X-User-Id` from allowed headers.
+4.  **Remove API keys from config.js** — Removed `initializeDefaultApiKeys()` from web Main.kt, updated config.js.template to document that AI keys stay server-side only.
+5.  **Add `authenticate("jwt")` wrapper** — Added to Organization routes, AI routes, Sync routes (in Routing.kt), Privacy routes (in Routing.kt). Migrated Subscription, Salary, Resume, CoverLetter, Interview routes from X-User-Id header to JWT auth via new `requireUserId()` helper.
+6.  **Fix notification routes double-prefix** — Changed from `route("/api/v1/notifications")` to `route("/notifications")` since already mounted inside `/api/v1`.
+7.  **Restrict Cloud SQL authorized_networks** — Disabled public IP (`ipv4_enabled = false`), removed `0.0.0.0/0` authorized_networks. Access via private VPC only.
+8.  **Add web auth guard** — Added `LaunchedEffect` in App.kt that redirects unauthenticated users to auth screen. Updated `showAuthScreen` logic.
+9. **Rotate all exposed secrets** — _Manual operation required. Rotate: Stripe keys, Gemini key, OpenAI key, DB password, LinkedIn secret, SMTP password._ 
 
 ### Phase 2 — HIGH Security & Reliability (Week 1-2)
 
-10. ✅ **Replace SHA-256 hashing** with bcrypt (cost 12) + backward-compatible legacy fallback _(completed)_
-11. ✅ **Add rate limiting** — auth (20/min), AI (10/min), subscription (30/min), global (100/min) using Ktor RateLimit plugin _(completed)_
-12. ✅ **Add missing auth headers** to JobTracker, Subscription, Salary, Organization, LinkedIn API clients _(completed in Phase 1)_
-13. ✅ **Fix NOC user match routes** — changed to `/users/me/matches` with JWT auth, updated NOCApiClient + NOCViewModel _(completed)_
-14. ✅ **Add database indexes** on 14+ columns across Tables.kt and JobTrackerTables.kt (userId, status, applicationId, resumeId, scheduledAt, reminderAt+isCompleted) _(completed)_
-15. ✅ **Add foreign key constraints** — 7 new FK refs: NotificationsTable, NotificationPreferencesTable, DeviceTokensTable, ScheduledNotificationsTable, EmailQueueTable, ChangeFeedTable userId→UsersTable; JobApplicationsTable resumeId→ResumesTable, coverLetterId→CoverLettersTable _(completed)_
-16. ✅ **Add `.dockerignore`** and non-root user (appuser/appgroup) to both Dockerfiles _(completed)_
-17. ✅ **Make test failures block deployment** — removed `|| echo` in cloudbuild.yaml _(completed)_
-18. ✅ **Fix region mismatch** — updated cloudrun-service.yaml from us-central1 to northamerica-northeast1 (5 occurrences) _(completed)_
-19. ✅ **Move iOS token storage** from NSUserDefaults to Keychain via KeychainHelper with auto-migration of existing tokens _(completed)_
-20. ✅ **Create least-privilege DB user** — Terraform updated: secret changed from "root" to "vwatek_app", added google_sql_user resource with GRANT instructions _(completed)_
+10.  **Replace SHA-256 hashing** with bcrypt (cost 12) + backward-compatible legacy fallback _(completed)_
+11.  **Add rate limiting** — auth (20/min), AI (10/min), subscription (30/min), global (100/min) using Ktor RateLimit plugin _(completed)_
+12.  **Add missing auth headers** to JobTracker, Subscription, Salary, Organization, LinkedIn API clients _(completed in Phase 1)_
+13.  **Fix NOC user match routes** — changed to `/users/me/matches` with JWT auth, updated NOCApiClient + NOCViewModel _(completed)_
+14.  **Add database indexes** on 14+ columns across Tables.kt and JobTrackerTables.kt (userId, status, applicationId, resumeId, scheduledAt, reminderAt+isCompleted) _(completed)_
+15.  **Add foreign key constraints** — 7 new FK refs: NotificationsTable, NotificationPreferencesTable, DeviceTokensTable, ScheduledNotificationsTable, EmailQueueTable, ChangeFeedTable userId→UsersTable; JobApplicationsTable resumeId→ResumesTable, coverLetterId→CoverLettersTable _(completed)_
+16.  **Add `.dockerignore`** and non-root user (appuser/appgroup) to both Dockerfiles _(completed)_
+17.  **Make test failures block deployment** — removed `|| echo` in cloudbuild.yaml _(completed)_
+18.  **Fix region mismatch** — updated cloudrun-service.yaml from us-central1 to northamerica-northeast1 (5 occurrences) _(completed)_
+19.  **Move iOS token storage** from NSUserDefaults to Keychain via KeychainHelper with auto-migration of existing tokens _(completed)_
+20.  **Create least-privilege DB user** — Terraform updated: secret changed from "root" to "vwatek_app", added google_sql_user resource with GRANT instructions _(completed)_
 
-### Phase 3 — Stability & Operations (Week 2-4) ✅ COMPLETED
+### Phase 3 — Stability & Operations (Week 2-4)  COMPLETED
 
-21. ~~**Implement versioned database migrations** (Flyway or Liquibase)~~ ✅ Added Flyway 10.10.0 with baseline-on-migrate, V1 baseline SQL, integrated into DatabaseConfig
-22. ~~**Add staging environment** with separate Cloud Run service~~ ✅ Created cloudbuild-staging.yaml + Terraform staging Cloud Run service + staging database
-23. ~~**Implement token refresh flow** across all platforms~~ ✅ Backend POST /auth/refresh endpoint + refreshToken() on Android, iOS, Web API, Web LocalStorage
-24. ~~**Increase HikariCP pool size** or reduce Cloud Run concurrency~~ ✅ Reduced pool to 5 (10×5=50, within Cloud SQL 100 limit), concurrency to 50, added leak detection
-25. ~~**Add password strength validation** (min 8 chars, complexity)~~ ✅ Added validatePasswordStrength() — min 8, upper, lower, digit, special char required
-26. ~~**Add request body size limits** and input sanitization~~ ✅ Created RequestValidation plugin (1MB/10MB limits), sanitizeInput() strips HTML/control chars
-27. ~~**Wire Android paywall** to SalaryInsights~~ ✅ Already wired — FeatureGatedContent + subscriptionManager.canUseFeature(PremiumFeature.SALARY_INSIGHTS)
-28. ~~**Connect iOS Settings** to shared SettingsRepository~~ ✅ Already connected — SettingsHelper.shared.getSetting/setSetting bridges to KMP SettingsRepository
-29. ~~**Enable remote Terraform state** backend~~ ✅ Uncommented GCS backend block, added google_storage_bucket resource with versioning
-30. ~~**Add security scanning** to CI/CD pipeline~~ ✅ Added OWASP dependency-check plugin + Trivy container image scanning in cloudbuild.yaml
+21. ~~**Implement versioned database migrations** (Flyway or Liquibase)~~  Added Flyway 10.10.0 with baseline-on-migrate, V1 baseline SQL, integrated into DatabaseConfig
+22. ~~**Add staging environment** with separate Cloud Run service~~  Created cloudbuild-staging.yaml + Terraform staging Cloud Run service + staging database
+23. ~~**Implement token refresh flow** across all platforms~~  Backend POST /auth/refresh endpoint + refreshToken() on Android, iOS, Web API, Web LocalStorage
+24. ~~**Increase HikariCP pool size** or reduce Cloud Run concurrency~~  Reduced pool to 5 (10×5=50, within Cloud SQL 100 limit), concurrency to 50, added leak detection
+25. ~~**Add password strength validation** (min 8 chars, complexity)~~  Added validatePasswordStrength() — min 8, upper, lower, digit, special char required
+26. ~~**Add request body size limits** and input sanitization~~  Created RequestValidation plugin (1MB/10MB limits), sanitizeInput() strips HTML/control chars
+27. ~~**Wire Android paywall** to SalaryInsights~~  Already wired — FeatureGatedContent + subscriptionManager.canUseFeature(PremiumFeature.SALARY_INSIGHTS)
+28. ~~**Connect iOS Settings** to shared SettingsRepository~~  Already connected — SettingsHelper.shared.getSetting/setSetting bridges to KMP SettingsRepository
+29. ~~**Enable remote Terraform state** backend~~  Uncommented GCS backend block, added google_storage_bucket resource with versioning
+30. ~~**Add security scanning** to CI/CD pipeline~~  Added OWASP dependency-check plugin + Trivy container image scanning in cloudbuild.yaml
 
-### Phase 4 — Quality & Completeness (Week 4+) ✅ COMPLETED
+### Phase 4 — Quality & Completeness (Week 4+)  COMPLETED
 
-31. ~~**Implement proper readiness probe**~~ ✅ `/health/ready` checks DB (SELECT 1), AI service config, memory pressure (<95%)
-32. ~~**Add structured JSON logging**~~ ✅ CallId plugin (UUID X-Request-Id), structured JSON format with request_id, user_id, duration_ms, IP
-33. ~~**Protect /metrics endpoint**~~ ✅ Bearer token auth via METRICS_AUTH_TOKEN env var
-34. ~~**Add pagination limits**~~ ✅ All list endpoints capped at max 100, default 50 (resumes, analyses, cover-letters, interviews, jobs)
-35. ~~**Add Content-Security-Policy and HSTS headers**~~ ✅ SecurityHeaders.kt: CSP, HSTS (1yr+preload), X-Frame-Options DENY, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy
-36. ~~**Expand SQLDelight schema**~~ ✅ Added JobApplication (14 cols), JobApplicationNote, PendingSync tables with full CRUD queries
-37. ~~**Implement full sync**~~ ✅ SyncEntityType.JOB_APPLICATION added, PendingSync table for offline queue
-38. ~~**Add client-side retry logic**~~ ✅ HttpClientExtensions.kt: HttpRequestRetry (3 retries, exponential backoff 500ms–10s), installed in Android/iOS/JS HttpClients
-39. ~~**Add HTTP status code differentiation**~~ ✅ HttpResponseValidator: 401→onUnauthorized callback, 403→exception, 429→exception
-40. ~~**Add AI prompt injection protection**~~ ✅ 16 injection regex patterns, sanitizeInput() on all user fields, delimited user content sections, OpenAI system message guardrail
+31. ~~**Implement proper readiness probe**~~  `/health/ready` checks DB (SELECT 1), AI service config, memory pressure (<95%)
+32. ~~**Add structured JSON logging**~~  CallId plugin (UUID X-Request-Id), structured JSON format with request_id, user_id, duration_ms, IP
+33. ~~**Protect /metrics endpoint**~~  Bearer token auth via METRICS_AUTH_TOKEN env var
+34. ~~**Add pagination limits**~~  All list endpoints capped at max 100, default 50 (resumes, analyses, cover-letters, interviews, jobs)
+35. ~~**Add Content-Security-Policy and HSTS headers**~~  SecurityHeaders.kt: CSP, HSTS (1yr+preload), X-Frame-Options DENY, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy
+36. ~~**Expand SQLDelight schema**~~  Added JobApplication (14 cols), JobApplicationNote, PendingSync tables with full CRUD queries
+37. ~~**Implement full sync**~~  SyncEntityType.JOB_APPLICATION added, PendingSync table for offline queue
+38. ~~**Add client-side retry logic**~~  HttpClientExtensions.kt: HttpRequestRetry (3 retries, exponential backoff 500ms–10s), installed in Android/iOS/JS HttpClients
+39. ~~**Add HTTP status code differentiation**~~  HttpResponseValidator: 401→onUnauthorized callback, 403→exception, 429→exception
+40. ~~**Add AI prompt injection protection**~~  16 injection regex patterns, sanitizeInput() on all user fields, delimited user content sections, OpenAI system message guardrail
 
 ---
 

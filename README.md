@@ -242,10 +242,10 @@ vwatek-apply/
 | AI enhancements | 10/day | Unlimited |
 | Interview practice | 15/month | Unlimited |
 | Application tracking | Unlimited | Unlimited |
-| Salary Intelligence | ✓ | ✓ |
-| Negotiation Coach | ✗ | ✓ |
-| LinkedIn Optimizer | ✗ | ✓ |
-| Priority support | ✗ | ✓ |
+| Salary Intelligence |  |  |
+| Negotiation Coach |  |  |
+| LinkedIn Optimizer |  |  |
+| Priority support |  |  |
 
 ### Subscription Links
 
@@ -254,7 +254,7 @@ vwatek-apply/
 | **Pro** | [$14.99/month](https://buy.stripe.com/5kQ6oI0rg0vx4Im8Qb5AQ01) | [$149.99/year](https://buy.stripe.com/aFa3cwei6fqr3EiaYj5AQ00) |
 | **Premium** | [$29.99/month](https://buy.stripe.com/3cI5kEb5U2DFfn07M75AQ03) | [$299.99/year](https://buy.stripe.com/cNi3cw3Ds3HJ0s68Qb5AQ04) |
 
-> **🎉 Demo Mode:** All Premium features are currently free during our beta period!
+> ** Demo Mode:** All Premium features are currently free during our beta period!
 
 ## Contributing
 

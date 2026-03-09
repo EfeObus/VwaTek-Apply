@@ -429,7 +429,7 @@ private fun ApplicationCard(
                     color(Color("#666"))
                 }
             }) {
-                Text("📍 ${application.locationDisplay}")
+                Text(" ${application.locationDisplay}")
             }
         }
         
@@ -482,7 +482,7 @@ private fun ApplicationListView(
 ) {
     if (applications.isEmpty()) {
         EmptyState(
-            icon = "📋",
+            icon = "",
             title = "No applications yet",
             description = "Click '+ Add Job' to track your first job application."
         )
@@ -547,7 +547,7 @@ private fun ApplicationListItem(
                     }
                     Div(attrs = { classes("flex", "gap-md", "text-sm", "text-secondary") }) {
                         if (application.locationDisplay.isNotBlank()) {
-                            Span { Text("📍 ${application.locationDisplay}") }
+                            Span { Text(" ${application.locationDisplay}") }
                         }
                         if (application.salaryDisplay?.isNotEmpty() == true) {
                             Span(attrs = { style { color(Color("#0066cc")) } }) {
@@ -588,7 +588,7 @@ private fun ApplicationListItem(
 @Composable
 private fun CalendarView() {
     EmptyState(
-        icon = "📅",
+        icon = "",
         title = "Calendar View",
         description = "Coming soon - View interviews and application deadlines on a calendar."
     )
@@ -1001,31 +1001,31 @@ private fun ApplicationDetailModal(
 private fun DetailsTab(application: JobApplication) {
     Div(attrs = { classes("space-y-md") }) {
         if (application.locationDisplay.isNotBlank()) {
-            DetailRow("📍 Location", application.locationDisplay)
+            DetailRow(" Location", application.locationDisplay)
         }
         if (application.salaryDisplay?.isNotEmpty() == true) {
-            DetailRow("💰 Salary", application.salaryDisplay ?: "")
+            DetailRow(" Salary", application.salaryDisplay ?: "")
         }
         application.jobBoardSource?.let {
-            DetailRow("🔗 Source", it.displayName)
+            DetailRow(" Source", it.displayName)
         }
         application.nocCode?.let {
-            DetailRow("📋 NOC Code", it)
+            DetailRow(" NOC Code", it)
         }
         application.appliedAt?.let {
-            DetailRow("📅 Applied", formatDate(it.toString()))
+            DetailRow(" Applied", formatDate(it.toString()))
         }
         if (application.requiresWorkPermit == true) {
-            DetailRow("📄 Work Permit", "Required")
+            DetailRow(" Work Permit", "Required")
         }
         if (application.isLmiaRequired == true) {
-            DetailRow("📄 LMIA", "Required")
+            DetailRow(" LMIA", "Required")
         }
         application.contactName?.let {
-            DetailRow("👤 Contact", it)
+            DetailRow(" Contact", it)
         }
         application.contactEmail?.let {
-            DetailRow("✉️ Email", it)
+            DetailRow(" Email", it)
         }
     }
 }
@@ -1096,7 +1096,7 @@ private fun RemindersTab(reminders: List<ApplicationReminder>, onAddReminder: ()
                     Span(attrs = { 
                         style { fontSize(20.px) }
                     }) {
-                        Text(if (reminder.isCompleted) "✅" else "🔔")
+                        Text(if (reminder.isCompleted) "" else "")
                     }
                     Div {
                         P(attrs = { classes("font-medium") }) { Text(reminder.title) }
@@ -1120,7 +1120,7 @@ private fun HistoryTab(history: List<StatusChange>) {
         Div(attrs = { classes("space-y-sm") }) {
             history.forEach { change ->
                 Div(attrs = { classes("card", "p-md", "flex", "gap-md", "items-center") }) {
-                    Span(attrs = { style { fontSize(20.px) } }) { Text("➡️") }
+                    Span(attrs = { style { fontSize(20.px) } }) { Text("") }
                     Div {
                         P(attrs = { classes("font-medium") }) {
                             if (change.fromStatus != null) {

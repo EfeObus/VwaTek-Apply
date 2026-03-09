@@ -213,7 +213,7 @@ private fun AnalyzeTab(
                                 Text("Strengths", style = MaterialTheme.typography.titleMedium, color = Color(0xFF4CAF50))
                                 analysis.strengths.forEach { strength ->
                                     Row {
-                                        Text("✅ ", style = MaterialTheme.typography.bodyMedium)
+                                        Text(" ", style = MaterialTheme.typography.bodyMedium)
                                         Text(strength, style = MaterialTheme.typography.bodyMedium)
                                     }
                                 }
@@ -229,7 +229,7 @@ private fun AnalyzeTab(
                                 Text("Improvements", style = MaterialTheme.typography.titleMedium, color = Color(0xFFF44336))
                                 analysis.improvements.forEach { improvement ->
                                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                                        Text("⚠️ ${improvement.issue}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                        Text(" ${improvement.issue}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
                                         Text(improvement.suggestion, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }

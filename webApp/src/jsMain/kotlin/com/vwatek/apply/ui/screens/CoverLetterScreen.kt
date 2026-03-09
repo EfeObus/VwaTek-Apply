@@ -352,7 +352,7 @@ private fun GenerateCoverLetterModal(
                                     property("font-size", "0.85rem")
                                 }
                             }) {
-                                Text("✓ ${resume.name} selected")
+                                Text(" ${resume.name} selected")
                             }
                         }
                     }

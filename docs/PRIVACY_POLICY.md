@@ -397,12 +397,12 @@ Canada
 
 ## Summary of Key Points
 
-✅ We collect only the information necessary to provide our Service  
-✅ We do NOT sell your personal information  
-✅ Your payment data is handled by secure, PCI-compliant processors  
-✅ You can access, correct, and delete your data at any time  
-✅ We use industry-standard security measures  
-✅ We comply with PIPEDA and Canadian privacy laws  
+ We collect only the information necessary to provide our Service  
+ We do NOT sell your personal information  
+ Your payment data is handled by secure, PCI-compliant processors  
+ You can access, correct, and delete your data at any time  
+ We use industry-standard security measures  
+ We comply with PIPEDA and Canadian privacy laws  
 
 ---
 

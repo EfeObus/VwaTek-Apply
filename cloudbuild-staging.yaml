@@ -26,7 +26,7 @@ steps:
       - |
         chmod +x gradlew
         ./gradlew :backend:build -x test --no-daemon
-        echo "✅ Staging backend build complete"
+        echo " Staging backend build complete"
 
   # ============================================
   # Stage 2: Run Tests (required to pass)
@@ -87,7 +87,7 @@ steps:
           --cpu=1 \
           --port=8080 \
           --timeout=300s
-        echo "✅ Staging backend deployed"
+        echo " Staging backend deployed"
     waitFor: ['docker-push']
 
   # ============================================
@@ -105,9 +105,9 @@ steps:
         TOKEN=$$(gcloud auth print-identity-token)
         response=$$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $$TOKEN" "$$STAGING_URL/health")
         if [ "$$response" = "200" ]; then
-          echo "✅ Staging health check passed"
+          echo " Staging health check passed"
         else
-          echo "❌ Staging health check failed (HTTP $$response)"
+          echo " Staging health check failed (HTTP $$response)"
           exit 1
         fi
     waitFor: ['deploy-staging']

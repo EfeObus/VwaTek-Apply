@@ -134,7 +134,7 @@ object EmailService {
                     <body>
                         <div class="container">
                             <div class="header">
-                                <h1>Welcome to VwaTek Apply! 🎉</h1>
+                                <h1>Welcome to VwaTek Apply! </h1>
                                 <p>Your AI-Powered Job Application Assistant</p>
                             </div>
                             <div class="content">
@@ -144,17 +144,17 @@ object EmailService {
                                 <h3>Here's what you can do:</h3>
                                 
                                 <div class="feature">
-                                    <strong>📄 Smart Resume Builder</strong>
+                                    <strong> Smart Resume Builder</strong>
                                     <p>Create and optimize your resume with AI-powered suggestions.</p>
                                 </div>
                                 
                                 <div class="feature">
-                                    <strong>✉️ Cover Letter Generator</strong>
+                                    <strong> Cover Letter Generator</strong>
                                     <p>Generate tailored cover letters for each job application.</p>
                                 </div>
                                 
                                 <div class="feature">
-                                    <strong>🎯 Interview Prep</strong>
+                                    <strong> Interview Prep</strong>
                                     <p>Practice with AI-powered mock interviews and get instant feedback.</p>
                                 </div>
                                 
