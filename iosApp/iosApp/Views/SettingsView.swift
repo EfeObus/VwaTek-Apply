@@ -38,6 +38,7 @@ struct SettingsView: View {
                             }
                             .onChange(of: useFrench) { newValue in
                                 saveSetting(key: "locale", value: newValue ? "fr" : "en")
+                                LocaleManager.shared.setLocaleByCode(code: newValue ? "fr" : "en")
                             }
                         }
                         

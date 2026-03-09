@@ -24,6 +24,11 @@ struct VwaTekApplyApp: App {
         // Initialize Koin for iOS
         KoinHelperKt.doInitKoin()
         
+        // Restore saved locale
+        if let savedLocale = SettingsHelper.shared.getSetting(key: "locale") {
+            LocaleManager.shared.setLocaleByCode(code: savedLocale)
+        }
+        
         // Configure Google Sign-In (if available)
         #if canImport(GoogleSignIn)
         GoogleSignInManager.shared.configure()

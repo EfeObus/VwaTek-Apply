@@ -55,6 +55,19 @@ interface Strings {
     val navSettings: String
     val navProfile: String
     val navHelp: String
+    val navDashboard: String
+    val navSalaryInsights: String
+    val navLinkedInOptimizer: String
+    val navOrganization: String
+    val navSubscription: String
+    val navCareerTools: String
+    val navInsights: String
+    val navAccount: String
+    val viewProfile: String
+    val premiumMember: String
+    val welcome: String
+    val signInToContinue: String
+    val signInRegister: String
     
     // Auth
     val signIn: String
@@ -210,16 +223,29 @@ object EnglishStrings : Strings {
     override val optional = "Optional"
     
     // Navigation
-    override val navResume = "Resume"
+    override val navResume = "Resumes"
     override val navOptimizer = "Optimizer"
-    override val navCoverLetter = "Cover Letter"
-    override val navInterview = "Interview"
-    override val navTracker = "Tracker"
+    override val navCoverLetter = "Cover Letters"
+    override val navInterview = "Interview Prep"
+    override val navTracker = "Job Tracker"
     override val navNOC = "NOC Codes"
     override val navJobBank = "Job Bank"
     override val navSettings = "Settings"
     override val navProfile = "Profile"
     override val navHelp = "Help"
+    override val navDashboard = "Dashboard"
+    override val navSalaryInsights = "Salary Insights"
+    override val navLinkedInOptimizer = "LinkedIn Optimizer"
+    override val navOrganization = "Organization"
+    override val navSubscription = "Subscription"
+    override val navCareerTools = "Career Tools"
+    override val navInsights = "Insights"
+    override val navAccount = "Account"
+    override val viewProfile = "View Profile"
+    override val premiumMember = "Premium Member"
+    override val welcome = "Welcome!"
+    override val signInToContinue = "Sign in to continue"
+    override val signInRegister = "Sign In / Register"
     
     // Auth
     override val signIn = "Sign In"
@@ -377,14 +403,27 @@ object FrenchStrings : Strings {
     // Navigation
     override val navResume = "CV"
     override val navOptimizer = "Optimiseur"
-    override val navCoverLetter = "Lettre de motivation"
-    override val navInterview = "Entrevue"
-    override val navTracker = "Suivi"
+    override val navCoverLetter = "Lettres de motivation"
+    override val navInterview = "Preparation d'entrevue"
+    override val navTracker = "Suivi des emplois"
     override val navNOC = "Codes CNP"
     override val navJobBank = "Guichet-Emplois"
     override val navSettings = "Paramètres"
     override val navProfile = "Profil"
     override val navHelp = "Aide"
+    override val navDashboard = "Tableau de bord"
+    override val navSalaryInsights = "Apercu salarial"
+    override val navLinkedInOptimizer = "Optimiseur LinkedIn"
+    override val navOrganization = "Organisation"
+    override val navSubscription = "Abonnement"
+    override val navCareerTools = "Outils de carriere"
+    override val navInsights = "Aperçus"
+    override val navAccount = "Compte"
+    override val viewProfile = "Voir le profil"
+    override val premiumMember = "Membre Premium"
+    override val welcome = "Bienvenue!"
+    override val signInToContinue = "Connectez-vous pour continuer"
+    override val signInRegister = "Connexion / Inscription"
     
     // Auth
     override val signIn = "Connexion"

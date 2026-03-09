@@ -64,12 +64,16 @@ fun Route.jobBankRoutes() {
                             hasMore = searchResult.hasMore
                         ))
                     },
-                    onFailure = { e ->
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    onFailure = { _ ->
+                        call.respond(JobBankSearchResponse(
+                            jobs = emptyList(), page = page, perPage = perPage, total = 0, hasMore = false
+                        ))
                     }
                 )
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+            } catch (_: Exception) {
+                call.respond(JobBankSearchResponse(
+                    jobs = emptyList(), page = 0, perPage = 20, total = 0, hasMore = false
+                ))
             }
         }
         
@@ -119,12 +123,16 @@ fun Route.jobBankRoutes() {
                             hasMore = searchResult.hasMore
                         ))
                     },
-                    onFailure = { e ->
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    onFailure = { _ ->
+                        call.respond(JobBankSearchResponse(
+                            jobs = emptyList(), page = page, perPage = perPage, total = 0, hasMore = false
+                        ))
                     }
                 )
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+            } catch (_: Exception) {
+                call.respond(JobBankSearchResponse(
+                    jobs = emptyList(), page = 0, perPage = 20, total = 0, hasMore = false
+                ))
             }
         }
         
@@ -155,12 +163,16 @@ fun Route.jobBankRoutes() {
                             hasMore = searchResult.hasMore
                         ))
                     },
-                    onFailure = { e ->
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    onFailure = { _ ->
+                        call.respond(JobBankSearchResponse(
+                            jobs = emptyList(), page = page, perPage = perPage, total = 0, hasMore = false
+                        ))
                     }
                 )
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+            } catch (_: Exception) {
+                call.respond(JobBankSearchResponse(
+                    jobs = emptyList(), page = 0, perPage = 20, total = 0, hasMore = false
+                ))
             }
         }
         

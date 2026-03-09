@@ -282,11 +282,11 @@ private fun PricingCard(
     }
     
     Div(attrs = {
-        classes(
-            "pricing-card",
-            if (isPopular) "pricing-card-popular" else "",
-            if (isCurrentTier) "pricing-card-current" else ""
-        )
+        classes(buildList {
+            add("pricing-card")
+            if (isPopular) add("pricing-card-popular")
+            if (isCurrentTier) add("pricing-card-current")
+        })
     }) {
         // Popular badge
         if (isPopular) {
@@ -350,12 +350,12 @@ private fun PricingCard(
         
         // CTA Button
         Button(attrs = {
-            classes(
-                "btn",
-                "btn-full",
-                if (isPopular) "btn-primary" else "btn-secondary",
-                if (isCurrentTier || tier == SubscriptionTier.FREE) "btn-disabled" else ""
-            )
+            classes(buildList {
+                add("btn")
+                add("btn-full")
+                add(if (isPopular) "btn-primary" else "btn-secondary")
+                if (isCurrentTier || tier == SubscriptionTier.FREE) add("btn-disabled")
+            })
             if (!isCurrentTier && tier != SubscriptionTier.FREE) {
                 onClick { onSelect() }
             }

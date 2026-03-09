@@ -109,6 +109,9 @@ fun Application.configureRouting() {
             }
             salaryRoutes(httpClient)
             
+            // Phase 5: LinkedIn Optimizer
+            linkedInRoutes(aiService)
+            
             // Phase 5: Enterprise & Organizations
             organizationRoutes()
         }

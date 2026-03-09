@@ -7,6 +7,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import com.vwatek.apply.domain.repository.SettingsRepository
+import com.vwatek.apply.i18n.Locale
+import com.vwatek.apply.i18n.LocaleManager
 import org.jetbrains.compose.web.attributes.*
 import org.jetbrains.compose.web.dom.*
 import org.koin.core.context.GlobalContext
@@ -251,6 +253,7 @@ fun SettingsScreen() {
                     checked = frenchEnabled,
                     onToggle = { checked ->
                         frenchEnabled = checked
+                        LocaleManager.setLocale(if (checked) Locale.FRENCH else Locale.ENGLISH)
                         scope.launch {
                             settingsRepository.setSetting("french_enabled", checked.toString())
                         }

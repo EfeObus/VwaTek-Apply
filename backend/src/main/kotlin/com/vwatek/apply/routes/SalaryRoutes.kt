@@ -94,6 +94,9 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
         
         // Check access (premium feature gate)
         fun checkSalaryAccess(userId: String): Boolean {
+            // In demo mode, grant all users premium access
+            if (System.getenv("DEMO_MODE")?.lowercase() == "true") return true
+            
             val subscription = transaction {
                 SubscriptionsTable.select { SubscriptionsTable.userId eq userId }
                     .singleOrNull()
@@ -479,6 +482,8 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
     route("/negotiation") {
         
         fun checkNegotiationAccess(userId: String): Boolean {
+            if (System.getenv("DEMO_MODE")?.lowercase() == "true") return true
+            
             val subscription = transaction {
                 SubscriptionsTable.select { SubscriptionsTable.userId eq userId }
                     .singleOrNull()

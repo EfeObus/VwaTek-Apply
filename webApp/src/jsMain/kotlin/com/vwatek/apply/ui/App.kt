@@ -27,6 +27,9 @@ import com.vwatek.apply.ui.screens.SalaryInsightsScreen
 import com.vwatek.apply.ui.screens.LinkedInOptimizerScreen
 import com.vwatek.apply.ui.screens.OrganizationScreen
 import com.vwatek.apply.ui.screens.ProfileView
+import com.vwatek.apply.domain.repository.SettingsRepository
+import com.vwatek.apply.i18n.Locale
+import com.vwatek.apply.i18n.LocaleManager
 import org.jetbrains.compose.web.dom.*
 import org.koin.core.context.GlobalContext
 import kotlinx.browser.window
@@ -79,6 +82,13 @@ fun App() {
     var currentScreen by remember { mutableStateOf(Screen.DASHBOARD) }
     var isSidebarOpen by remember { mutableStateOf(false) }
     
+    // Initialize locale from saved settings
+    LaunchedEffect(Unit) {
+        val settingsRepository = GlobalContext.get().get<SettingsRepository>()
+        val frenchEnabled = settingsRepository.getSetting("french_enabled") == "true"
+        LocaleManager.setLocale(if (frenchEnabled) Locale.FRENCH else Locale.ENGLISH)
+    }
+    
     // Hash-based routing: read initial hash and listen for changes
     LaunchedEffect(Unit) {
         // Parse initial hash on load
@@ -125,9 +135,10 @@ fun App() {
                 userName = authState.user?.let { "${it.firstName} ${it.lastName}" },
                 onAuthClick = { 
                     if (isAuthenticated) {
-                        authViewModel.onIntent(AuthIntent.SwitchView(AuthView.PROFILE))
+                        currentScreen = Screen.PROFILE
+                    } else {
+                        currentScreen = Screen.AUTH
                     }
-                    currentScreen = Screen.AUTH 
                 }
             )
         }

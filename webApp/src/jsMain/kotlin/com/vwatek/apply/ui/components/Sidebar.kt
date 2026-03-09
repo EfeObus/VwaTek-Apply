@@ -1,6 +1,13 @@
 package com.vwatek.apply.ui.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.vwatek.apply.i18n.LocaleManager
+import com.vwatek.apply.i18n.Strings
 import com.vwatek.apply.ui.Screen
 import org.jetbrains.compose.web.dom.*
 import org.jetbrains.compose.web.attributes.*
@@ -15,6 +22,12 @@ fun Sidebar(
     userName: String? = null,
     onAuthClick: () -> Unit = {}
 ) {
+    // Observe locale changes for recomposition
+    var s by remember { mutableStateOf(LocaleManager.strings) }
+    LaunchedEffect(Unit) {
+        LocaleManager.currentLocale.collect { s = LocaleManager.strings }
+    }
+
     Nav(attrs = {
         classes("sidebar")
         if (isOpen) classes("open")
@@ -95,7 +108,7 @@ fun Sidebar(
                                 property("color", "var(--text-secondary)")
                             }
                         }) { 
-                            Text("Premium Member")
+                            Text(s.premiumMember)
                         }
                     }
                 }
@@ -121,7 +134,7 @@ fun Sidebar(
                     }
                 }) {
                     RawHtml("""<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>""")
-                    Text("View Profile")
+                    Text(s.viewProfile)
                 }
             } else {
                 Div(attrs = { 
@@ -155,7 +168,7 @@ fun Sidebar(
                                 property("margin", "0")
                             } 
                         }) { 
-                            Text("Welcome!") 
+                            Text(s.welcome) 
                         }
                         P(attrs = { 
                             style { 
@@ -164,7 +177,7 @@ fun Sidebar(
                                 property("color", "var(--text-secondary)")
                             }
                         }) { 
-                            Text("Sign in to continue") 
+                            Text(s.signInToContinue) 
                         }
                     }
                 }
@@ -184,7 +197,7 @@ fun Sidebar(
                         property("transition", "all 0.2s ease")
                     }
                 }) {
-                    Text("Sign In / Register")
+                    Text(s.signInRegister)
                 }
             }
         }
@@ -193,82 +206,82 @@ fun Sidebar(
         Ul(attrs = { classes("nav-menu") }) {
             // Main section
             NavItem(
-                label = "Dashboard",
+                label = s.navDashboard,
                 icon = Icons.DASHBOARD,
                 isActive = currentScreen == Screen.DASHBOARD,
                 onClick = { onNavigate(Screen.DASHBOARD) }
             )
             NavItem(
-                label = "Resumes",
+                label = s.navResume,
                 icon = Icons.DOCUMENT,
                 isActive = currentScreen == Screen.RESUMES,
                 onClick = { onNavigate(Screen.RESUMES) }
             )
             NavItem(
-                label = "Optimizer",
+                label = s.navOptimizer,
                 icon = Icons.OPTIMIZE,
                 isActive = currentScreen == Screen.RESUME_OPTIMIZER,
                 onClick = { onNavigate(Screen.RESUME_OPTIMIZER) }
             )
             NavItem(
-                label = "Cover Letters",
+                label = s.navCoverLetter,
                 icon = Icons.LETTER,
                 isActive = currentScreen == Screen.COVER_LETTERS,
                 onClick = { onNavigate(Screen.COVER_LETTERS) }
             )
             
             // Career Tools section
-            NavSectionHeader("Career Tools")
+            NavSectionHeader(s.navCareerTools)
             NavItem(
-                label = "Interview Prep",
+                label = s.navInterview,
                 icon = Icons.MICROPHONE,
                 isActive = currentScreen == Screen.INTERVIEW,
                 onClick = { onNavigate(Screen.INTERVIEW) }
             )
             NavItem(
-                label = "Job Tracker",
+                label = s.navTracker,
                 icon = Icons.BRIEFCASE,
                 isActive = currentScreen == Screen.TRACKER,
                 onClick = { onNavigate(Screen.TRACKER) }
             )
             NavItem(
-                label = "Job Bank",
+                label = s.navJobBank,
                 icon = Icons.SEARCH,
                 isActive = currentScreen == Screen.JOB_BANK,
                 onClick = { onNavigate(Screen.JOB_BANK) }
             )
             NavItem(
-                label = "NOC Codes",
+                label = s.navNOC,
                 icon = Icons.CHART,
                 isActive = currentScreen == Screen.NOC,
                 onClick = { onNavigate(Screen.NOC) }
             )
             
             // Insights section
-            NavSectionHeader("Insights")
+            NavSectionHeader(s.navInsights)
             NavItem(
-                label = "Salary Insights",
+                label = s.navSalaryInsights,
                 icon = Icons.DOLLAR,
                 isActive = currentScreen == Screen.SALARY_INSIGHTS,
                 onClick = { onNavigate(Screen.SALARY_INSIGHTS) }
             )
             NavItem(
-                label = "LinkedIn Optimizer",
+                label = s.navLinkedInOptimizer,
                 icon = Icons.LINKEDIN,
                 isActive = currentScreen == Screen.LINKEDIN_OPTIMIZER,
                 onClick = { onNavigate(Screen.LINKEDIN_OPTIMIZER) }
             )
             
             // Account section
-            NavSectionHeader("Account")
+            NavSectionHeader(s.navAccount)
             NavItem(
-                label = "Organization",
+                label = s.navOrganization,
                 icon = Icons.ORGANIZATION,
                 isActive = currentScreen == Screen.ORGANIZATION,
                 onClick = { onNavigate(Screen.ORGANIZATION) }
             )
             NavItem(
-                label = "Subscription",
+                label = s.navSubscription,
                 icon = Icons.STAR,
                 isActive = currentScreen == Screen.SUBSCRIPTION,
                 onClick = { onNavigate(Screen.SUBSCRIPTION) }
@@ -276,7 +289,7 @@ fun Sidebar(
             
             if (isAuthenticated) {
                 NavItem(
-                    label = "Profile",
+                    label = s.navProfile,
                     icon = Icons.USER,
                     isActive = currentScreen == Screen.PROFILE,
                     onClick = { onNavigate(Screen.PROFILE) }
@@ -290,7 +303,7 @@ fun Sidebar(
         // Settings at bottom
         Ul(attrs = { classes("nav-menu") }) {
             NavItem(
-                label = "Settings",
+                label = s.navSettings,
                 icon = Icons.SETTINGS,
                 isActive = currentScreen == Screen.SETTINGS,
                 onClick = { onNavigate(Screen.SETTINGS) }

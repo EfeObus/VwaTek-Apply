@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vwatek.apply.android.ui.screens.*
 import com.vwatek.apply.android.ui.theme.VwaTekApplyTheme
+import com.vwatek.apply.i18n.LocaleManager
+import com.vwatek.apply.i18n.Strings
 import com.vwatek.apply.presentation.auth.AuthViewModel
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -98,6 +100,32 @@ private val DRAWER_SECTIONS = listOf(
     ))
 )
 
+/** Get localized label for a NavigationItem. */
+private fun NavigationItem.localizedLabel(s: Strings): String = when (this) {
+    NavigationItem.Home -> s.navDashboard
+    NavigationItem.Resume -> s.navResume
+    NavigationItem.Optimizer -> s.navOptimizer
+    NavigationItem.CoverLetter -> s.navCoverLetter
+    NavigationItem.Interview -> s.navInterview
+    NavigationItem.NOC -> s.navNOC
+    NavigationItem.JobBank -> s.navJobBank
+    NavigationItem.Tracker -> s.navTracker
+    NavigationItem.SalaryInsights -> s.navSalaryInsights
+    NavigationItem.LinkedInOptimizer -> s.navLinkedInOptimizer
+    NavigationItem.Organization -> s.navOrganization
+    NavigationItem.Subscription -> s.navSubscription
+    NavigationItem.Profile -> s.navProfile
+    NavigationItem.Settings -> s.navSettings
+}
+
+/** Get localized title for a DrawerSection. */
+private fun DrawerSection.localizedTitle(s: Strings): String = when (title) {
+    "Career Tools" -> s.navCareerTools
+    "Insights" -> s.navInsights
+    "Account" -> s.navAccount
+    else -> title
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VwaTekApp(
@@ -107,6 +135,8 @@ fun VwaTekApp(
 ) {
     val authViewModel: AuthViewModel = koinInject()
     val authState by authViewModel.state.collectAsState()
+    val locale by LocaleManager.currentLocale.collectAsState()
+    val s = LocaleManager.strings
 
     var selectedItem by remember { mutableStateOf(NavigationItem.Home) }
 
@@ -174,7 +204,7 @@ private fun PhoneLayout(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            selectedItem.label,
+                            selectedItem.localizedLabel(LocaleManager.strings),
                             fontWeight = FontWeight.SemiBold
                         )
                     },
@@ -199,12 +229,12 @@ private fun PhoneLayout(
                             icon = {
                                 Icon(
                                     if (selectedItem == item) item.selectedIcon else item.unselectedIcon,
-                                    contentDescription = item.label
+                                    contentDescription = item.localizedLabel(LocaleManager.strings)
                                 )
                             },
                             label = {
                                 Text(
-                                    item.label,
+                                    item.localizedLabel(LocaleManager.strings),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     fontSize = 11.sp
@@ -367,7 +397,7 @@ private fun DrawerSectionContent(
     onItemSelected: (NavigationItem) -> Unit
 ) {
     Text(
-        text = section.title,
+        text = section.localizedTitle(LocaleManager.strings),
         modifier = Modifier.padding(start = 28.dp, top = 16.dp, bottom = 4.dp),
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -378,10 +408,10 @@ private fun DrawerSectionContent(
             icon = {
                 Icon(
                     if (selectedItem == item) item.selectedIcon else item.unselectedIcon,
-                    contentDescription = item.label
+                    contentDescription = item.localizedLabel(LocaleManager.strings)
                 )
             },
-            label = { Text(item.label) },
+            label = { Text(item.localizedLabel(LocaleManager.strings)) },
             selected = selectedItem == item,
             onClick = { onItemSelected(item) },
             modifier = Modifier.padding(horizontal = 12.dp),
