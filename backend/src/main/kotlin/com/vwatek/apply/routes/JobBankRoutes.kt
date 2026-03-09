@@ -2,19 +2,34 @@ package com.vwatek.apply.routes
 
 import com.vwatek.apply.integrations.jobbank.JobBankApiClient
 import com.vwatek.apply.integrations.jobbank.CanadianProvince
+import com.vwatek.apply.integrations.jobbank.JobBankJob
+import com.vwatek.apply.integrations.jobbank.JobBankJobDetail
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /**
  * Phase 3: Job Bank Canada Integration Routes
  * Provides access to Job Bank job listings and labour market information
  */
 fun Route.jobBankRoutes() {
-    val jobBankClient = JobBankApiClient()
+    val httpClient = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            })
+        }
+    }
+    val jobBankClient = JobBankApiClient(httpClient)
     
     route("/jobbank") {
         /**
@@ -23,33 +38,36 @@ fun Route.jobBankRoutes() {
          */
         get("/search") {
             try {
-                val query = call.parameters["q"]
+                val query = call.parameters["q"] ?: ""
                 val location = call.parameters["location"]
                 val provinceCode = call.parameters["province"]
                 val nocCode = call.parameters["nocCode"]
-                val page = call.parameters["page"]?.toIntOrNull() ?: 0
+                val page = call.parameters["page"]?.toIntOrNull() ?: 1
                 val perPage = call.parameters["perPage"]?.toIntOrNull() ?: 20
                 
-                val province = provinceCode?.let { 
-                    CanadianProvince.entries.find { p -> p.name == it }
-                }
-                
-                val jobs = jobBankClient.searchJobs(
+                val result = jobBankClient.searchJobs(
                     query = query,
                     location = location,
-                    province = province,
+                    province = provinceCode,
                     nocCode = nocCode,
                     page = page,
-                    perPage = perPage
+                    pageSize = perPage
                 )
                 
-                call.respond(JobBankSearchResponse(
-                    jobs = jobs.map { it.toResponse() },
-                    page = page,
-                    perPage = perPage,
-                    total = jobs.size,
-                    hasMore = jobs.size == perPage
-                ))
+                result.fold(
+                    onSuccess = { searchResult ->
+                        call.respond(JobBankSearchResponse(
+                            jobs = searchResult.jobs.map { it.toResponse() },
+                            page = searchResult.page,
+                            perPage = searchResult.pageSize,
+                            total = searchResult.totalCount,
+                            hasMore = searchResult.hasMore
+                        ))
+                    },
+                    onFailure = { e ->
+                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    }
+                )
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
             }
@@ -64,12 +82,15 @@ fun Route.jobBankRoutes() {
                 val jobId = call.parameters["jobId"] 
                     ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Job ID required"))
                 
-                val job = jobBankClient.getJobDetails(jobId)
-                if (job != null) {
-                    call.respond(job.toResponse())
-                } else {
-                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "Job not found"))
-                }
+                val result = jobBankClient.getJobDetails(jobId)
+                result.fold(
+                    onSuccess = { job ->
+                        call.respond(job.toDetailResponse())
+                    },
+                    onFailure = { e ->
+                        call.respond(HttpStatusCode.NotFound, mapOf("error" to "Job not found: ${e.message}"))
+                    }
+                )
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
             }
@@ -83,18 +104,25 @@ fun Route.jobBankRoutes() {
             try {
                 val nocCode = call.parameters["nocCode"]
                     ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "NOC code required"))
-                val page = call.parameters["page"]?.toIntOrNull() ?: 0
+                val page = call.parameters["page"]?.toIntOrNull() ?: 1
                 val perPage = call.parameters["perPage"]?.toIntOrNull() ?: 20
                 
-                val jobs = jobBankClient.searchByNOC(nocCode, page, perPage)
+                val result = jobBankClient.searchByNOC(nocCode, page = page, pageSize = perPage)
                 
-                call.respond(JobBankSearchResponse(
-                    jobs = jobs.map { it.toResponse() },
-                    page = page,
-                    perPage = perPage,
-                    total = jobs.size,
-                    hasMore = jobs.size == perPage
-                ))
+                result.fold(
+                    onSuccess = { searchResult ->
+                        call.respond(JobBankSearchResponse(
+                            jobs = searchResult.jobs.map { it.toResponse() },
+                            page = searchResult.page,
+                            perPage = searchResult.pageSize,
+                            total = searchResult.totalCount,
+                            hasMore = searchResult.hasMore
+                        ))
+                    },
+                    onFailure = { e ->
+                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    }
+                )
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
             }
@@ -109,21 +137,28 @@ fun Route.jobBankRoutes() {
                 val provinceCode = call.parameters["provinceCode"]
                     ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Province code required"))
                 
-                val province = CanadianProvince.entries.find { it.name == provinceCode }
+                val province = CanadianProvince.fromCode(provinceCode)
                     ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid province code"))
                 
-                val page = call.parameters["page"]?.toIntOrNull() ?: 0
+                val page = call.parameters["page"]?.toIntOrNull() ?: 1
                 val perPage = call.parameters["perPage"]?.toIntOrNull() ?: 20
                 
-                val jobs = jobBankClient.searchByProvince(province, page, perPage)
+                val result = jobBankClient.searchByProvince(province.code, page = page, pageSize = perPage)
                 
-                call.respond(JobBankSearchResponse(
-                    jobs = jobs.map { it.toResponse() },
-                    page = page,
-                    perPage = perPage,
-                    total = jobs.size,
-                    hasMore = jobs.size == perPage
-                ))
+                result.fold(
+                    onSuccess = { searchResult ->
+                        call.respond(JobBankSearchResponse(
+                            jobs = searchResult.jobs.map { it.toResponse() },
+                            page = searchResult.page,
+                            perPage = searchResult.pageSize,
+                            total = searchResult.totalCount,
+                            hasMore = searchResult.hasMore
+                        ))
+                    },
+                    onFailure = { e ->
+                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    }
+                )
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
             }
@@ -138,17 +173,20 @@ fun Route.jobBankRoutes() {
                 val provinceCode = call.parameters["province"]
                 val limit = call.parameters["limit"]?.toIntOrNull() ?: 10
                 
-                val province = provinceCode?.let { 
-                    CanadianProvince.entries.find { p -> p.name == it }
-                }
+                val result = jobBankClient.getTrendingJobs(provinceCode, limit)
                 
-                val jobs = jobBankClient.getTrendingJobs(province, limit)
-                
-                call.respond(mapOf(
-                    "jobs" to jobs.map { it.toResponse() },
-                    "province" to provinceCode,
-                    "count" to jobs.size
-                ))
+                result.fold(
+                    onSuccess = { searchResult ->
+                        call.respond(mapOf(
+                            "jobs" to searchResult.jobs.map { it.toResponse() },
+                            "province" to provinceCode,
+                            "count" to searchResult.totalCount
+                        ))
+                    },
+                    onFailure = { e ->
+                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    }
+                )
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
             }
@@ -164,12 +202,15 @@ fun Route.jobBankRoutes() {
                     ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "NOC code required"))
                 val provinceCode = call.parameters["province"]
                 
-                val province = provinceCode?.let { 
-                    CanadianProvince.entries.find { p -> p.name == it }
-                }
-                
-                val outlook = jobBankClient.getJobOutlook(nocCode, province)
-                call.respond(outlook)
+                val result = jobBankClient.getJobOutlook(nocCode, provinceCode)
+                result.fold(
+                    onSuccess = { outlook ->
+                        call.respond(outlook)
+                    },
+                    onFailure = { e ->
+                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    }
+                )
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
             }
@@ -182,9 +223,9 @@ fun Route.jobBankRoutes() {
         get("/provinces") {
             call.respond(CanadianProvince.entries.map { province ->
                 ProvinceResponse(
-                    code = province.name,
-                    name = province.displayName,
-                    nameFr = province.displayNameFr
+                    code = province.code,
+                    name = province.nameEn,
+                    nameFr = province.nameFr
                 )
             })
         }
@@ -211,7 +252,7 @@ data class JobBankJobResponse(
     val nocCode: String?,
     val postingDate: String,
     val expiryDate: String?,
-    val description: String,
+    val description: String?,
     val requirements: List<String>,
     val benefits: List<String>,
     val hours: String?,
@@ -244,13 +285,13 @@ data class ProvinceResponse(
 )
 
 // Extension function to convert domain model to response
-private fun com.vwatek.apply.integrations.jobbank.JobBankJob.toResponse() = JobBankJobResponse(
-    id = id,
+private fun JobBankJob.toResponse() = JobBankJobResponse(
+    id = jobId,
     title = title,
     employer = employer,
     location = JobBankLocationResponse(
         city = location.city,
-        province = location.province.displayName,
+        province = location.province,
         postalCode = location.postalCode,
         isRemote = location.isRemote
     ),
@@ -258,7 +299,39 @@ private fun com.vwatek.apply.integrations.jobbank.JobBankJob.toResponse() = JobB
         JobBankSalaryResponse(
             min = it.min,
             max = it.max,
-            period = it.period.name
+            period = it.type.name,
+            currency = it.currency
+        )
+    },
+    nocCode = nocCode,
+    postingDate = postingDate,
+    expiryDate = expiryDate,
+    description = null,
+    requirements = emptyList(),
+    benefits = emptyList(),
+    hours = workHours,
+    jobType = employmentType,
+    vacancies = 1,
+    url = jobUrl
+)
+
+// Extension function to convert job detail to response
+private fun JobBankJobDetail.toDetailResponse() = JobBankJobResponse(
+    id = jobId,
+    title = title,
+    employer = employer,
+    location = JobBankLocationResponse(
+        city = location.city,
+        province = location.province,
+        postalCode = location.postalCode,
+        isRemote = location.isRemote
+    ),
+    salary = salary?.let { 
+        JobBankSalaryResponse(
+            min = it.min,
+            max = it.max,
+            period = it.type.name,
+            currency = it.currency
         )
     },
     nocCode = nocCode,
@@ -266,9 +339,9 @@ private fun com.vwatek.apply.integrations.jobbank.JobBankJob.toResponse() = JobB
     expiryDate = expiryDate,
     description = description,
     requirements = requirements,
-    benefits = benefits,
-    hours = hours?.name,
-    jobType = jobType,
+    benefits = benefits ?: emptyList(),
+    hours = workHours,
+    jobType = employmentType,
     vacancies = vacancies,
-    url = url
+    url = jobUrl
 )

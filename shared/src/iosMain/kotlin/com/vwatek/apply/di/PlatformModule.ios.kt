@@ -19,6 +19,7 @@ import com.vwatek.apply.domain.repository.SettingsRepository
 import com.vwatek.apply.domain.repository.AuthRepository
 import com.vwatek.apply.domain.repository.LinkedInRepository
 import com.vwatek.apply.domain.repository.FileUploadRepository
+import com.vwatek.apply.network.installRetryAndAuthHandling
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -61,6 +62,12 @@ actual fun platformModule(): Module = module {
             install(Logging) {
                 level = LogLevel.INFO
             }
+            
+            installRetryAndAuthHandling(
+                onUnauthorized = {
+                    // Trigger logout in the auth repository layer
+                }
+            )
         }
     }
     

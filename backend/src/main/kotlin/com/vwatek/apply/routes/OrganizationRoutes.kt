@@ -9,13 +9,18 @@ import com.vwatek.apply.db.tables.OrganizationActivityLogTable
 import com.vwatek.apply.db.tables.UsersTable
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.DateTimeUnit
+import kotlin.time.Duration.Companion.days
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.time.Instant
 import java.util.*
 
 /**
@@ -206,7 +211,8 @@ data class ActivityDto(
 // ===== Routes =====
 
 fun Route.organizationRoutes() {
-    route("/organizations") {
+    authenticate("jwt") {
+        route("/organizations") {
         
         // Create organization
         post {
@@ -219,7 +225,7 @@ fun Route.organizationRoutes() {
             }
             
             val slug = request.name.lowercase().replace(Regex("[^a-z0-9]+"), "-")
-            val now = Instant.now().toEpochMilli()
+            val now = Clock.System.now()
             
             val orgId = transaction {
                 // Check if slug exists
@@ -228,26 +234,31 @@ fun Route.organizationRoutes() {
                     return@transaction null
                 }
                 
-                val orgId = OrganizationsTable.insert {
+                val newOrgId = UUID.randomUUID().toString()
+                OrganizationsTable.insert {
+                    it[id] = newOrgId
                     it[name] = request.name
                     it[OrganizationsTable.slug] = slug
                     it[description] = request.description
                     it[industry] = request.industry
                     it[size] = request.size
+                    it[settingsJson] = "{}"
                     it[createdAt] = now
                     it[updatedAt] = now
-                } get OrganizationsTable.id
+                }
                 
                 // Create default settings
                 OrganizationSettingsTable.insert {
-                    it[organizationId] = orgId
-                    it[updatedAt] = now
+                    it[id] = UUID.randomUUID().toString()
+                    it[organizationId] = newOrgId
+                    it[updatedAt] = now.toEpochMilliseconds()
                 }
                 
                 // Add creator as owner
                 OrganizationMembersTable.insert {
-                    it[organizationId] = orgId
-                    it[OrganizationMembersTable.userId] = UUID.fromString(userId)
+                    it[id] = UUID.randomUUID().toString()
+                    it[organizationId] = newOrgId
+                    it[OrganizationMembersTable.userId] = userId
                     it[role] = "OWNER"
                     it[status] = "ACTIVE"
                     it[joinedAt] = now
@@ -255,7 +266,7 @@ fun Route.organizationRoutes() {
                     it[updatedAt] = now
                 }
                 
-                orgId
+                newOrgId
             }
             
             if (orgId == null) {
@@ -275,8 +286,8 @@ fun Route.organizationRoutes() {
                     subscriptionTier = "FREE",
                     ssoEnabled = false,
                     memberCount = 1,
-                    createdAt = Instant.ofEpochMilli(now).toString(),
-                    updatedAt = Instant.ofEpochMilli(now).toString()
+                    createdAt = now.toString(),
+                    updatedAt = now.toString()
                 )
             ))
         }
@@ -288,7 +299,7 @@ fun Route.organizationRoutes() {
             val orgs = transaction {
                 (OrganizationsTable innerJoin OrganizationMembersTable)
                     .select { 
-                        (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                        (OrganizationMembersTable.userId eq userId) and
                         (OrganizationMembersTable.status eq "ACTIVE")
                     }
                     .map { row ->
@@ -298,7 +309,7 @@ fun Route.organizationRoutes() {
                             .count()
                         
                         OrganizationDto(
-                            id = orgId.toString(),
+                            id = orgId,
                             name = row[OrganizationsTable.name],
                             slug = row[OrganizationsTable.slug],
                             description = row[OrganizationsTable.description],
@@ -308,8 +319,8 @@ fun Route.organizationRoutes() {
                             subscriptionTier = row[OrganizationsTable.subscriptionTier],
                             ssoEnabled = row[OrganizationsTable.ssoEnabled],
                             memberCount = memberCount.toInt(),
-                            createdAt = Instant.ofEpochMilli(row[OrganizationsTable.createdAt]).toString(),
-                            updatedAt = Instant.ofEpochMilli(row[OrganizationsTable.updatedAt]).toString()
+                            createdAt = row[OrganizationsTable.createdAt].toString(),
+                            updatedAt = row[OrganizationsTable.updatedAt].toString()
                         )
                     }
             }
@@ -328,18 +339,18 @@ fun Route.organizationRoutes() {
             val org = transaction {
                 // Verify membership
                 val isMember = OrganizationMembersTable.select { 
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
-                    (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
+                    (OrganizationMembersTable.userId eq userId) and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count() > 0
                 
                 if (!isMember) return@transaction null
                 
-                OrganizationsTable.select { OrganizationsTable.id eq UUID.fromString(orgId) }
+                OrganizationsTable.select { OrganizationsTable.id eq orgId }
                     .firstOrNull()
                     ?.let { row ->
                         val memberCount = OrganizationMembersTable
-                            .select { (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and (OrganizationMembersTable.status eq "ACTIVE") }
+                            .select { (OrganizationMembersTable.organizationId eq orgId) and (OrganizationMembersTable.status eq "ACTIVE") }
                             .count()
                         
                         OrganizationDto(
@@ -353,8 +364,8 @@ fun Route.organizationRoutes() {
                             subscriptionTier = row[OrganizationsTable.subscriptionTier],
                             ssoEnabled = row[OrganizationsTable.ssoEnabled],
                             memberCount = memberCount.toInt(),
-                            createdAt = Instant.ofEpochMilli(row[OrganizationsTable.createdAt]).toString(),
-                            updatedAt = Instant.ofEpochMilli(row[OrganizationsTable.updatedAt]).toString()
+                            createdAt = row[OrganizationsTable.createdAt].toString(),
+                            updatedAt = row[OrganizationsTable.updatedAt].toString()
                         )
                     }
             }
@@ -379,21 +390,21 @@ fun Route.organizationRoutes() {
             val success = transaction {
                 // Check if user is admin/owner
                 val isAdmin = OrganizationMembersTable.select {
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
-                    (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
+                    (OrganizationMembersTable.userId eq userId) and
                     (OrganizationMembersTable.role inList listOf("OWNER", "ADMIN")) and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count() > 0
                 
                 if (!isAdmin) return@transaction false
                 
-                OrganizationsTable.update({ OrganizationsTable.id eq UUID.fromString(orgId) }) {
+                OrganizationsTable.update({ OrganizationsTable.id eq orgId }) {
                     request.name?.let { name -> it[OrganizationsTable.name] = name }
                     request.description?.let { desc -> it[description] = desc }
                     request.logoUrl?.let { logo -> it[logoUrl] = logo }
                     request.industry?.let { ind -> it[industry] = ind }
                     request.size?.let { s -> it[size] = s }
-                    it[updatedAt] = Instant.now().toEpochMilli()
+                    it[updatedAt] = Clock.System.now()
                 }
                 true
             }
@@ -419,15 +430,15 @@ fun Route.organizationRoutes() {
             val members = transaction {
                 // Verify membership
                 val isMember = OrganizationMembersTable.select { 
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
-                    (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
+                    (OrganizationMembersTable.userId eq userId) and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count() > 0
                 
                 if (!isMember) return@transaction null
                 
                 OrganizationMembersTable.select { 
-                    OrganizationMembersTable.organizationId eq UUID.fromString(orgId)
+                    OrganizationMembersTable.organizationId eq orgId
                 }.map { row ->
                     MemberDto(
                         id = row[OrganizationMembersTable.id].toString(),
@@ -436,9 +447,7 @@ fun Route.organizationRoutes() {
                         name = null,
                         role = row[OrganizationMembersTable.role],
                         status = row[OrganizationMembersTable.status],
-                        joinedAt = row[OrganizationMembersTable.joinedAt]?.let { 
-                            Instant.ofEpochMilli(it).toString() 
-                        }
+                        joinedAt = row[OrganizationMembersTable.joinedAt]?.toString()
                     )
                 }
             }
@@ -469,8 +478,8 @@ fun Route.organizationRoutes() {
             val invitation = transaction {
                 // Check if user is admin/owner
                 val isAdmin = OrganizationMembersTable.select {
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
-                    (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
+                    (OrganizationMembersTable.userId eq userId) and
                     (OrganizationMembersTable.role inList listOf("OWNER", "ADMIN")) and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count() > 0
@@ -479,34 +488,36 @@ fun Route.organizationRoutes() {
                 
                 // Check for existing invitation
                 val existingInvite = OrganizationInvitationsTable.select {
-                    (OrganizationInvitationsTable.organizationId eq UUID.fromString(orgId)) and
+                    (OrganizationInvitationsTable.organizationId eq orgId) and
                     (OrganizationInvitationsTable.email eq request.email) and
                     (OrganizationInvitationsTable.status eq "PENDING")
                 }.count() > 0
                 
                 if (existingInvite) return@transaction "EXISTS"
                 
-                val now = Instant.now().toEpochMilli()
-                val expiresAt = now + (7 * 24 * 60 * 60 * 1000) // 7 days
+                val now = Clock.System.now()
+                val expiresAt = now + 7.days
                 val token = UUID.randomUUID().toString()
                 
                 val inviteId = OrganizationInvitationsTable.insert {
-                    it[organizationId] = UUID.fromString(orgId)
+                    it[id] = UUID.randomUUID().toString()
+                    it[organizationId] = orgId
                     it[email] = request.email
                     it[role] = request.role
-                    it[invitedBy] = UUID.fromString(userId)
+                    it[invitedBy] = userId
                     it[OrganizationInvitationsTable.token] = token
                     it[OrganizationInvitationsTable.expiresAt] = expiresAt
                     it[createdAt] = now
-                } get OrganizationInvitationsTable.id
+                    it[status] = "PENDING"
+                }
                 
                 InvitationDto(
-                    id = inviteId.toString(),
+                    id = token,
                     email = request.email,
                     role = request.role,
                     status = "PENDING",
-                    expiresAt = Instant.ofEpochMilli(expiresAt).toString(),
-                    createdAt = Instant.ofEpochMilli(now).toString()
+                    expiresAt = expiresAt.toString(),
+                    createdAt = now.toString()
                 )
             }
             
@@ -539,8 +550,8 @@ fun Route.organizationRoutes() {
             val success = transaction {
                 // Check if user is owner (only owner can change roles)
                 val isOwner = OrganizationMembersTable.select {
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
-                    (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
+                    (OrganizationMembersTable.userId eq userId) and
                     (OrganizationMembersTable.role eq "OWNER") and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count() > 0
@@ -549,14 +560,14 @@ fun Route.organizationRoutes() {
                 
                 // Cannot change owner's role
                 val targetRole = OrganizationMembersTable.select {
-                    OrganizationMembersTable.id eq UUID.fromString(memberId)
+                    OrganizationMembersTable.id eq memberId
                 }.firstOrNull()?.get(OrganizationMembersTable.role)
                 
                 if (targetRole == "OWNER") return@transaction false
                 
-                OrganizationMembersTable.update({ OrganizationMembersTable.id eq UUID.fromString(memberId) }) {
+                OrganizationMembersTable.update({ OrganizationMembersTable.id eq memberId }) {
                     it[role] = request.role
-                    it[updatedAt] = Instant.now().toEpochMilli()
+                    it[updatedAt] = Clock.System.now()
                 }
                 true
             }
@@ -584,8 +595,8 @@ fun Route.organizationRoutes() {
             val success = transaction {
                 // Check if user is admin/owner
                 val isAdmin = OrganizationMembersTable.select {
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
-                    (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
+                    (OrganizationMembersTable.userId eq userId) and
                     (OrganizationMembersTable.role inList listOf("OWNER", "ADMIN")) and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count() > 0
@@ -594,14 +605,14 @@ fun Route.organizationRoutes() {
                 
                 // Cannot remove owner
                 val targetRole = OrganizationMembersTable.select {
-                    OrganizationMembersTable.id eq UUID.fromString(memberId)
+                    OrganizationMembersTable.id eq memberId
                 }.firstOrNull()?.get(OrganizationMembersTable.role)
                 
                 if (targetRole == "OWNER") return@transaction false
                 
-                OrganizationMembersTable.update({ OrganizationMembersTable.id eq UUID.fromString(memberId) }) {
+                OrganizationMembersTable.update({ OrganizationMembersTable.id eq memberId }) {
                     it[status] = "REMOVED"
-                    it[updatedAt] = Instant.now().toEpochMilli()
+                    it[updatedAt] = Clock.System.now()
                 }
                 true
             }
@@ -627,15 +638,15 @@ fun Route.organizationRoutes() {
             val templates = transaction {
                 // Verify membership
                 val isMember = OrganizationMembersTable.select { 
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
-                    (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
+                    (OrganizationMembersTable.userId eq userId) and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count() > 0
                 
                 if (!isMember) return@transaction null
                 
                 OrganizationTemplatesTable.select { 
-                    OrganizationTemplatesTable.organizationId eq UUID.fromString(orgId)
+                    OrganizationTemplatesTable.organizationId eq orgId
                 }.map { row ->
                     TemplateDto(
                         id = row[OrganizationTemplatesTable.id].toString(),
@@ -645,7 +656,7 @@ fun Route.organizationRoutes() {
                         category = row[OrganizationTemplatesTable.category],
                         tags = row[OrganizationTemplatesTable.tags]?.split(",") ?: emptyList(),
                         isDefault = row[OrganizationTemplatesTable.isDefault],
-                        createdAt = Instant.ofEpochMilli(row[OrganizationTemplatesTable.createdAt]).toString()
+                        createdAt = row[OrganizationTemplatesTable.createdAt].toString()
                     )
                 }
             }
@@ -676,18 +687,20 @@ fun Route.organizationRoutes() {
             val template = transaction {
                 // Check if user is admin/owner/manager
                 val canCreate = OrganizationMembersTable.select {
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
-                    (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
+                    (OrganizationMembersTable.userId eq userId) and
                     (OrganizationMembersTable.role inList listOf("OWNER", "ADMIN", "MANAGER")) and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count() > 0
                 
                 if (!canCreate) return@transaction null
                 
-                val now = Instant.now().toEpochMilli()
+                val now = Clock.System.now()
+                val templateId = UUID.randomUUID().toString()
                 
-                val templateId = OrganizationTemplatesTable.insert {
-                    it[organizationId] = UUID.fromString(orgId)
+                OrganizationTemplatesTable.insert {
+                    it[id] = templateId
+                    it[organizationId] = orgId
                     it[name] = request.name
                     it[description] = request.description
                     it[type] = request.type
@@ -695,20 +708,20 @@ fun Route.organizationRoutes() {
                     it[category] = request.category
                     it[tags] = request.tags.joinToString(",")
                     it[isDefault] = request.isDefault
-                    it[createdBy] = UUID.fromString(userId)
+                    it[createdBy] = userId
                     it[createdAt] = now
                     it[updatedAt] = now
-                } get OrganizationTemplatesTable.id
+                }
                 
                 TemplateDto(
-                    id = templateId.toString(),
+                    id = templateId,
                     name = request.name,
                     description = request.description,
                     type = request.type,
                     category = request.category,
                     tags = request.tags,
                     isDefault = request.isDefault,
-                    createdAt = Instant.ofEpochMilli(now).toString()
+                    createdAt = now.toString()
                 )
             }
             
@@ -733,8 +746,8 @@ fun Route.organizationRoutes() {
             val analytics = transaction {
                 // Check if user is admin/owner/manager
                 val canView = OrganizationMembersTable.select {
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
-                    (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
+                    (OrganizationMembersTable.userId eq userId) and
                     (OrganizationMembersTable.role inList listOf("OWNER", "ADMIN", "MANAGER")) and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count() > 0
@@ -742,12 +755,12 @@ fun Route.organizationRoutes() {
                 if (!canView) return@transaction null
                 
                 val memberCount = OrganizationMembersTable.select {
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count().toInt()
                 
-                val now = Instant.now()
-                val thirtyDaysAgo = now.minusSeconds(30 * 24 * 60 * 60)
+                val now = Clock.System.now()
+                val thirtyDaysAgo = now - 30.days
                 
                 // Placeholder analytics - would be computed from actual application data
                 AnalyticsDto(
@@ -784,8 +797,8 @@ fun Route.organizationRoutes() {
             val activities = transaction {
                 // Check if user is admin/owner
                 val isAdmin = OrganizationMembersTable.select {
-                    (OrganizationMembersTable.organizationId eq UUID.fromString(orgId)) and
-                    (OrganizationMembersTable.userId eq UUID.fromString(userId)) and
+                    (OrganizationMembersTable.organizationId eq orgId) and
+                    (OrganizationMembersTable.userId eq userId) and
                     (OrganizationMembersTable.role inList listOf("OWNER", "ADMIN")) and
                     (OrganizationMembersTable.status eq "ACTIVE")
                 }.count() > 0
@@ -793,7 +806,7 @@ fun Route.organizationRoutes() {
                 if (!isAdmin) return@transaction null
                 
                 OrganizationActivityLogTable.select {
-                    OrganizationActivityLogTable.organizationId eq UUID.fromString(orgId)
+                    OrganizationActivityLogTable.organizationId eq orgId
                 }
                     .orderBy(OrganizationActivityLogTable.timestamp, SortOrder.DESC)
                     .limit(limit)
@@ -805,7 +818,7 @@ fun Route.organizationRoutes() {
                             action = row[OrganizationActivityLogTable.action],
                             resourceType = row[OrganizationActivityLogTable.resourceType],
                             details = row[OrganizationActivityLogTable.details],
-                            timestamp = Instant.ofEpochMilli(row[OrganizationActivityLogTable.timestamp]).toString()
+                            timestamp = row[OrganizationActivityLogTable.timestamp].toString()
                         )
                     }
             }
@@ -834,7 +847,7 @@ fun Route.organizationRoutes() {
             }.firstOrNull() ?: return@transaction "NOT_FOUND"
             
             val expiresAt = invitation[OrganizationInvitationsTable.expiresAt]
-            if (Instant.now().toEpochMilli() > expiresAt) {
+            if (Clock.System.now() > expiresAt) {
                 OrganizationInvitationsTable.update({ OrganizationInvitationsTable.token eq token }) {
                     it[status] = "EXPIRED"
                 }
@@ -843,12 +856,12 @@ fun Route.organizationRoutes() {
             
             val orgId = invitation[OrganizationInvitationsTable.organizationId]
             val role = invitation[OrganizationInvitationsTable.role]
-            val now = Instant.now().toEpochMilli()
+            val now = Clock.System.now()
             
             // Check if already a member
             val existingMember = OrganizationMembersTable.select {
                 (OrganizationMembersTable.organizationId eq orgId) and
-                (OrganizationMembersTable.userId eq UUID.fromString(userId))
+                (OrganizationMembersTable.userId eq userId)
             }.firstOrNull()
             
             if (existingMember != null) {
@@ -868,7 +881,7 @@ fun Route.organizationRoutes() {
             } else {
                 OrganizationMembersTable.insert {
                     it[organizationId] = orgId
-                    it[OrganizationMembersTable.userId] = UUID.fromString(userId)
+                    it[OrganizationMembersTable.userId] = userId
                     it[OrganizationMembersTable.role] = role
                     it[status] = "ACTIVE"
                     it[joinedAt] = now
@@ -892,4 +905,5 @@ fun Route.organizationRoutes() {
             "SUCCESS" -> call.respond(mapOf("message" to "Successfully joined organization"))
         }
     }
+}
 }

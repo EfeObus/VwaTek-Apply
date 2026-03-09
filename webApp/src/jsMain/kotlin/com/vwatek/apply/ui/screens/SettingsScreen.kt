@@ -22,6 +22,7 @@ fun SettingsScreen() {
     var geminiApiKey by remember { mutableStateOf("") }
     var openAiApiKey by remember { mutableStateOf("") }
     var savedMessage by remember { mutableStateOf<String?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     
     // Notification preferences
@@ -33,6 +34,13 @@ fun SettingsScreen() {
     // Appearance preferences
     var darkMode by remember { mutableStateOf(false) }
     var compactMode by remember { mutableStateOf(false) }
+    
+    // Language preferences
+    var frenchEnabled by remember { mutableStateOf(false) }
+    
+    // Privacy preferences
+    var analyticsEnabled by remember { mutableStateOf(true) }
+    var crashReportingEnabled by remember { mutableStateOf(true) }
     
     // Load existing settings
     LaunchedEffect(Unit) {
@@ -55,6 +63,13 @@ fun SettingsScreen() {
         darkMode = settingsRepository.getSetting("dark_mode") == "true"
         compactMode = settingsRepository.getSetting("compact_mode") == "true"
         
+        // Load language preferences
+        frenchEnabled = settingsRepository.getSetting("french_enabled") == "true"
+        
+        // Load privacy preferences
+        analyticsEnabled = settingsRepository.getSetting("analytics_enabled") != "false"
+        crashReportingEnabled = settingsRepository.getSetting("crash_reporting_enabled") != "false"
+        
         // Apply dark mode if enabled
         if (darkMode) {
             kotlinx.browser.document.documentElement?.classList?.add("dark-mode")
@@ -67,6 +82,59 @@ fun SettingsScreen() {
         // Header
         H1(attrs = { classes("mb-lg") }) { Text("Settings") }
         
+        // Error banner
+        if (errorMessage != null) {
+            Div(attrs = {
+                classes("alert", "alert-error")
+                style {
+                    property("display", "flex")
+                    property("align-items", "center")
+                    property("justify-content", "space-between")
+                    property("padding", "12px 16px")
+                    property("margin-bottom", "16px")
+                    property("background", "#fef2f2")
+                    property("border", "1px solid #fca5a5")
+                    property("border-radius", "8px")
+                    property("color", "#dc2626")
+                }
+            }) {
+                Span { Text(errorMessage ?: "") }
+                Button(attrs = {
+                    style {
+                        property("background", "none")
+                        property("border", "none")
+                        property("cursor", "pointer")
+                        property("color", "#dc2626")
+                        property("font-size", "1.2rem")
+                    }
+                    onClick { errorMessage = null }
+                }) { Text("×") }
+            }
+        }
+        
+        if (isLoading) {
+            Div(attrs = {
+                style {
+                    property("display", "flex")
+                    property("justify-content", "center")
+                    property("align-items", "center")
+                    property("padding", "48px")
+                }
+            }) {
+                Span(attrs = {
+                    classes("spinner")
+                    style {
+                        property("width", "32px")
+                        property("height", "32px")
+                        property("border", "3px solid #e5e7eb")
+                        property("border-top-color", "#6366f1")
+                        property("border-radius", "50%")
+                        property("animation", "spin 0.8s linear infinite")
+                    }
+                })
+                Span(attrs = { style { property("margin-left", "12px") } }) { Text("Loading settings...") }
+            }
+        } else {
         // API Configuration Card
         Div(attrs = { classes("card", "mb-lg") }) {
             H3(attrs = { classes("card-title", "mb-md") }) { Text("AI API Configuration") }
@@ -274,6 +342,29 @@ fun SettingsScreen() {
             }
         }
         
+        // Language Card
+        Div(attrs = { classes("card", "mb-lg") }) {
+            H3(attrs = { classes("card-title", "mb-md") }) { Text("Language") }
+            
+            P(attrs = { classes("text-secondary", "mb-lg") }) {
+                Text("Choose your preferred language for the interface.")
+            }
+            
+            Div(attrs = { classes("settings-toggles") }) {
+                SettingsToggle(
+                    label = if (frenchEnabled) "Français" else "French Language",
+                    description = if (frenchEnabled) "Activé" else "Enable French language",
+                    checked = frenchEnabled,
+                    onToggle = { checked ->
+                        frenchEnabled = checked
+                        scope.launch {
+                            settingsRepository.setSetting("french_enabled", checked.toString())
+                        }
+                    }
+                )
+            }
+        }
+        
         // About Card
         Div(attrs = { classes("card", "mb-lg") }) {
             H3(attrs = { classes("card-title", "mb-md") }) { Text("About VwaTek Apply") }
@@ -328,8 +419,34 @@ fun SettingsScreen() {
         }
         
         // Privacy & Security Card
-        Div(attrs = { classes("card") }) {
+        Div(attrs = { classes("card", "mb-lg") }) {
             H3(attrs = { classes("card-title", "mb-md") }) { Text("Privacy & Security") }
+            
+            Div(attrs = { classes("settings-toggles", "mb-lg") }) {
+                SettingsToggle(
+                    label = "Analytics",
+                    description = "Help improve the app with anonymous usage data",
+                    checked = analyticsEnabled,
+                    onToggle = { checked ->
+                        analyticsEnabled = checked
+                        scope.launch {
+                            settingsRepository.setSetting("analytics_enabled", checked.toString())
+                        }
+                    }
+                )
+                
+                SettingsToggle(
+                    label = "Crash Reporting",
+                    description = "Automatically report crashes to help fix bugs",
+                    checked = crashReportingEnabled,
+                    onToggle = { checked ->
+                        crashReportingEnabled = checked
+                        scope.launch {
+                            settingsRepository.setSetting("crash_reporting_enabled", checked.toString())
+                        }
+                    }
+                )
+            }
             
             Div(attrs = { classes("mb-md") }) {
                 H4(attrs = { classes("mb-sm") }) { Text("Data Storage") }
@@ -351,7 +468,23 @@ fun SettingsScreen() {
                     Text("VwaTek Apply does not require account creation. You maintain full control over your data at all times.")
                 }
             }
+            
+            // Links
+            Div(attrs = { classes("mt-lg", "pt-md", "border-top") }) {
+                Div(attrs = { classes("flex", "gap-lg") }) {
+                    A(href = "#privacy", attrs = { classes("text-primary") }) {
+                        Text("Privacy Policy")
+                    }
+                    A(href = "#terms", attrs = { classes("text-primary") }) {
+                        Text("Terms of Service")
+                    }
+                    A(href = "mailto:support@vwatek.com", attrs = { classes("text-primary") }) {
+                        Text("Help & Support")
+                    }
+                }
+            }
         }
+        } // else - loading check
     }
 }
 

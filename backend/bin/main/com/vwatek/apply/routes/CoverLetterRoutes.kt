@@ -8,6 +8,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import com.vwatek.apply.auth.requireUserId
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -34,18 +37,18 @@ data class CoverLetterResponse(
 )
 
 fun Route.coverLetterRoutes() {
+    authenticate("jwt") {
     route("/cover-letters") {
         // Get all cover letters
         get {
-            val userId = call.request.headers["X-User-Id"]
+            val userId = call.requireUserId() ?: return@get
+            val limit = (call.request.queryParameters["limit"]?.toIntOrNull() ?: 50).coerceIn(1, 100)
+            val offset = (call.request.queryParameters["offset"]?.toIntOrNull() ?: 0).coerceAtLeast(0)
             
             val coverLetters = transaction {
-                val query = if (userId != null) {
-                    CoverLettersTable.select { CoverLettersTable.userId eq userId }
-                } else {
-                    CoverLettersTable.selectAll()
-                }
-                query.orderBy(CoverLettersTable.createdAt, SortOrder.DESC)
+                CoverLettersTable.select { CoverLettersTable.userId eq userId }
+                    .orderBy(CoverLettersTable.createdAt, SortOrder.DESC)
+                    .limit(limit, offset.toLong())
                     .map { row ->
                         CoverLetterResponse(
                             id = row[CoverLettersTable.id],
@@ -89,7 +92,7 @@ fun Route.coverLetterRoutes() {
         // Create cover letter
         post {
             val request = call.receive<CoverLetterRequest>()
-            val userId = call.request.headers["X-User-Id"]
+            val userId = call.requireUserId() ?: return@post
             
             val coverLetterId = UUID.randomUUID().toString()
             val now = Clock.System.now()
@@ -134,4 +137,5 @@ fun Route.coverLetterRoutes() {
             call.respond(HttpStatusCode.NoContent)
         }
     }
+    } // authenticate("jwt")
 }

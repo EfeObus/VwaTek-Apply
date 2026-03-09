@@ -271,6 +271,8 @@ class LocalStorageAuthRepository : AuthRepository {
     
     override fun getAuthState(): Flow<AuthState> = _authState.asStateFlow()
     
+    override fun getAuthToken(): String? = _authState.value.accessToken
+    
     override suspend fun getCurrentUser(): User? = _authState.value.user
     
     @OptIn(ExperimentalUuidApi::class)
@@ -491,6 +493,12 @@ class LocalStorageAuthRepository : AuthRepository {
         }
         // Simulate success
         return Result.success(Unit)
+    }
+    
+    override suspend fun refreshToken(): Result<String> {
+        // LocalStorage implementation — no real refresh needed
+        val token = localStorage.getItem(authKey) ?: return Result.failure(Exception("No session"))
+        return Result.success(token)
     }
     
     override suspend fun isEmailAvailable(email: String): Boolean {

@@ -226,7 +226,6 @@ class NOCViewModel(
      * Save user's NOC match
      */
     fun saveNOCMatch(
-        userId: String,
         resumeId: String?,
         nocCode: String,
         analysis: NOCFitAnalysis
@@ -244,7 +243,7 @@ class NOCViewModel(
                 recommendations = analysis.resumeImprovements.map { it.suggestion }
             )
             
-            nocApiClient.saveNOCMatch(userId, request).onSuccess { response ->
+            nocApiClient.saveNOCMatch(request).onSuccess { response ->
                 _state.update { 
                     it.copy(
                         isSavingMatch = false,
@@ -265,11 +264,11 @@ class NOCViewModel(
     /**
      * Load user's saved NOC matches
      */
-    fun loadUserMatches(userId: String) {
+    fun loadUserMatches() {
         scope.launch {
             _state.update { it.copy(isLoadingUserMatches = true) }
             
-            nocApiClient.getUserNOCMatches(userId).onSuccess { response ->
+            nocApiClient.getUserNOCMatches().onSuccess { response ->
                 _state.update { 
                     it.copy(
                         isLoadingUserMatches = false,
@@ -438,12 +437,12 @@ data class ProvincialDemandInfo(
     val outlookYear: Int
 ) {
     fun formatSalary(): String {
-        return medianSalary?.let { "$${"%.0f".format(it)}/year" } ?: "N/A"
+        return medianSalary?.let { "\$${it.toLong()}/year" } ?: "N/A"
     }
     
     fun formatSalaryRange(): String {
         return if (salaryLow != null && salaryHigh != null) {
-            "$${"%.0f".format(salaryLow)} - $${"%.0f".format(salaryHigh)}/year"
+            "\$${salaryLow.toLong()} - \$${salaryHigh.toLong()}/year"
         } else {
             formatSalary()
         }

@@ -3,6 +3,7 @@ package com.vwatek.apply.routes
 import com.vwatek.apply.services.AIService
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -71,7 +72,8 @@ data class GetInterviewFeedbackResponse(
 )
 
 fun Route.aiRoutes(aiService: AIService) {
-    route("/ai") {
+    authenticate("jwt") {
+        route("/ai") {
         // Analyze resume against job description
         post("/analyze-resume") {
             try {
@@ -149,5 +151,6 @@ fun Route.aiRoutes(aiService: AIService) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to (e.message ?: "Feedback generation failed")))
             }
         }
+    }
     }
 }

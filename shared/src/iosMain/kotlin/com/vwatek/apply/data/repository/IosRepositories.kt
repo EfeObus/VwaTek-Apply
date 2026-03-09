@@ -16,6 +16,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import platform.Foundation.NSUserDefaults
+import com.vwatek.apply.data.security.KeychainHelper
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -91,13 +92,19 @@ class IosAuthRepository(
     }
     
     private fun loadSavedToken(): String? {
-        return userDefaults.stringForKey("vwatek_auth_token")
+        // Migrate from NSUserDefaults to Keychain if needed
+        val legacyToken = userDefaults.stringForKey("vwatek_auth_token")
+        if (legacyToken != null) {
+            KeychainHelper.save("vwatek_auth_token", legacyToken)
+            userDefaults.removeObjectForKey("vwatek_auth_token")
+        }
+        return KeychainHelper.get("vwatek_auth_token")
     }
     
     private fun saveAuthData(user: User, token: String) {
         val savedUser = SavedUser.fromUser(user)
         userDefaults.setObject(json.encodeToString(savedUser), forKey = "vwatek_user")
-        userDefaults.setObject(token, forKey = "vwatek_auth_token")
+        KeychainHelper.save("vwatek_auth_token", token)
         _currentUser = user
         _authToken = token
         _authState.value = AuthState(isAuthenticated = true, user = user)
@@ -105,13 +112,15 @@ class IosAuthRepository(
     
     private fun clearAuthData() {
         userDefaults.removeObjectForKey("vwatek_user")
-        userDefaults.removeObjectForKey("vwatek_auth_token")
+        KeychainHelper.delete("vwatek_auth_token")
         _currentUser = null
         _authToken = null
         _authState.value = AuthState(isAuthenticated = false, user = null)
     }
     
     override fun getAuthState(): Flow<AuthState> = _authState.asStateFlow()
+    
+    override fun getAuthToken(): String? = _authToken
     
     override suspend fun getCurrentUser(): User? = _currentUser
     
@@ -283,6 +292,26 @@ class IosAuthRepository(
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Password reset failed"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun refreshToken(): Result<String> {
+        val currentToken = _authToken ?: return Result.failure(Exception("No auth token"))
+        return try {
+            val response = httpClient.post("$apiBaseUrl/auth/refresh") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(currentToken)
+            }
+            if (response.status.isSuccess()) {
+                val body = response.body<AuthApiResponse>()
+                val user = body.user.toUser()
+                saveAuthData(user, body.token)
+                Result.success(body.token)
+            } else {
+                Result.failure(Exception("Token refresh failed"))
             }
         } catch (e: Exception) {
             Result.failure(e)

@@ -11,8 +11,8 @@ import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 object JobApplicationsTable : Table("job_applications") {
     val id = varchar("id", 36)
     val userId = varchar("user_id", 36).references(UsersTable.id)
-    val resumeId = varchar("resume_id", 36).nullable()
-    val coverLetterId = varchar("cover_letter_id", 36).nullable()
+    val resumeId = varchar("resume_id", 36).references(ResumesTable.id).nullable()
+    val coverLetterId = varchar("cover_letter_id", 36).references(CoverLettersTable.id).nullable()
     
     // Job Details
     val jobTitle = varchar("job_title", 255)
@@ -57,6 +57,11 @@ object JobApplicationsTable : Table("job_applications") {
     val updatedAt = timestamp("updated_at")
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, userId)
+        index(false, status)
+    }
 }
 
 object JobApplicationStatusHistoryTable : Table("job_application_status_history") {
@@ -68,6 +73,10 @@ object JobApplicationStatusHistoryTable : Table("job_application_status_history"
     val changedAt = timestamp("changed_at")
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, applicationId)
+    }
 }
 
 object JobApplicationNotesTable : Table("job_application_notes") {
@@ -79,6 +88,10 @@ object JobApplicationNotesTable : Table("job_application_notes") {
     val updatedAt = timestamp("updated_at")
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, applicationId)
+    }
 }
 
 object JobApplicationRemindersTable : Table("job_application_reminders") {
@@ -93,6 +106,11 @@ object JobApplicationRemindersTable : Table("job_application_reminders") {
     val createdAt = timestamp("created_at")
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, applicationId)
+        index(false, reminderAt, isCompleted)
+    }
 }
 
 object JobApplicationInterviewsTable : Table("job_application_interviews") {
@@ -111,6 +129,11 @@ object JobApplicationInterviewsTable : Table("job_application_interviews") {
     val updatedAt = timestamp("updated_at")
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, applicationId)
+        index(false, scheduledAt)
+    }
 }
 
 object JobApplicationDocumentsTable : Table("job_application_documents") {
@@ -124,4 +147,8 @@ object JobApplicationDocumentsTable : Table("job_application_documents") {
     val uploadedAt = timestamp("uploaded_at")
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, applicationId)
+    }
 }

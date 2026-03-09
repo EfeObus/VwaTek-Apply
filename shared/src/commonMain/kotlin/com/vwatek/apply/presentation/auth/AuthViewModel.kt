@@ -81,6 +81,13 @@ sealed class AuthIntent {
     // LinkedIn OAuth callback
     data class LinkedInCallback(val authCode: String) : AuthIntent()
     
+    // Apple Sign-In with user info
+    data class AppleSignIn(
+        val email: String,
+        val firstName: String,
+        val lastName: String
+    ) : AuthIntent()
+    
     // Profile
     data class UpdateProfile(val user: User) : AuthIntent()
     data class ChangePassword(val currentPassword: String, val newPassword: String) : AuthIntent()
@@ -151,6 +158,7 @@ class AuthViewModel(
             is AuthIntent.UploadResume -> uploadResume(intent.fileData, intent.fileName, intent.fileType)
             is AuthIntent.ImportFromLinkedIn -> importFromLinkedIn(intent.authCode)
             is AuthIntent.GoogleSignIn -> handleGoogleSignIn(intent)
+            is AuthIntent.AppleSignIn -> handleAppleSignIn(intent)
             is AuthIntent.LinkedInCallback -> handleLinkedInCallback(intent.authCode)
             AuthIntent.ClearError -> _state.value = _state.value.copy(error = null)
             AuthIntent.ClearSuccess -> _state.value = _state.value.copy(
@@ -205,6 +213,34 @@ class AuthViewModel(
                     _state.value = _state.value.copy(
                         isLoading = false,
                         error = error.message ?: "Google sign-in failed"
+                    )
+                }
+        }
+    }
+    
+    private fun handleAppleSignIn(intent: AuthIntent.AppleSignIn) {
+        scope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            
+            loginWithGoogle(
+                idToken = intent.email,
+                email = intent.email,
+                firstName = intent.firstName,
+                lastName = intent.lastName,
+                profilePicture = null
+            )
+                .onSuccess { user ->
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isAuthenticated = true,
+                        user = user,
+                        currentView = AuthView.PROFILE
+                    )
+                }
+                .onFailure { error ->
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = error.message ?: "Apple sign-in failed"
                     )
                 }
         }

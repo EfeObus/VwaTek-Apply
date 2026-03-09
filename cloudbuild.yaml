@@ -6,7 +6,7 @@ substitutions:
   _REGION: northamerica-northeast1
   _BACKEND_SERVICE: vwatek-backend
   _FRONTEND_BUCKET: vwatek-apply-web
-  _CLOUD_SQL_INSTANCE: vwatek-apply:northamerica-northeast1:vwatekapply
+  _CLOUD_SQL_INSTANCE: vwatek-apply:us-central1:vwatekapply
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -36,7 +36,21 @@ steps:
     args:
       - '-c'
       - |
-        ./gradlew :backend:test --no-daemon || echo "⚠️ Some tests failed, continuing..."
+        ./gradlew :backend:test --no-daemon
+    waitFor: ['build-backend']
+
+  # ============================================
+  # Stage 2.5: Security Scanning — Dependency Vulnerabilities
+  # ============================================
+  - id: 'security-scan-dependencies'
+    name: 'gradle:8.5-jdk17'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔍 Running dependency vulnerability scan..."
+        ./gradlew :backend:dependencyCheckAnalyze --no-daemon || true
+        echo "✅ Dependency scan complete (results in build/reports)"
     waitFor: ['build-backend']
 
   # ============================================
@@ -67,6 +81,21 @@ steps:
     name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/${_BACKEND_SERVICE}:latest']
     waitFor: ['docker-build']
+
+  # ============================================
+  # Stage 4.5: Container Image Security Scan (Trivy)
+  # ============================================
+  - id: 'security-scan-container'
+    name: 'aquasec/trivy:latest'
+    args:
+      - 'image'
+      - '--exit-code'
+      - '0'               # Don't fail build; report only. Change to 1 to enforce.
+      - '--severity'
+      - 'CRITICAL,HIGH'
+      - '--no-progress'
+      - 'gcr.io/$PROJECT_ID/${_BACKEND_SERVICE}:$COMMIT_SHA'
+    waitFor: ['docker-push-sha']
 
   # ============================================
   # Stage 5: Deploy Backend to Cloud Run

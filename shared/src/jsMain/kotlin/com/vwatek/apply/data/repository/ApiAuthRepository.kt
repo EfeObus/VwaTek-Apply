@@ -102,6 +102,8 @@ class ApiAuthRepository : AuthRepository {
     
     override fun getAuthState(): Flow<AuthState> = _authState.asStateFlow()
     
+    override fun getAuthToken(): String? = _authState.value.accessToken
+    
     override suspend fun getCurrentUser(): User? = _authState.value.user
     
     override suspend fun registerWithEmail(data: RegistrationData): Result<User> {
@@ -344,6 +346,37 @@ class ApiAuthRepository : AuthRepository {
         } catch (e: Exception) {
             console.error("Password reset error: ${e.message}")
             Result.failure(AuthError.NetworkError)
+        }
+    }
+    
+    override suspend fun refreshToken(): Result<String> {
+        val currentToken = _authState.value.accessToken ?: return Result.failure(Exception("No auth token"))
+        return try {
+            val response = fetch(
+                "$apiBaseUrl/api/v1/auth/refresh",
+                RequestInit(
+                    method = "POST",
+                    headers = json(
+                        "Content-Type" to "application/json",
+                        "Authorization" to "Bearer $currentToken"
+                    )
+                )
+            ).await()
+            
+            if (response.ok) {
+                val responseText = response.text().await()
+                val authResponse = json.decodeFromString<AuthApiResponse>(responseText)
+                val user = authResponse.user.toUser()
+                cacheSession(user, authResponse.token, authResponse.expiresAt)
+                _authState.value = AuthState(isAuthenticated = true, user = user, accessToken = authResponse.token)
+                console.log("Token refreshed successfully")
+                Result.success(authResponse.token)
+            } else {
+                Result.failure(Exception("Token refresh failed"))
+            }
+        } catch (e: Exception) {
+            console.error("Token refresh error: ${e.message}")
+            Result.failure(e)
         }
     }
     

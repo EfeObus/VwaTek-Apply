@@ -46,8 +46,8 @@ data class JobBankSalary(
 ) {
     val displayRange: String
         get() {
-            val minStr = min?.let { String.format("$%.2f", it) } ?: ""
-            val maxStr = max?.let { String.format("$%.2f", it) } ?: ""
+            val minStr = min?.let { "$${it.formatCurrency()}" } ?: ""
+            val maxStr = max?.let { "$${it.formatCurrency()}" } ?: ""
             val periodStr = if (period == "HOURLY") "/hr" else "/yr"
             
             return when {
@@ -57,34 +57,15 @@ data class JobBankSalary(
                 else -> "Negotiable"
             }
         }
-}
-
-@Serializable
-data class CanadianProvince(
-    val code: String,
-    val name: String,
-    val nameFr: String
-) {
-    companion object {
-        val ALL_PROVINCES = listOf(
-            CanadianProvince("AB", "Alberta", "Alberta"),
-            CanadianProvince("BC", "British Columbia", "Colombie-Britannique"),
-            CanadianProvince("MB", "Manitoba", "Manitoba"),
-            CanadianProvince("NB", "New Brunswick", "Nouveau-Brunswick"),
-            CanadianProvince("NL", "Newfoundland and Labrador", "Terre-Neuve-et-Labrador"),
-            CanadianProvince("NS", "Nova Scotia", "Nouvelle-Écosse"),
-            CanadianProvince("NT", "Northwest Territories", "Territoires du Nord-Ouest"),
-            CanadianProvince("NU", "Nunavut", "Nunavut"),
-            CanadianProvince("ON", "Ontario", "Ontario"),
-            CanadianProvince("PE", "Prince Edward Island", "Île-du-Prince-Édouard"),
-            CanadianProvince("QC", "Quebec", "Québec"),
-            CanadianProvince("SK", "Saskatchewan", "Saskatchewan"),
-            CanadianProvince("YT", "Yukon", "Yukon")
-        )
-        
-        fun fromCode(code: String): CanadianProvince? = ALL_PROVINCES.find { it.code == code }
+    
+    private fun Double.formatCurrency(): String {
+        val intPart = this.toLong()
+        val decPart = ((this - intPart) * 100).toLong()
+        return if (decPart == 0L) "$intPart.00" else "$intPart.${decPart.toString().padStart(2, '0')}"
     }
 }
+
+// CanadianProvince is defined in JobApplication.kt as an enum
 
 @Serializable
 data class JobBankSearchFilters(

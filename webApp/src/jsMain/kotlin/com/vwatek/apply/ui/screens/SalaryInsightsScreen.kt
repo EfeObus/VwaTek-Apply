@@ -1,35 +1,48 @@
 package com.vwatek.apply.ui.screens
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.vwatek.apply.domain.model.PremiumFeature
-import com.vwatek.apply.domain.model.SubscriptionTier
+import com.vwatek.apply.domain.model.*
+import com.vwatek.apply.domain.usecase.SalaryIntelligenceManager
+import com.vwatek.apply.domain.usecase.SalaryInsightsState
+import com.vwatek.apply.domain.usecase.SubscriptionManager
 import org.jetbrains.compose.web.attributes.*
 import org.jetbrains.compose.web.dom.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.core.context.GlobalContext
 
 /**
  * Salary Insights Screen for Web - Premium Feature
- * Phase 4: Premium & Monetization
+ * Uses SalaryIntelligenceManager from shared module for real API data
  */
 @Composable
 fun SalaryInsightsScreen() {
+    val salaryManager = remember { GlobalContext.get().get<SalaryIntelligenceManager>() }
+    val subscriptionManager = remember { GlobalContext.get().get<SubscriptionManager>() }
+    
     var jobTitle by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
+    var province by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
     var yearsExperience by remember { mutableStateOf("") }
-    var skills by remember { mutableStateOf("") }
     
-    var isLoading by remember { mutableStateOf(false) }
-    var hasAccess by remember { mutableStateOf(false) } // Would be checked from subscription manager
     var showPaywall by remember { mutableStateOf(false) }
+    var showOfferTab by remember { mutableStateOf(false) }
     
-    var salaryInsights by remember { mutableStateOf<SalaryInsightsData?>(null) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    // Offer form fields
+    var offerJobTitle by remember { mutableStateOf("") }
+    var offerCompany by remember { mutableStateOf("") }
+    var offerBaseSalary by remember { mutableStateOf("") }
+    var offerProvince by remember { mutableStateOf("") }
+    
+    val hasAccess = remember { subscriptionManager.canUseFeature(PremiumFeature.SALARY_INSIGHTS) }
+    val insightsState by salaryManager.insightsState.collectAsState()
     
     val scope = remember { CoroutineScope(Dispatchers.Main) }
     
@@ -48,7 +61,6 @@ fun SalaryInsightsScreen() {
                 requiredTier = SubscriptionTier.PRO,
                 onClose = { showPaywall = false },
                 onUpgrade = { tier, period ->
-                    // Handle upgrade
                     showPaywall = false
                 }
             )
@@ -60,107 +72,222 @@ fun SalaryInsightsScreen() {
         // Header
         H1(attrs = { classes("mb-lg") }) { Text("Salary Insights") }
         
-        // Search Form Card
-        Div(attrs = { classes("card", "mb-lg") }) {
-            H3(attrs = { classes("card-title", "mb-md") }) { Text("Search Salary Data") }
-            
-            Div(attrs = { classes("form-grid") }) {
-                // Job Title
-                Div(attrs = { classes("form-group") }) {
-                    Label(attrs = { classes("form-label") }) { Text("Job Title") }
-                    Div(attrs = { classes("input-with-icon") }) {
-                        Span(attrs = { classes("input-icon") }) { Text("💼") }
-                        Input(InputType.Text) {
-                            classes("form-input")
-                            placeholder("e.g., Software Engineer")
-                            value(jobTitle)
-                            onInput { jobTitle = it.value }
-                        }
-                    }
-                }
-                
-                // Location
-                Div(attrs = { classes("form-group") }) {
-                    Label(attrs = { classes("form-label") }) { Text("Location") }
-                    Div(attrs = { classes("input-with-icon") }) {
-                        Span(attrs = { classes("input-icon") }) { Text("📍") }
-                        Input(InputType.Text) {
-                            classes("form-input")
-                            placeholder("e.g., Toronto, ON")
-                            value(location)
-                            onInput { location = it.value }
-                        }
-                    }
-                }
-                
-                // Years of Experience
-                Div(attrs = { classes("form-group") }) {
-                    Label(attrs = { classes("form-label") }) { Text("Years of Experience") }
-                    Div(attrs = { classes("input-with-icon") }) {
-                        Span(attrs = { classes("input-icon") }) { Text("⏱️") }
-                        Input(InputType.Number) {
-                            classes("form-input")
-                            placeholder("e.g., 5")
-                            value(yearsExperience)
-                            onInput { yearsExperience = it.value }
-                        }
-                    }
-                }
-                
-                // Skills
-                Div(attrs = { classes("form-group") }) {
-                    Label(attrs = { classes("form-label") }) { Text("Key Skills") }
-                    Div(attrs = { classes("input-with-icon") }) {
-                        Span(attrs = { classes("input-icon") }) { Text("🔧") }
-                        Input(InputType.Text) {
-                            classes("form-input")
-                            placeholder("e.g., Kotlin, Android, AWS (comma separated)")
-                            value(skills)
-                            onInput { skills = it.value }
-                        }
-                    }
-                }
-            }
-            
+        // Tab selector
+        Div(attrs = { classes("tab-bar", "mb-lg") }) {
             Button(attrs = {
-                classes("btn", "btn-primary", "btn-full", "mt-md")
-                if (jobTitle.isBlank() || location.isBlank()) {
-                    classes("btn-disabled")
-                }
-                onClick {
-                    if (jobTitle.isNotBlank() && location.isNotBlank()) {
-                        scope.launch {
-                            searchSalary(jobTitle, location, yearsExperience.toIntOrNull() ?: 0, skills) { result ->
-                                salaryInsights = result
+                classes("tab-btn", if (!showOfferTab) "active" else "")
+                onClick { showOfferTab = false }
+            }) { Text("Salary Search") }
+            Button(attrs = {
+                classes("tab-btn", if (showOfferTab) "active" else "")
+                onClick { showOfferTab = true }
+            }) { Text("Offer Evaluation") }
+        }
+        
+        if (showOfferTab) {
+            // Offer Evaluation Form
+            Div(attrs = { classes("card", "mb-lg") }) {
+                H3(attrs = { classes("card-title", "mb-md") }) { Text("Evaluate a Job Offer") }
+                
+                Div(attrs = { classes("form-grid") }) {
+                    Div(attrs = { classes("form-group") }) {
+                        Label(attrs = { classes("form-label") }) { Text("Job Title") }
+                        Div(attrs = { classes("input-with-icon") }) {
+                            Span(attrs = { classes("input-icon") }) { Text("💼") }
+                            Input(InputType.Text) {
+                                classes("form-input")
+                                placeholder("e.g., Software Engineer")
+                                value(offerJobTitle)
+                                onInput { offerJobTitle = it.value }
+                            }
+                        }
+                    }
+                    
+                    Div(attrs = { classes("form-group") }) {
+                        Label(attrs = { classes("form-label") }) { Text("Company") }
+                        Div(attrs = { classes("input-with-icon") }) {
+                            Span(attrs = { classes("input-icon") }) { Text("🏢") }
+                            Input(InputType.Text) {
+                                classes("form-input")
+                                placeholder("e.g., Shopify")
+                                value(offerCompany)
+                                onInput { offerCompany = it.value }
+                            }
+                        }
+                    }
+                    
+                    Div(attrs = { classes("form-group") }) {
+                        Label(attrs = { classes("form-label") }) { Text("Base Salary (CAD)") }
+                        Div(attrs = { classes("input-with-icon") }) {
+                            Span(attrs = { classes("input-icon") }) { Text("💰") }
+                            Input(InputType.Number) {
+                                classes("form-input")
+                                placeholder("e.g., 120000")
+                                attr("value", offerBaseSalary)
+                                onInput { offerBaseSalary = it.value?.toString() ?: "" }
+                            }
+                        }
+                    }
+                    
+                    Div(attrs = { classes("form-group") }) {
+                        Label(attrs = { classes("form-label") }) { Text("Province") }
+                        Div(attrs = { classes("input-with-icon") }) {
+                            Span(attrs = { classes("input-icon") }) { Text("🗺️") }
+                            Input(InputType.Text) {
+                                classes("form-input")
+                                placeholder("e.g., Ontario")
+                                value(offerProvince)
+                                onInput { offerProvince = it.value }
                             }
                         }
                     }
                 }
-            }) {
-                Span { Text("🔍") }
-                Text(" Get Salary Insights")
+                
+                Button(attrs = {
+                    classes("btn", "btn-primary", "btn-full", "mt-md")
+                    if (offerJobTitle.isBlank() || offerCompany.isBlank() || offerBaseSalary.isBlank()) {
+                        classes("btn-disabled")
+                    }
+                    onClick {
+                        val salary = offerBaseSalary.toDoubleOrNull() ?: return@onClick
+                        val offer = JobOffer(
+                            jobTitle = offerJobTitle,
+                            company = offerCompany,
+                            nocCode = null,
+                            baseSalary = salary,
+                            signingBonus = null,
+                            annualBonus = null,
+                            stockOptions = null,
+                            benefits = null,
+                            province = offerProvince,
+                            city = null,
+                            isRemote = false,
+                            yearsExperienceRequired = null
+                        )
+                        scope.launch { salaryManager.evaluateOffer(offer) }
+                    }
+                }) {
+                    Span { Text("📊") }
+                    Text(" Evaluate Offer")
+                }
+            }
+        } else {
+            // Search Form Card
+            Div(attrs = { classes("card", "mb-lg") }) {
+                H3(attrs = { classes("card-title", "mb-md") }) { Text("Search Salary Data") }
+                
+                Div(attrs = { classes("form-grid") }) {
+                    // Job Title
+                    Div(attrs = { classes("form-group") }) {
+                        Label(attrs = { classes("form-label") }) { Text("Job Title") }
+                        Div(attrs = { classes("input-with-icon") }) {
+                            Span(attrs = { classes("input-icon") }) { Text("💼") }
+                            Input(InputType.Text) {
+                                classes("form-input")
+                                placeholder("e.g., Software Engineer")
+                                value(jobTitle)
+                                onInput { jobTitle = it.value }
+                            }
+                        }
+                    }
+                    
+                    // Province
+                    Div(attrs = { classes("form-group") }) {
+                        Label(attrs = { classes("form-label") }) { Text("Province") }
+                        Div(attrs = { classes("input-with-icon") }) {
+                            Span(attrs = { classes("input-icon") }) { Text("🗺️") }
+                            Input(InputType.Text) {
+                                classes("form-input")
+                                placeholder("e.g., Ontario")
+                                value(province)
+                                onInput { province = it.value }
+                            }
+                        }
+                    }
+                    
+                    // City
+                    Div(attrs = { classes("form-group") }) {
+                        Label(attrs = { classes("form-label") }) { Text("City (optional)") }
+                        Div(attrs = { classes("input-with-icon") }) {
+                            Span(attrs = { classes("input-icon") }) { Text("🏙️") }
+                            Input(InputType.Text) {
+                                classes("form-input")
+                                placeholder("e.g., Toronto")
+                                value(city)
+                                onInput { city = it.value }
+                            }
+                        }
+                    }
+                    
+                    // Years of Experience
+                    Div(attrs = { classes("form-group") }) {
+                        Label(attrs = { classes("form-label") }) { Text("Years of Experience (optional)") }
+                        Div(attrs = { classes("input-with-icon") }) {
+                            Span(attrs = { classes("input-icon") }) { Text("⏱️") }
+                            Input(InputType.Number) {
+                                classes("form-input")
+                                placeholder("e.g., 5")
+                                attr("value", yearsExperience)
+                                onInput { yearsExperience = it.value?.toString() ?: "" }
+                            }
+                        }
+                    }
+                }
+                
+                Button(attrs = {
+                    classes("btn", "btn-primary", "btn-full", "mt-md")
+                    if (jobTitle.isBlank() || province.isBlank()) {
+                        classes("btn-disabled")
+                    }
+                    onClick {
+                        if (jobTitle.isNotBlank() && province.isNotBlank()) {
+                            scope.launch {
+                                salaryManager.searchSalary(
+                                    jobTitle = jobTitle,
+                                    province = province,
+                                    city = city.ifBlank { null },
+                                    yearsExperience = yearsExperience.toIntOrNull()
+                                )
+                            }
+                        }
+                    }
+                }) {
+                    Span { Text("🔍") }
+                    Text(" Get Salary Insights")
+                }
             }
         }
         
-        // Results section
-        if (isLoading) {
-            Div(attrs = { classes("loading-container") }) {
-                Div(attrs = { classes("spinner") })
-                Text("Loading salary data...")
+        // Results section based on state
+        when (val state = insightsState) {
+            is SalaryInsightsState.Loading -> {
+                Div(attrs = { classes("loading-container") }) {
+                    Div(attrs = { classes("spinner") })
+                    Text("Loading salary data...")
+                }
             }
-        } else if (errorMessage != null) {
-            Div(attrs = { classes("alert", "alert-error") }) {
-                Text(errorMessage!!)
+            is SalaryInsightsState.Error -> {
+                Div(attrs = { classes("alert", "alert-error") }) {
+                    Text(state.message)
+                }
             }
-        } else if (salaryInsights != null) {
-            SalaryResults(salaryInsights!!)
-        } else {
-            // Empty state
-            Div(attrs = { classes("empty-state", "text-center") }) {
-                Div(attrs = { classes("empty-icon") }) { Text("💰") }
-                H3 { Text("Search for Salary Data") }
-                P(attrs = { classes("text-secondary") }) {
-                    Text("Enter a job title and location to see salary insights for your target role")
+            is SalaryInsightsState.Success -> {
+                SalaryResults(state.insights.insights, state.insights.chartData)
+            }
+            is SalaryInsightsState.OfferEvaluated -> {
+                OfferEvaluationResults(state.evaluation.evaluation)
+            }
+            is SalaryInsightsState.Idle -> {
+                // Empty state
+                Div(attrs = { classes("empty-state", "text-center") }) {
+                    Div(attrs = { classes("empty-icon") }) { Text(if (showOfferTab) "📊" else "💰") }
+                    H3 { Text(if (showOfferTab) "Evaluate a Job Offer" else "Search for Salary Data") }
+                    P(attrs = { classes("text-secondary") }) {
+                        Text(
+                            if (showOfferTab) "Enter your offer details to get a comprehensive market analysis"
+                            else "Enter a job title and province to see salary insights based on Canadian market data"
+                        )
+                    }
                 }
             }
         }
@@ -180,7 +307,10 @@ fun SalaryInsightsScreen() {
 }
 
 @Composable
-private fun SalaryResults(insights: SalaryInsightsData) {
+private fun SalaryResults(
+    insights: SalaryInsights,
+    chartData: com.vwatek.apply.data.api.SalaryChartData?
+) {
     // Salary Range Card
     Div(attrs = { classes("card", "card-highlight", "mb-lg") }) {
         Div(attrs = { classes("salary-header", "mb-md") }) {
@@ -191,54 +321,78 @@ private fun SalaryResults(insights: SalaryInsightsData) {
         // Salary range display
         Div(attrs = { classes("salary-range", "mb-lg") }) {
             Div(attrs = { classes("salary-point") }) {
-                Span(attrs = { classes("label") }) { Text("Min") }
-                Span(attrs = { classes("value") }) { Text(formatSalary(insights.minSalary)) }
+                Span(attrs = { classes("label") }) { Text("Low") }
+                Span(attrs = { classes("value") }) { Text(formatSalary(insights.salaryRange.low)) }
             }
             Div(attrs = { classes("salary-point", "salary-point-highlight") }) {
                 Span(attrs = { classes("label") }) { Text("Median") }
                 Span(attrs = { classes("value", "value-large") }) { Text(formatSalary(insights.medianSalary)) }
             }
             Div(attrs = { classes("salary-point") }) {
-                Span(attrs = { classes("label") }) { Text("Max") }
-                Span(attrs = { classes("value") }) { Text(formatSalary(insights.maxSalary)) }
+                Span(attrs = { classes("label") }) { Text("High") }
+                Span(attrs = { classes("value") }) { Text(formatSalary(insights.salaryRange.high)) }
             }
         }
         
         // Salary bar visualization
+        val range = insights.salaryRange.high - insights.salaryRange.low
+        val medianPct = if (range > 0) ((insights.medianSalary - insights.salaryRange.low) / range * 100).toInt() else 50
         Div(attrs = { classes("salary-bar-container") }) {
             Div(attrs = { 
                 classes("salary-bar") 
-                style {
-                    property("width", "${((insights.medianSalary - insights.minSalary).toDouble() / (insights.maxSalary - insights.minSalary).toDouble() * 100).toInt()}%")
-                }
+                style { property("width", "${medianPct}%") }
             })
         }
-    }
-    
-    // Statistics Card
-    Div(attrs = { classes("card", "mb-lg") }) {
-        H4(attrs = { classes("card-title", "mb-md") }) { Text("Market Data") }
         
-        Div(attrs = { classes("stats-grid") }) {
-            StatItem("Data Points", "${insights.dataPoints} salaries")
-            StatItem("Experience", "${insights.yearsExperience} years")
-            StatItem("Confidence", "${insights.confidence}%")
-            if (insights.percentile != null) {
-                StatItem("Your Position", "${insights.percentile}th percentile")
+        // Market trend
+        Div(attrs = { 
+            classes("flex", "align-center", "gap-sm", "mt-md")
+        }) {
+            val trendEmoji = when (insights.marketTrend) {
+                MarketTrend.INCREASING -> "📈"
+                MarketTrend.STABLE -> "➡️"
+                MarketTrend.DECREASING -> "📉"
+                else -> "➡️"
+            }
+            Span { Text(trendEmoji) }
+            Span(attrs = { classes("text-secondary", "text-sm") }) {
+                Text("Market trend: ${insights.marketTrend.name.lowercase().replaceFirstChar { it.uppercase() }}")
             }
         }
     }
     
-    // Insights Card
-    if (insights.insights.isNotEmpty()) {
+    // Market Comparison Card
+    Div(attrs = { classes("card", "mb-lg") }) {
+        H4(attrs = { classes("card-title", "mb-md") }) { Text("Market Comparison") }
+        
+        Div(attrs = { classes("stats-grid") }) {
+            insights.percentile?.let { percentile ->
+                StatItem("Your Position", "${percentile}th percentile")
+            }
+            StatItem("vs Provincial Avg", formatPercentage(insights.comparisonToProvincialAverage))
+            StatItem("vs National Avg", formatPercentage(insights.comparisonToNationalAverage))
+        }
+    }
+    
+    // Related Job Salaries
+    if (insights.relatedJobSalaries.isNotEmpty()) {
         Div(attrs = { classes("card", "mb-lg") }) {
-            H4(attrs = { classes("card-title", "mb-md") }) { Text("Key Insights") }
+            H4(attrs = { classes("card-title", "mb-md") }) { Text("Related Job Salaries") }
             
-            Ul(attrs = { classes("insights-list") }) {
-                insights.insights.forEach { insight ->
-                    Li {
-                        Span(attrs = { classes("insight-icon") }) { Text("💡") }
-                        Text(insight)
+            insights.relatedJobSalaries.forEach { related ->
+                Div(attrs = { classes("flex", "justify-between", "align-center", "mb-sm") }) {
+                    Div {
+                        Span(attrs = { classes("font-medium") }) { Text(related.jobTitle) }
+                        Br()
+                        Span(attrs = { classes("text-secondary", "text-sm") }) { Text("NOC: ${related.nocCode}") }
+                    }
+                    Div(attrs = { style { property("text-align", "right") } }) {
+                        Span(attrs = { classes("font-bold") }) { Text(formatSalary(related.medianSalary)) }
+                        Br()
+                        Span(attrs = {
+                            classes("text-sm")
+                            if (related.salaryDifference >= 0) classes("text-success") else classes("text-error")
+                        }) { Text(formatPercentage(related.salaryDifference)) }
                     }
                 }
             }
@@ -263,6 +417,119 @@ private fun SalaryResults(insights: SalaryInsightsData) {
 }
 
 @Composable
+private fun OfferEvaluationResults(evaluation: OfferEvaluation) {
+    // Overall Rating
+    Div(attrs = { classes("card", "card-highlight", "mb-lg", "text-center") }) {
+        H4(attrs = { classes("card-title", "mb-md") }) { Text("Offer Rating") }
+        
+        Div(attrs = {
+            classes("rating-badge", "mb-md")
+            style {
+                property("font-size", "2rem")
+                property("font-weight", "bold")
+                property("color", when (evaluation.overallRating) {
+                    OfferRating.EXCELLENT -> "#4CAF50"
+                    OfferRating.GOOD -> "#2196F3"
+                    OfferRating.FAIR -> "#FF9800"
+                    OfferRating.BELOW_MARKET -> "#F44336"
+                    OfferRating.POOR -> "#F44336"
+                    else -> "#666"
+                })
+            }
+        }) { Text(evaluation.overallRating.name.replace("_", " ")) }
+        
+        P(attrs = { classes("text-secondary") }) { Text(evaluation.recommendation) }
+    }
+    
+    // Compensation Analysis
+    Div(attrs = { classes("card", "mb-lg") }) {
+        H4(attrs = { classes("card-title", "mb-md") }) { Text("Compensation Analysis") }
+        
+        Div(attrs = { classes("stats-grid") }) {
+            StatItem("Base Salary", formatSalary(evaluation.offer.baseSalary))
+            StatItem("Market Median", formatSalary(evaluation.marketAnalysis.marketMedian))
+            StatItem("vs Market", formatPercentage(evaluation.marketAnalysis.comparisonToMarket))
+            StatItem("Total (1st Year)", formatSalary(evaluation.totalCompensation.totalFirstYear))
+            StatItem("Total (Annual)", formatSalary(evaluation.totalCompensation.totalAnnualized))
+        }
+    }
+    
+    // Strengths
+    if (evaluation.strengths.isNotEmpty()) {
+        Div(attrs = { classes("card", "mb-lg") }) {
+            H4(attrs = { classes("card-title", "mb-md") }) { Text("Strengths") }
+            Ul(attrs = { classes("insights-list") }) {
+                evaluation.strengths.forEach { strength ->
+                    Li {
+                        Span(attrs = { classes("insight-icon") }) { Text("✅") }
+                        Text(strength)
+                    }
+                }
+            }
+        }
+    }
+    
+    // Concerns
+    if (evaluation.concerns.isNotEmpty()) {
+        Div(attrs = { classes("card", "mb-lg") }) {
+            H4(attrs = { classes("card-title", "mb-md") }) { Text("Concerns") }
+            Ul(attrs = { classes("insights-list") }) {
+                evaluation.concerns.forEach { concern ->
+                    Li {
+                        Span(attrs = { classes("insight-icon") }) { Text("⚠️") }
+                        Text(concern)
+                    }
+                }
+            }
+        }
+    }
+    
+    // Negotiation Opportunities
+    if (evaluation.negotiationOpportunities.isNotEmpty()) {
+        Div(attrs = { classes("card", "mb-lg") }) {
+            H4(attrs = { classes("card-title", "mb-md") }) { Text("Negotiation Opportunities") }
+            
+            evaluation.negotiationOpportunities.forEach { opportunity ->
+                Div(attrs = {
+                    classes("card", "mb-sm")
+                    style { property("background", "#f8f9fa") }
+                }) {
+                    Div(attrs = { classes("flex", "justify-between", "align-center", "mb-sm") }) {
+                        Span(attrs = { classes("font-bold") }) { Text(opportunity.area.name.replace("_", " ")) }
+                        Span(attrs = {
+                            classes("badge")
+                            style {
+                                property("background", when (opportunity.priority) {
+                                    NegotiationPriority.HIGH -> "#F44336"
+                                    NegotiationPriority.MEDIUM -> "#FF9800"
+                                    NegotiationPriority.LOW -> "#2196F3"
+                                    else -> "#666"
+                                })
+                                property("color", "white")
+                                property("padding", "2px 8px")
+                                property("border-radius", "8px")
+                                property("font-size", "12px")
+                            }
+                        }) { Text(opportunity.priority.name) }
+                    }
+                    
+                    Div(attrs = { classes("text-sm", "mb-sm") }) {
+                        Span(attrs = { classes("text-secondary") }) { Text("Current: ") }
+                        Text(opportunity.currentValue)
+                        Span(attrs = { classes("text-secondary") }) { Text(" → Target: ") }
+                        Span(attrs = { classes("text-success", "font-bold") }) { Text(opportunity.suggestedTarget) }
+                    }
+                    
+                    P(attrs = { classes("text-secondary", "text-sm") }) {
+                        Text(opportunity.marketJustification)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun StatItem(label: String, value: String) {
     Div(attrs = { classes("stat-item") }) {
         Span(attrs = { classes("stat-label") }) { Text(label) }
@@ -270,57 +537,11 @@ private fun StatItem(label: String, value: String) {
     }
 }
 
-// Data class for salary insights
-private data class SalaryInsightsData(
-    val jobTitle: String,
-    val location: String,
-    val minSalary: Long,
-    val medianSalary: Long,
-    val maxSalary: Long,
-    val dataPoints: Int,
-    val yearsExperience: Int,
-    val confidence: Int,
-    val percentile: Int? = null,
-    val insights: List<String>,
-    val recommendations: List<String>
-)
-
-// Simulated search function
-private suspend fun searchSalary(
-    jobTitle: String,
-    location: String,
-    yearsExperience: Int,
-    skills: String,
-    onResult: (SalaryInsightsData) -> Unit
-) {
-    // Simulated API call - would be replaced with actual API call
-    kotlinx.coroutines.delay(1500)
-    
-    onResult(
-        SalaryInsightsData(
-            jobTitle = jobTitle,
-            location = location,
-            minSalary = 70000,
-            medianSalary = 95000,
-            maxSalary = 150000,
-            dataPoints = 1234,
-            yearsExperience = yearsExperience,
-            confidence = 87,
-            percentile = 65,
-            insights = listOf(
-                "Salaries in $location are 12% above the national average",
-                "Skills like ${if (skills.isEmpty()) "cloud computing" else skills} can increase salary by 15%",
-                "Remote positions typically offer 8% higher compensation"
-            ),
-            recommendations = listOf(
-                "Consider highlighting your experience with distributed systems",
-                "Certifications could increase your market value by 10-15%",
-                "Negotiating for equity can significantly increase total compensation"
-            )
-        )
-    )
+private fun formatSalary(amount: Double): String {
+    return "$${amount.asDynamic().toLocaleString("en-CA", js("({style: 'decimal', minimumFractionDigits: 0, maximumFractionDigits: 0})")) as String} CAD"
 }
 
-private fun formatSalary(amount: Long): String {
-    return "$${"%,d".format(amount)}"
+private fun formatPercentage(value: Double): String {
+    val sign = if (value >= 0) "+" else ""
+    return "$sign${value.asDynamic().toFixed(1)}%"
 }

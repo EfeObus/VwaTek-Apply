@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.vwatek.apply.android.auth.LinkedInAuthHelper
 import com.vwatek.apply.android.util.PdfExportUtil
 import com.vwatek.apply.domain.model.Resume
+import com.vwatek.apply.domain.model.ResumeSourceType
 import com.vwatek.apply.domain.model.ResumeVersion
 import com.vwatek.apply.presentation.auth.AuthIntent
 import com.vwatek.apply.presentation.auth.AuthViewModel
@@ -531,12 +533,58 @@ private fun ResumeCard(
             Spacer(modifier = Modifier.width(16.dp))
             
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = resume.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = resume.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    when (resume.sourceType) {
+                        ResumeSourceType.UPLOADED -> {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.tertiaryContainer
+                            ) {
+                                Text(
+                                    text = "📄 Uploaded",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                        }
+                        ResumeSourceType.LINKEDIN -> {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = Color(0xFF0077B5).copy(alpha = 0.15f)
+                            ) {
+                                Text(
+                                    text = "in LinkedIn",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    color = Color(0xFF0077B5)
+                                )
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+                
+                if (resume.content.isNotBlank()) {
+                    Text(
+                        text = resume.content.take(120) + if (resume.content.length > 120) "..." else "",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (resume.industry != null) {

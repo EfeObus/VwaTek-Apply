@@ -1,21 +1,53 @@
-MIT License
+VwaTek Proprietary Software License Agreement
+Copyright © 2026 VwaTek
+All Rights Reserved
 
-Copyright (c) 2026 VwaTek
+1. Ownership
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This software and all associated source code, object code, documentation, designs, algorithms, databases, and related materials (collectively, the “Software”) are the exclusive intellectual property of VwaTek.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+All rights, title, and interest in and to the Software remain solely with VwaTek. No ownership rights are transferred under this Agreement.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. No License Granted
+
+Except as expressly authorized in a separate written agreement signed by VwaTek, no license or right to use the Software is granted.
+
+Possession, access, or delivery of the Software does not convey any right to use, reproduce, modify, distribute, or exploit the Software in any manner.
+
+3. Restrictions
+
+Without the prior written consent of VwaTek, no person or entity may:
+
+* Use the Software for commercial purposes;
+* Use the Software for personal gain;
+* Copy, reproduce, or distribute the Software in whole or in part;
+* Modify, adapt, translate, reverse engineer, decompile, or disassemble the Software;
+* Create derivative works based upon the Software;
+* Sell, sublicense, lease, rent, assign, or otherwise transfer the Software;
+* Use the Software within any organization, business, or revenue-generating service.
+
+Any unauthorized use constitutes a violation of intellectual property rights.
+
+4. Confidentiality
+
+If the Software is disclosed for evaluation, internal review, or limited authorized purposes, it shall be treated as confidential information.
+
+The recipient agrees not to disclose, publish, or otherwise make available the Software or any portion thereof to any third party without prior written authorization from VwaTek.
+
+5. Enforcement
+
+Unauthorized use, reproduction, distribution, or modification of the Software may result in civil liability and, where applicable, criminal prosecution under relevant intellectual property and copyright laws.
+
+VwaTek reserves all rights and remedies available at law and in equity.
+
+6. Disclaimer of Warranty
+
+THE SOFTWARE IS PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+7. Limitation of Liability
+
+IN NO EVENT SHALL VWATEK BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+8. Governing Law
+
+This Agreement shall be governed by and construed in accordance with the laws applicable in the jurisdiction in which VwaTek is legally registered, without regard to conflict of law principles.

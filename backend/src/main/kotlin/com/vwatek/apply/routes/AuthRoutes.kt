@@ -1,5 +1,7 @@
 package com.vwatek.apply.routes
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import com.vwatek.apply.db.tables.UsersTable
 import com.vwatek.apply.services.EmailService
 import io.ktor.client.*
@@ -15,6 +17,9 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import com.vwatek.apply.auth.requireUserId
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
@@ -85,8 +90,18 @@ fun Route.authRoutes() {
             val request = call.receive<RegisterRequest>()
             
             // Validate email
-            if (!request.email.contains("@")) {
+            if (!request.email.contains("@") || !request.email.contains(".")) {
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid email format"))
+                return@post
+            }
+            
+            // Validate password strength
+            val passwordErrors = validatePasswordStrength(request.password)
+            if (passwordErrors.isNotEmpty()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf(
+                    "error" to "Password does not meet requirements",
+                    "details" to passwordErrors
+                ))
                 return@post
             }
             
@@ -105,14 +120,19 @@ fun Route.authRoutes() {
             val userId = UUID.randomUUID().toString()
             val now = Clock.System.now()
             
+            // Sanitize user-supplied text
+            val safeFirstName = com.vwatek.apply.plugins.sanitizeInput(request.firstName)
+            val safeLastName = com.vwatek.apply.plugins.sanitizeInput(request.lastName)
+            val safePhone = request.phone?.let { com.vwatek.apply.plugins.sanitizeInput(it) }
+            
             transaction {
                 UsersTable.insert {
                     it[id] = userId
                     it[email] = request.email.lowercase()
                     it[password] = hashedPassword
-                    it[firstName] = request.firstName
-                    it[lastName] = request.lastName
-                    it[phone] = request.phone
+                    it[firstName] = safeFirstName
+                    it[lastName] = safeLastName
+                    it[phone] = safePhone
                     it[authProvider] = "EMAIL"
                     it[emailVerified] = false
                     it[createdAt] = now
@@ -120,7 +140,7 @@ fun Route.authRoutes() {
                 }
             }
             
-            val token = generateToken()
+            val token = generateJwtToken(userId, request.email.lowercase(), 30)
             val expiresAt = now.plus(30.days)
             
             // Send welcome email asynchronously
@@ -172,9 +192,9 @@ fun Route.authRoutes() {
                 return@post
             }
             
-            val token = generateToken()
             val now = Clock.System.now()
             val expiryDays = if (request.rememberMe) 30 else 1
+            val token = generateJwtToken(user[UsersTable.id], user[UsersTable.email], expiryDays)
             val expiresAt = now.plus(expiryDays.days)
             
             call.respond(AuthResponse(
@@ -193,10 +213,45 @@ fun Route.authRoutes() {
             ))
         }
         
+        // Token Refresh — exchange a valid (or recently expired) JWT for a new one
+        authenticate("jwt") {
+            post("/refresh") {
+                val userId = call.requireUserId() ?: return@post
+                
+                val user = transaction {
+                    UsersTable.select { UsersTable.id eq userId }.firstOrNull()
+                }
+                
+                if (user == null) {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not found"))
+                    return@post
+                }
+                
+                val now = Clock.System.now()
+                val token = generateJwtToken(user[UsersTable.id], user[UsersTable.email], 30)
+                val expiresAt = now.plus(30.days)
+                
+                call.respond(AuthResponse(
+                    user = UserResponse(
+                        id = user[UsersTable.id],
+                        email = user[UsersTable.email],
+                        firstName = user[UsersTable.firstName],
+                        lastName = user[UsersTable.lastName],
+                        phone = user[UsersTable.phone],
+                        authProvider = user[UsersTable.authProvider],
+                        emailVerified = user[UsersTable.emailVerified],
+                        createdAt = user[UsersTable.createdAt].toString()
+                    ),
+                    token = token,
+                    expiresAt = expiresAt.toString()
+                ))
+            }
+        }
+        
         // Get current user
         get("/me") {
-            // In production, extract user from JWT token
-            val userId = call.request.headers["X-User-Id"]
+            // Extract user ID from JWT Bearer token, fallback to X-User-Id header for backward compatibility
+            val userId = extractUserIdFromToken(call) ?: call.request.headers["X-User-Id"]
             
             if (userId == null) {
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Not authenticated"))
@@ -235,7 +290,7 @@ fun Route.authRoutes() {
             
             // Always return success to prevent email enumeration attacks
             if (user != null && EmailService.isConfigured()) {
-                val resetToken = generateToken()
+                val resetToken = UUID.randomUUID().toString()
                 val userName = "${user[UsersTable.firstName]} ${user[UsersTable.lastName]}"
                 
                 // Store reset token in database (expires in 1 hour)
@@ -277,10 +332,10 @@ fun Route.authRoutes() {
             }
             
             val now = Clock.System.now()
-            val token = generateToken()
             val expiresAt = now.plus(30.days)
             
             if (existingUser != null) {
+                val token = generateJwtToken(existingUser[UsersTable.id], existingUser[UsersTable.email], 30)
                 // User exists, return their info
                 call.respond(AuthResponse(
                     user = UserResponse(
@@ -314,6 +369,7 @@ fun Route.authRoutes() {
                     }
                 }
                 
+                val token = generateJwtToken(userId, request.email.lowercase(), 30)
                 call.respond(HttpStatusCode.Created, AuthResponse(
                     user = UserResponse(
                         id = userId,
@@ -351,10 +407,10 @@ fun Route.authRoutes() {
                 }
                 
                 val now = Clock.System.now()
-                val token = generateToken()
                 val expiresAt = now.plus(30.days)
                 
                 if (existingUser != null) {
+                    val token = generateJwtToken(existingUser[UsersTable.id], existingUser[UsersTable.email], 30)
                     // Update LinkedIn profile URL if available
                     transaction {
                         UsersTable.update({ UsersTable.id eq existingUser[UsersTable.id] }) {
@@ -396,6 +452,7 @@ fun Route.authRoutes() {
                         }
                     }
                     
+                    val token = generateJwtToken(userId, userProfile.email.lowercase(), 30)
                     call.respond(HttpStatusCode.Created, AuthResponse(
                         user = UserResponse(
                             id = userId,
@@ -419,26 +476,84 @@ fun Route.authRoutes() {
     }
 }
 
+private fun validatePasswordStrength(password: String): List<String> {
+    val errors = mutableListOf<String>()
+    if (password.length < 8) errors.add("Password must be at least 8 characters")
+    if (!password.any { it.isUpperCase() }) errors.add("Password must contain at least one uppercase letter")
+    if (!password.any { it.isLowerCase() }) errors.add("Password must contain at least one lowercase letter")
+    if (!password.any { it.isDigit() }) errors.add("Password must contain at least one digit")
+    if (!password.any { !it.isLetterOrDigit() }) errors.add("Password must contain at least one special character")
+    return errors
+}
+
 private fun hashPassword(password: String): String {
-    val salt = UUID.randomUUID().toString()
-    val md = MessageDigest.getInstance("SHA-256")
-    val hash = md.digest("$salt:$password".toByteArray()).joinToString("") { "%02x".format(it) }
-    return "$salt:$hash"
+    return at.favre.lib.crypto.bcrypt.BCrypt.withDefaults()
+        .hashToString(12, password.toCharArray())
 }
 
 private fun verifyPassword(password: String, storedHash: String): Boolean {
-    val parts = storedHash.split(":")
-    if (parts.size != 2) return false
-    val salt = parts[0]
-    val hash = parts[1]
-    
-    val md = MessageDigest.getInstance("SHA-256")
-    val computedHash = md.digest("$salt:$password".toByteArray()).joinToString("") { "%02x".format(it) }
-    return hash == computedHash
+    // Support both bcrypt and legacy SHA-256 hashes for migration
+    return if (storedHash.startsWith("\$2")) {
+        // bcrypt hash
+        at.favre.lib.crypto.bcrypt.BCrypt.verifyer()
+            .verify(password.toCharArray(), storedHash)
+            .verified
+    } else {
+        // Legacy SHA-256 hash (salt:hash format) — for backward compatibility
+        val parts = storedHash.split(":")
+        if (parts.size != 2) return false
+        val salt = parts[0]
+        val hash = parts[1]
+        val md = java.security.MessageDigest.getInstance("SHA-256")
+        val computedHash = md.digest("$salt:$password".toByteArray()).joinToString("") { "%02x".format(it) }
+        hash == computedHash
+    }
 }
 
-private fun generateToken(): String {
-    return UUID.randomUUID().toString() + UUID.randomUUID().toString().replace("-", "")
+/**
+ * Extract user ID from JWT Bearer token in the Authorization header.
+ * Returns null if no valid token is present.
+ */
+private fun extractUserIdFromToken(call: io.ktor.server.application.ApplicationCall): String? {
+    val authHeader = call.request.headers[HttpHeaders.Authorization] ?: return null
+    if (!authHeader.startsWith("Bearer ", ignoreCase = true)) return null
+    val token = authHeader.removePrefix("Bearer ").removePrefix("bearer ").trim()
+    
+    return try {
+        val jwtSecret = System.getenv("JWT_SECRET") ?: "vwatek-apply-secret-key-change-in-production"
+        val jwtIssuer = System.getenv("JWT_ISSUER") ?: "vwatek-apply"
+        val jwtAudience = System.getenv("JWT_AUDIENCE") ?: "vwatek-apply-users"
+        
+        val verifier = JWT.require(Algorithm.HMAC256(jwtSecret))
+            .withAudience(jwtAudience)
+            .withIssuer(jwtIssuer)
+            .build()
+        
+        val decoded = verifier.verify(token)
+        decoded.getClaim("userId").asString()
+    } catch (e: Exception) {
+        null
+    }
+}
+
+/**
+ * Generate a proper JWT token signed with HMAC256.
+ * Includes userId, email, audience, issuer, and expiry claims
+ * so that the Ktor authenticate("jwt") block can validate it.
+ */
+private fun generateJwtToken(userId: String, email: String, expiryDays: Int = 30): String {
+    val jwtSecret = System.getenv("JWT_SECRET") ?: "vwatek-apply-secret-key-change-in-production"
+    val jwtIssuer = System.getenv("JWT_ISSUER") ?: "vwatek-apply"
+    val jwtAudience = System.getenv("JWT_AUDIENCE") ?: "vwatek-apply-users"
+    
+    return JWT.create()
+        .withAudience(jwtAudience)
+        .withIssuer(jwtIssuer)
+        .withSubject(userId)
+        .withClaim("userId", userId)
+        .withClaim("email", email)
+        .withExpiresAt(java.util.Date(System.currentTimeMillis() + expiryDays.toLong() * 24 * 60 * 60 * 1000))
+        .sign(Algorithm.HMAC256(jwtSecret))
 }
 
 // LinkedIn OAuth Configuration

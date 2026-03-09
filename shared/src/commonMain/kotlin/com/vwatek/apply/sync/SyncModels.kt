@@ -20,6 +20,7 @@ enum class SyncEntityType {
     RESUME,
     COVER_LETTER,
     INTERVIEW_SESSION,
+    JOB_APPLICATION,
     SETTINGS,
     USER_PROFILE
 }

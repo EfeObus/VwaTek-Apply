@@ -9,7 +9,10 @@ struct InterviewView: View {
     
     var body: some View {
         NavigationStack {
-            if viewModel.currentSession != nil {
+            if viewModel.isLoading && viewModel.sessions.isEmpty && viewModel.currentSession == nil {
+                ProgressView("Loading sessions...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if viewModel.currentSession != nil {
                 ActiveInterviewView(
                     viewModel: viewModel,
                     onEndInterview: {
@@ -21,11 +24,15 @@ struct InterviewView: View {
                 )
             } else {
                 InterviewSetupView(
+                    sessions: viewModel.sessions,
                     onStartInterview: {
                         showSetupSheet = true
                     },
                     onStarCoaching: {
                         showStarCoachingSheet = true
+                    },
+                    onSelectSession: { session in
+                        viewModel.selectSession(id: session.id)
                     }
                 )
             }
@@ -60,8 +67,10 @@ struct InterviewView: View {
 }
 
 struct InterviewSetupView: View {
+    var sessions: [InterviewSession]
     var onStartInterview: () -> Void
     var onStarCoaching: () -> Void
+    var onSelectSession: (InterviewSession) -> Void
     
     var body: some View {
         ScrollView {
@@ -188,6 +197,57 @@ struct InterviewSetupView: View {
                         title: "Prepare Questions",
                         description: "Have thoughtful questions ready for the interviewer."
                     )
+                }
+                
+                // Previous Sessions
+                Divider()
+                    .padding(.horizontal)
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Previous Sessions")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    if sessions.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "mic.badge.plus")
+                                .font(.system(size: 40))
+                                .foregroundColor(.secondary.opacity(0.5))
+                            Text("No Interview Sessions Yet")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text("Start a mock interview above to begin practicing")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 24)
+                    } else {
+                        ForEach(sessions, id: \.id) { session in
+                            Button(action: { onSelectSession(session) }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(session.role)
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.primary)
+                                        Text("\(session.questions.count) questions")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding()
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(10)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal)
+                        }
+                    }
                 }
             }
             .padding(.vertical)

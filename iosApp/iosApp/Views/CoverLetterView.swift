@@ -17,6 +17,11 @@ struct CoverLetterView: View {
     
     var body: some View {
         NavigationStack {
+            Group {
+                if viewModel.isLoading && viewModel.coverLetters.isEmpty {
+                    ProgressView("Loading cover letters...")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
             ScrollView {
                 VStack(spacing: 20) {
                     // Header card
@@ -227,10 +232,25 @@ struct CoverLetterView: View {
                     }
                     
                     // Saved Cover Letters Section
-                    if !viewModel.coverLetters.isEmpty {
-                        Divider()
-                            .padding(.vertical)
-                        
+                    Divider()
+                        .padding(.vertical)
+                    
+                    if viewModel.coverLetters.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "envelope.badge.fill")
+                                .font(.system(size: 48))
+                                .foregroundColor(.secondary.opacity(0.5))
+                            Text("No Cover Letters Yet")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            Text("Generate your first AI-powered cover letter above")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 32)
+                    } else {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Saved Cover Letters")
                                 .font(.headline)
@@ -252,6 +272,8 @@ struct CoverLetterView: View {
                 }
                 .padding()
             }
+                } // else - loading check
+            } // Group
             .navigationTitle("Cover Letter")
             .alert("Error", isPresented: $showError) {
                 Button("OK") {

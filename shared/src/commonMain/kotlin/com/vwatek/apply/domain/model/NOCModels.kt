@@ -102,6 +102,7 @@ data class NOCProvincialDemand(
 @Serializable
 enum class DemandLevel {
     HIGH,
+    MODERATE,
     MEDIUM,
     LOW,
     VERY_LOW

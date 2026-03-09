@@ -36,7 +36,7 @@ fun PaywallScreen(
     var selectedBillingPeriod by remember { mutableStateOf(BillingPeriod.YEARLY) }
     
     val featureInfo = getFeatureInfo(feature)
-    val pricing = SubscriptionPricing.forTier(requiredTier)
+    val pricing = SubscriptionPricing.forTier(requiredTier) ?: return
     
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -133,14 +133,14 @@ fun PaywallScreen(
             ) {
                 PaywallBillingOption(
                     label = "Monthly",
-                    price = "$${pricing.monthlyPrice}/mo",
+                    price = "CA$${"%.2f".format(pricing.monthlyPriceCad)}/mo",
                     isSelected = selectedBillingPeriod == BillingPeriod.MONTHLY,
                     onClick = { selectedBillingPeriod = BillingPeriod.MONTHLY },
                     modifier = Modifier.weight(1f)
                 )
                 PaywallBillingOption(
                     label = "Yearly",
-                    price = "$${pricing.yearlyPrice / 12}/mo",
+                    price = "CA$${"%.2f".format(pricing.yearlyPriceCad / 12)}/mo",
                     savings = "Save 17%",
                     isSelected = selectedBillingPeriod == BillingPeriod.YEARLY,
                     onClick = { selectedBillingPeriod = BillingPeriod.YEARLY },

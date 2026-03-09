@@ -17,9 +17,12 @@ fun Application.module() {
     DatabaseConfig.init()
     
     // Configure plugins
+    configureRequestValidation()  // Body size limits — install early
+    configureSecurityHeaders()    // CSP, HSTS, X-Frame-Options
     configureSerialization()
     configureCORS()
     configureMonitoring()
+    configureRateLimiting()
     configureSecurity()  // Must be before routing for authenticate() blocks
     configureMonitoringRoutes()
     configureRouting()

@@ -3,6 +3,7 @@ import SwiftUI
 struct AuthView: View {
     @ObservedObject var viewModel: AuthViewModelWrapper
     @State private var currentView: AuthViewType = .login
+    @State private var showError = false
     
     var body: some View {
         NavigationStack {
@@ -30,6 +31,14 @@ struct AuthView: View {
                 case .profile:
                     EmptyView()
                 }
+            }
+            .alert("Error", isPresented: $showError) {
+                Button("OK") { viewModel.clearError() }
+            } message: {
+                Text(viewModel.error ?? "An unknown error occurred")
+            }
+            .onChange(of: viewModel.error) { error in
+                if error != nil { showError = true }
             }
         }
     }

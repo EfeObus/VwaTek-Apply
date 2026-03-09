@@ -31,6 +31,27 @@ fun JobBankScreen() {
     var selectedJobId by remember { mutableStateOf<String?>(null) }
     
     Div {
+        // Error banner
+        val errorMsg = state.searchError ?: state.detailsError
+        if (errorMsg != null) {
+            Div(attrs = {
+                classes("alert", "alert-error")
+                style {
+                    property("display", "flex")
+                    property("align-items", "center")
+                    property("justify-content", "space-between")
+                    property("padding", "12px 16px")
+                    property("margin-bottom", "16px")
+                    property("background", "#fef2f2")
+                    property("border", "1px solid #fca5a5")
+                    property("border-radius", "8px")
+                    property("color", "#dc2626")
+                }
+            }) {
+                Span { Text(errorMsg) }
+            }
+        }
+        
         // Header
         Div(attrs = { classes("flex", "justify-between", "items-center", "mb-lg") }) {
             Div {
@@ -197,6 +218,14 @@ fun JobBankScreen() {
                     if (state.isLoadingTrending) {
                         Div(attrs = { classes("flex", "justify-center", "p-xl") }) {
                             Span(attrs = { classes("spinner") })
+                        }
+                    } else if (state.trendingJobs.isEmpty()) {
+                        Div(attrs = { classes("card", "p-xl", "text-center") }) {
+                            Div(attrs = { classes("text-4xl", "mb-md") }) { Text("📋") }
+                            H3 { Text("No Trending Jobs Available") }
+                            P(attrs = { classes("text-secondary") }) {
+                                Text("Check back later for trending job listings.")
+                            }
                         }
                     } else {
                         Div(attrs = { classes("space-y-md") }) {

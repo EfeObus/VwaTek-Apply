@@ -112,11 +112,13 @@ object DatabaseConfig {
             driverClassName = "com.mysql.cj.jdbc.Driver"
             username = CLOUD_SQL_USER
             password = CLOUD_SQL_PASSWORD
-            maximumPoolSize = 10
-            minimumIdle = 2
+            // Pool sized for Cloud Run: maxScale=10 × 5 = 50 total (within Cloud SQL 100 limit)
+            maximumPoolSize = 5
+            minimumIdle = 1
             idleTimeout = 30000
             connectionTimeout = 30000  // Longer timeout for Cloud SQL
             maxLifetime = 1800000
+            leakDetectionThreshold = 60000  // Log connections held >60s
             connectionTestQuery = "SELECT 1"
         }
         
@@ -206,11 +208,13 @@ object DatabaseConfig {
             driverClassName = "com.mysql.cj.jdbc.Driver"
             username = user
             this.password = password
-            maximumPoolSize = 10
-            minimumIdle = 2
+            // Pool sized for Cloud Run: maxScale=10 × 5 = 50 total (within Cloud SQL 100 limit)
+            maximumPoolSize = 5
+            minimumIdle = 1
             idleTimeout = 30000
             connectionTimeout = 10000
             maxLifetime = 1800000
+            leakDetectionThreshold = 60000  // Log connections held >60s
             
             // Connection validation
             connectionTestQuery = "SELECT 1"
@@ -220,6 +224,16 @@ object DatabaseConfig {
     private fun runMigrations() {
         logger.info("Running database migrations...")
         
+        // Run Flyway versioned migrations first
+        dataSource?.let { ds ->
+            try {
+                FlywayMigration.migrate(ds)
+            } catch (e: Exception) {
+                logger.warn("Flyway migration failed, falling back to Exposed SchemaUtils: ${e.message}")
+            }
+        }
+        
+        // Exposed SchemaUtils as safety net — creates any tables Flyway missed
         transaction {
             SchemaUtils.createMissingTablesAndColumns(
                 // Core tables

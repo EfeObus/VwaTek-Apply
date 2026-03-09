@@ -12,9 +12,16 @@ import kotlinx.serialization.Serializable
  * Handles subscription management, pricing, and billing operations
  */
 class SubscriptionApiClient(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val getAuthToken: () -> String? = { null }
 ) {
     private val baseUrl = "${ApiConfig.apiV1Url}/subscriptions"
+    
+    private fun HttpRequestBuilder.applyAuth() {
+        getAuthToken()?.let { token ->
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
     
     // ===== Subscription Management =====
     
@@ -23,7 +30,9 @@ class SubscriptionApiClient(
      */
     suspend fun getSubscription(): Result<SubscriptionResponse> {
         return try {
-            val response = httpClient.get(baseUrl)
+            val response = httpClient.get(baseUrl) {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -35,7 +44,9 @@ class SubscriptionApiClient(
      */
     suspend fun getPricing(): Result<PricingResponse> {
         return try {
-            val response = httpClient.get("$baseUrl/pricing")
+            val response = httpClient.get("$baseUrl/pricing") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -53,6 +64,7 @@ class SubscriptionApiClient(
     ): Result<CheckoutSessionResponse> {
         return try {
             val response = httpClient.post("$baseUrl/checkout") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(CreateCheckoutRequest(
                     tier = tier.name,
@@ -73,6 +85,7 @@ class SubscriptionApiClient(
     suspend fun createPortalSession(returnUrl: String): Result<PortalSessionResponse> {
         return try {
             val response = httpClient.post("$baseUrl/portal") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(CreatePortalRequest(returnUrl))
             }
@@ -87,7 +100,9 @@ class SubscriptionApiClient(
      */
     suspend fun cancelSubscription(): Result<MessageResponse> {
         return try {
-            val response = httpClient.post("$baseUrl/cancel")
+            val response = httpClient.post("$baseUrl/cancel") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -99,7 +114,9 @@ class SubscriptionApiClient(
      */
     suspend fun reactivateSubscription(): Result<MessageResponse> {
         return try {
-            val response = httpClient.post("$baseUrl/reactivate")
+            val response = httpClient.post("$baseUrl/reactivate") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -111,7 +128,9 @@ class SubscriptionApiClient(
      */
     suspend fun getUsageLimits(): Result<UsageLimitsResponse> {
         return try {
-            val response = httpClient.get("$baseUrl/usage")
+            val response = httpClient.get("$baseUrl/usage") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -123,7 +142,9 @@ class SubscriptionApiClient(
      */
     suspend fun checkFeatureAccess(feature: PremiumFeature): Result<FeatureAccessResponse> {
         return try {
-            val response = httpClient.get("$baseUrl/feature/${feature.name}")
+            val response = httpClient.get("$baseUrl/feature/${feature.name}") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)

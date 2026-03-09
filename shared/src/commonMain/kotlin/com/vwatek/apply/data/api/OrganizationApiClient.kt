@@ -12,9 +12,16 @@ import kotlinx.serialization.Serializable
  * Handles team management, invitations, templates, and analytics
  */
 class OrganizationApiClient(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val getAuthToken: () -> String? = { null }
 ) {
     private val baseUrl = "${ApiConfig.apiV1Url}/organizations"
+    
+    private fun HttpRequestBuilder.applyAuth() {
+        getAuthToken()?.let { token ->
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
     
     // ===== Organization Management =====
     
@@ -24,6 +31,7 @@ class OrganizationApiClient(
     suspend fun createOrganization(request: CreateOrganizationApiRequest): Result<OrganizationResponse> {
         return try {
             val response = httpClient.post(baseUrl) {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -38,7 +46,9 @@ class OrganizationApiClient(
      */
     suspend fun getOrganizations(): Result<OrganizationsListResponse> {
         return try {
-            val response = httpClient.get(baseUrl)
+            val response = httpClient.get(baseUrl) {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -50,7 +60,9 @@ class OrganizationApiClient(
      */
     suspend fun getOrganization(orgId: String): Result<OrganizationResponse> {
         return try {
-            val response = httpClient.get("$baseUrl/$orgId")
+            val response = httpClient.get("$baseUrl/$orgId") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -66,6 +78,7 @@ class OrganizationApiClient(
     ): Result<MessageResponse> {
         return try {
             val response = httpClient.put("$baseUrl/$orgId") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -82,7 +95,9 @@ class OrganizationApiClient(
      */
     suspend fun getMembers(orgId: String): Result<MembersListResponse> {
         return try {
-            val response = httpClient.get("$baseUrl/$orgId/members")
+            val response = httpClient.get("$baseUrl/$orgId/members") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -99,6 +114,7 @@ class OrganizationApiClient(
     ): Result<InvitationResponse> {
         return try {
             val response = httpClient.post("$baseUrl/$orgId/members/invite") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(InviteMemberApiRequest(email, role))
             }
@@ -118,6 +134,7 @@ class OrganizationApiClient(
     ): Result<MessageResponse> {
         return try {
             val response = httpClient.put("$baseUrl/$orgId/members/$memberId/role") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(UpdateMemberRoleApiRequest(role))
             }
@@ -132,7 +149,9 @@ class OrganizationApiClient(
      */
     suspend fun removeMember(orgId: String, memberId: String): Result<MessageResponse> {
         return try {
-            val response = httpClient.delete("$baseUrl/$orgId/members/$memberId")
+            val response = httpClient.delete("$baseUrl/$orgId/members/$memberId") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -146,7 +165,9 @@ class OrganizationApiClient(
      */
     suspend fun getTemplates(orgId: String): Result<TemplatesListResponse> {
         return try {
-            val response = httpClient.get("$baseUrl/$orgId/templates")
+            val response = httpClient.get("$baseUrl/$orgId/templates") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -162,6 +183,7 @@ class OrganizationApiClient(
     ): Result<TemplateResponse> {
         return try {
             val response = httpClient.post("$baseUrl/$orgId/templates") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -178,7 +200,9 @@ class OrganizationApiClient(
      */
     suspend fun getAnalytics(orgId: String): Result<AnalyticsResponse> {
         return try {
-            val response = httpClient.get("$baseUrl/$orgId/analytics")
+            val response = httpClient.get("$baseUrl/$orgId/analytics") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -193,6 +217,7 @@ class OrganizationApiClient(
     suspend fun getActivityLog(orgId: String, limit: Int = 50): Result<ActivityLogResponse> {
         return try {
             val response = httpClient.get("$baseUrl/$orgId/activity") {
+                applyAuth()
                 parameter("limit", limit)
             }
             Result.success(response.body())
@@ -208,7 +233,9 @@ class OrganizationApiClient(
      */
     suspend fun acceptInvitation(token: String): Result<MessageResponse> {
         return try {
-            val response = httpClient.post("${ApiConfig.apiV1Url}/invitations/$token/accept")
+            val response = httpClient.post("${ApiConfig.apiV1Url}/invitations/$token/accept") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)

@@ -10,6 +10,7 @@ struct NOCView: View {
     @State private var searchQuery = ""
     @State private var showFilterSheet = false
     @State private var showDetailsSheet = false
+    @State private var showError = false
     
     var body: some View {
         NavigationStack {
@@ -146,6 +147,14 @@ struct NOCView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+        }
+        .alert("Error", isPresented: $showError) {
+            Button("OK") { }
+        } message: {
+            Text(viewModel.error ?? "An unknown error occurred")
+        }
+        .onChange(of: viewModel.error) { error in
+            showError = error != nil
         }
     }
 }

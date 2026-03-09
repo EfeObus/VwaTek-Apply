@@ -8,6 +8,8 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
+import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
@@ -61,7 +63,7 @@ fun Application.configureRouting() {
         get("/health") {
             call.respond(HealthResponse(
                 status = "healthy",
-                database = if (DatabaseConfig.isUsingCloudSQL()) "cloud-sql" else "local",
+                database = "postgresql",
                 timestamp = System.currentTimeMillis()
             ))
         }
@@ -98,11 +100,15 @@ fun Application.configureRouting() {
             }
             val aiService = AIService(httpClient)
             
-            authRoutes()
+            rateLimit(RateLimitName("auth")) {
+                authRoutes()
+            }
             resumeRoutes()
             coverLetterRoutes()
             interviewRoutes()
-            aiRoutes(aiService)
+            rateLimit(RateLimitName("ai")) {
+                aiRoutes(aiService)
+            }
             
             // Phase 2: Job Tracker
             jobTrackerRoutes()
@@ -117,7 +123,9 @@ fun Application.configureRouting() {
             notificationRoutes()
             
             // Phase 4: Premium & Monetization
-            subscriptionRoutes(httpClient)
+            rateLimit(RateLimitName("subscription")) {
+                subscriptionRoutes(httpClient)
+            }
             salaryRoutes(httpClient)
             
             // Phase 5: Enterprise & Organizations
@@ -125,9 +133,13 @@ fun Application.configureRouting() {
         }
         
         // Sync routes (separate from versioned API for flexibility)
-        syncRoutes()
+        authenticate("jwt") {
+            syncRoutes()
+        }
         
         // Privacy routes for PIPEDA compliance
-        privacyRoutes()
+        authenticate("jwt") {
+            privacyRoutes()
+        }
     }
 }

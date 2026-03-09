@@ -12,9 +12,16 @@ import com.vwatek.apply.domain.model.*
  */
 class NOCApiClient(
     private val httpClient: HttpClient,
-    private val apiConfig: ApiConfig = ApiConfig
+    private val apiConfig: ApiConfig = ApiConfig,
+    private val getAuthToken: () -> String? = { null }
 ) {
     private val baseUrl get() = apiConfig.baseUrl
+
+    private fun HttpRequestBuilder.applyAuth() {
+        getAuthToken()?.let { token ->
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
     
     /**
      * Search NOC codes
@@ -73,23 +80,25 @@ class NOCApiClient(
     }
     
     /**
-     * Save user's NOC match
+     * Save user's NOC match (JWT-authenticated, userId derived from token)
      */
     suspend fun saveNOCMatch(
-        userId: String,
         request: CreateNOCMatchRequest
     ): Result<CreateNOCMatchResponse> = runCatching {
-        httpClient.post("$baseUrl/api/v1/noc/users/$userId/matches") {
+        httpClient.post("$baseUrl/api/v1/noc/users/me/matches") {
             contentType(ContentType.Application.Json)
             setBody(request)
+            applyAuth()
         }.body()
     }
     
     /**
-     * Get user's NOC matches
+     * Get current user's NOC matches (JWT-authenticated)
      */
-    suspend fun getUserNOCMatches(userId: String): Result<UserNOCMatchListResponse> = runCatching {
-        httpClient.get("$baseUrl/api/v1/noc/users/$userId/matches").body()
+    suspend fun getUserNOCMatches(): Result<UserNOCMatchListResponse> = runCatching {
+        httpClient.get("$baseUrl/api/v1/noc/users/me/matches") {
+            applyAuth()
+        }.body()
     }
 }
 

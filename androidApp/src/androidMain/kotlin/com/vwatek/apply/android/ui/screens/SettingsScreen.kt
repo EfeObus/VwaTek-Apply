@@ -69,7 +69,14 @@ fun SettingsScreen(
     
     fun saveSetting(key: String, value: String) {
         scope.launch {
-            settingsRepository.setSetting(key, value)
+            try {
+                settingsRepository.setSetting(key, value)
+            } catch (e: Exception) {
+                snackbarHostState.showSnackbar(
+                    message = "Failed to save setting: ${e.message}",
+                    duration = SnackbarDuration.Short
+                )
+            }
         }
     }
     

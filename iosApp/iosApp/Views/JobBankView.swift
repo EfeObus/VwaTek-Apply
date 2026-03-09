@@ -10,6 +10,7 @@ struct JobBankView: View {
     @State private var selectedProvinceCode: String? = nil
     @State private var showFilters = false
     @State private var showJobDetails = false
+    @State private var showError = false
     
     var body: some View {
         NavigationView {
@@ -105,6 +106,17 @@ struct JobBankView: View {
             }
             .sheet(isPresented: $showJobDetails) {
                 jobDetailsSheet
+            }
+            .alert("Error", isPresented: $showError) {
+                Button("OK") { }
+            } message: {
+                Text(viewModel.searchError ?? viewModel.detailsError ?? "An unknown error occurred")
+            }
+            .onChange(of: viewModel.searchError) { error in
+                if error != nil { showError = true }
+            }
+            .onChange(of: viewModel.detailsError) { error in
+                if error != nil { showError = true }
             }
         }
     }

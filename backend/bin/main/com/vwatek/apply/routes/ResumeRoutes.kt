@@ -9,6 +9,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import com.vwatek.apply.auth.requireUserId
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -54,18 +57,18 @@ data class AnalysisResponse(
 )
 
 fun Route.resumeRoutes() {
+    authenticate("jwt") {
     route("/resumes") {
         // Get all resumes
         get {
-            val userId = call.request.headers["X-User-Id"]
+            val userId = call.requireUserId() ?: return@get
+            val limit = (call.request.queryParameters["limit"]?.toIntOrNull() ?: 50).coerceIn(1, 100)
+            val offset = (call.request.queryParameters["offset"]?.toIntOrNull() ?: 0).coerceAtLeast(0)
             
             val resumes = transaction {
-                val query = if (userId != null) {
-                    ResumesTable.select { ResumesTable.userId eq userId }
-                } else {
-                    ResumesTable.selectAll()
-                }
-                query.orderBy(ResumesTable.updatedAt, SortOrder.DESC)
+                ResumesTable.select { ResumesTable.userId eq userId }
+                    .orderBy(ResumesTable.updatedAt, SortOrder.DESC)
+                    .limit(limit, offset.toLong())
                     .map { row ->
                         ResumeResponse(
                             id = row[ResumesTable.id],
@@ -109,7 +112,7 @@ fun Route.resumeRoutes() {
         // Create resume
         post {
             val request = call.receive<ResumeRequest>()
-            val userId = call.request.headers["X-User-Id"]
+            val userId = call.requireUserId() ?: return@post
             
             val resumeId = UUID.randomUUID().toString()
             val now = Clock.System.now()
@@ -189,10 +192,13 @@ fun Route.resumeRoutes() {
         // Get analyses for a resume
         get("/{id}/analyses") {
             val resumeId = call.parameters["id"] ?: throw IllegalArgumentException("Missing resume ID")
+            val limit = (call.request.queryParameters["limit"]?.toIntOrNull() ?: 50).coerceIn(1, 100)
+            val offset = (call.request.queryParameters["offset"]?.toIntOrNull() ?: 0).coerceAtLeast(0)
             
             val analyses = transaction {
                 ResumeAnalysesTable.select { ResumeAnalysesTable.resumeId eq resumeId }
                     .orderBy(ResumeAnalysesTable.createdAt, SortOrder.DESC)
+                    .limit(limit, offset.toLong())
                     .map { row ->
                         AnalysisResponse(
                             id = row[ResumeAnalysesTable.id],
@@ -240,4 +246,5 @@ fun Route.resumeRoutes() {
             ))
         }
     }
+    } // authenticate("jwt")
 }

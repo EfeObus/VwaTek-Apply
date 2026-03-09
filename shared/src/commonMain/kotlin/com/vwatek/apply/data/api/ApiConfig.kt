@@ -30,12 +30,12 @@ object ApiConfig {
     /**
      * Production API URL (Canadian region - Montreal)
      */
-    private const val PRODUCTION_BASE_URL = "https://vwatek-backend-21443684777.northamerica-northeast1.run.app"
+    private const val PRODUCTION_BASE_URL = "https://vwatek-backend-i6ex2rjk3a-nn.a.run.app"
     
     /**
      * Staging API URL
      */
-    private const val STAGING_BASE_URL = "https://vwatek-backend-staging.northamerica-northeast1.run.app"
+    private const val STAGING_BASE_URL = "https://vwatek-backend-staging-i6ex2rjk3a-nn.a.run.app"
     
     /**
      * Development API URL (local or us-central for dev)

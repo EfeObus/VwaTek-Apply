@@ -12,7 +12,7 @@ import org.jetbrains.exposed.sql.Table
  */
 object NotificationsTable : Table("notifications") {
     val id = varchar("id", 36)
-    val userId = varchar("user_id", 36)
+    val userId = varchar("user_id", 36).references(UsersTable.id)
     val type = varchar("type", 50) // NotificationType enum
     val title = varchar("title", 255)
     val body = text("body")
@@ -39,7 +39,7 @@ object NotificationsTable : Table("notifications") {
  * Stores user notification preferences
  */
 object NotificationPreferencesTable : Table("notification_preferences") {
-    val userId = varchar("user_id", 36)
+    val userId = varchar("user_id", 36).references(UsersTable.id)
     
     // Channel preferences
     val enablePush = bool("enable_push").default(true)
@@ -77,7 +77,7 @@ object NotificationPreferencesTable : Table("notification_preferences") {
  */
 object DeviceTokensTable : Table("device_tokens") {
     val id = varchar("id", 36)
-    val userId = varchar("user_id", 36)
+    val userId = varchar("user_id", 36).references(UsersTable.id)
     val token = text("token") // FCM/APNs token
     val platform = varchar("platform", 20) // ANDROID, IOS, WEB
     val deviceName = varchar("device_name", 100).nullable()
@@ -99,7 +99,7 @@ object DeviceTokensTable : Table("device_tokens") {
  */
 object ScheduledNotificationsTable : Table("scheduled_notifications") {
     val id = varchar("id", 36)
-    val userId = varchar("user_id", 36)
+    val userId = varchar("user_id", 36).references(UsersTable.id)
     val notificationType = varchar("notification_type", 50)
     val title = varchar("title", 255)
     val body = text("body")
@@ -125,7 +125,7 @@ object ScheduledNotificationsTable : Table("scheduled_notifications") {
  */
 object EmailQueueTable : Table("email_queue") {
     val id = varchar("id", 36)
-    val userId = varchar("user_id", 36)
+    val userId = varchar("user_id", 36).references(UsersTable.id)
     val toEmail = varchar("to_email", 255)
     val subject = varchar("subject", 255)
     val body = text("body")

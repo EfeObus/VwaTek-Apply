@@ -195,15 +195,7 @@ data class MarketAnalysis(
     val marketOutlook: MarketTrend
 )
 
-/**
- * Demand level for the job type
- */
-@Serializable
-enum class DemandLevel {
-    HIGH,
-    MODERATE,
-    LOW
-}
+// DemandLevel is defined in NOCModels.kt
 
 /**
  * Total compensation breakdown

@@ -203,5 +203,5 @@ data class ProvinceDto(
     val name: String,
     val nameFr: String
 ) {
-    fun toDomainModel() = CanadianProvince(code, name, nameFr)
+    fun toDomainModel() = CanadianProvince.fromCode(code) ?: CanadianProvince.ON
 }

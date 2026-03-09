@@ -239,7 +239,7 @@ class JobBankViewModel(
                 }
             }.onFailure {
                 // Use default list on failure
-                _state.update { it.copy(provinces = CanadianProvince.ALL_PROVINCES) }
+                _state.update { it.copy(provinces = CanadianProvince.entries.toList()) }
             }
         }
     }
@@ -320,7 +320,7 @@ data class JobBankState(
     val isLoadingTrending: Boolean = false,
     
     // Reference data
-    val provinces: List<CanadianProvince> = CanadianProvince.ALL_PROVINCES,
+    val provinces: List<CanadianProvince> = CanadianProvince.entries.toList(),
     
     // Settings
     val currentLocale: Locale = Locale.ENGLISH

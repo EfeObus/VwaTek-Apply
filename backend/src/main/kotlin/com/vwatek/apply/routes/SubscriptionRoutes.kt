@@ -13,6 +13,9 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import com.vwatek.apply.auth.requireUserId
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -120,13 +123,10 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
     
     route("/subscriptions") {
         
+        authenticate("jwt") {
         // Get current user's subscription
         get {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@get
-            }
+            val userId = call.requireUserId() ?: return@get
             
             val subscription = transaction {
                 SubscriptionsTable.select { SubscriptionsTable.userId eq userId }
@@ -242,11 +242,7 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
         
         // Create checkout session
         post("/checkout") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@post
-            }
+            val userId = call.requireUserId() ?: return@post
             
             val request = call.receive<CreateCheckoutRequest>()
             
@@ -300,11 +296,7 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
         
         // Create customer portal session
         post("/portal") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@post
-            }
+            val userId = call.requireUserId() ?: return@post
             
             val request = call.receive<CreatePortalRequest>()
             
@@ -336,11 +328,7 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
         
         // Cancel subscription at period end
         post("/cancel") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@post
-            }
+            val userId = call.requireUserId() ?: return@post
             
             val subscription = transaction {
                 SubscriptionsTable.select { SubscriptionsTable.userId eq userId }
@@ -376,11 +364,7 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
         
         // Reactivate canceled subscription
         post("/reactivate") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@post
-            }
+            val userId = call.requireUserId() ?: return@post
             
             val subscription = transaction {
                 SubscriptionsTable.select { SubscriptionsTable.userId eq userId }
@@ -417,11 +401,7 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
         
         // Get usage/limits
         get("/usage") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@get
-            }
+            val userId = call.requireUserId() ?: return@get
             
             val subscription = transaction {
                 SubscriptionsTable.select { SubscriptionsTable.userId eq userId }
@@ -476,11 +456,7 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
         
         // Check if feature is available
         get("/feature/{feature}") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@get
-            }
+            val userId = call.requireUserId() ?: return@get
             
             val featureName = call.parameters["feature"]
             val feature = try {
@@ -516,6 +492,8 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
                 "requiredTier" to if (!available) getRequiredTier(feature).name else tier.name
             ))
         }
+        
+        } // authenticate("jwt")
         
         // Stripe webhook handler
         post("/webhook") {

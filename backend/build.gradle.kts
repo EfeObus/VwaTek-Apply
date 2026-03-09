@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("org.owasp.dependencycheck") version "9.2.0"
 }
 
 group = "com.vwatek.apply"
@@ -36,7 +37,10 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.call.logging)
+    implementation("io.ktor:ktor-server-call-id:${libs.versions.ktor.get()}")
+    implementation("io.ktor:ktor-server-default-headers:${libs.versions.ktor.get()}")
     implementation(libs.ktor.server.metrics.micrometer)
+    implementation("io.ktor:ktor-server-rate-limit:${libs.versions.ktor.get()}")
     implementation(libs.logback.classic)
     
     // Metrics & Monitoring
@@ -49,14 +53,18 @@ dependencies {
     
     // Database
     implementation(libs.hikari)
-    implementation(libs.mysql.connector)
+    implementation(libs.postgresql)
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.datetime)
     
-    // Google Cloud SQL Socket Factory for Cloud Run (updated for MySQL 8.4 compatibility)
-    implementation("com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.21.0")
+    // Database Migrations (Flyway)
+    implementation("org.flywaydb:flyway-core:10.10.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.10.0")
+    
+    // Password Hashing (bcrypt)
+    implementation("at.favre.lib:bcrypt:0.10.2")
     
     // Email (JavaMail/Jakarta Mail)
     implementation("com.sun.mail:jakarta.mail:2.0.1")

@@ -78,10 +78,7 @@ struct CanadianProvinceUI: Identifiable {
     ]
 }
 
-enum AppLocaleJB {
-    case english
-    case french
-}
+// AppLocaleJB is now a typealias defined in NOCViewModelWrapper.swift
 
 /// Wrapper class to make Kotlin JobBankViewModel observable in SwiftUI
 @MainActor
@@ -106,10 +103,14 @@ class JobBankViewModelWrapper: ObservableObject {
     
     @Published var currentLocale: AppLocaleJB = .english
     
+    @Published var lastLocationFilter: String? = nil
+    @Published var lastProvinceFilter: String? = nil
+    @Published var lastNocFilter: String? = nil
+    
     private var stateWatcher: Closeable?
     
     var hasActiveFilters: Bool {
-        return false // Will be updated based on state
+        lastLocationFilter != nil || lastProvinceFilter != nil || lastNocFilter != nil
     }
     
     var hasSearchResults: Bool {
@@ -146,6 +147,9 @@ class JobBankViewModelWrapper: ObservableObject {
                 self.isLoadingTrending = jbState.isLoadingTrending
                 self.searchError = jbState.searchError
                 self.detailsError = jbState.detailsError
+                self.lastLocationFilter = jbState.lastLocationFilter
+                self.lastProvinceFilter = jbState.lastProvinceFilter
+                self.lastNocFilter = jbState.lastNocFilter
                 self.currentLocale = jbState.currentLocale == .english ? .english : .french
             }
         }

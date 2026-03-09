@@ -152,3 +152,98 @@ INSERT OR REPLACE INTO Settings (key, value) VALUES (?, ?);
 
 deleteSetting:
 DELETE FROM Settings WHERE key = ?;
+
+-- ============================================
+-- Phase 2+: Job Application Tracker (offline)
+-- ============================================
+CREATE TABLE JobApplication (
+    id TEXT NOT NULL PRIMARY KEY,
+    userId TEXT,
+    jobTitle TEXT NOT NULL,
+    companyName TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'SAVED',
+    source TEXT,
+    jobUrl TEXT,
+    province TEXT,
+    salaryMin REAL,
+    salaryMax TEXT,
+    notes TEXT,
+    appliedAt INTEGER,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL
+);
+
+CREATE TABLE JobApplicationNote (
+    id TEXT NOT NULL PRIMARY KEY,
+    applicationId TEXT NOT NULL,
+    content TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    FOREIGN KEY (applicationId) REFERENCES JobApplication(id) ON DELETE CASCADE
+);
+
+-- Job Application queries
+selectAllJobApplications:
+SELECT * FROM JobApplication ORDER BY updatedAt DESC;
+
+selectJobApplicationsByUserId:
+SELECT * FROM JobApplication WHERE userId = ? ORDER BY updatedAt DESC;
+
+selectJobApplicationsByStatus:
+SELECT * FROM JobApplication WHERE userId = ? AND status = ? ORDER BY updatedAt DESC;
+
+selectJobApplicationById:
+SELECT * FROM JobApplication WHERE id = ?;
+
+insertJobApplication:
+INSERT INTO JobApplication (id, userId, jobTitle, companyName, status, source, jobUrl, province, salaryMin, salaryMax, notes, appliedAt, createdAt, updatedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateJobApplicationStatus:
+UPDATE JobApplication SET status = ?, updatedAt = ? WHERE id = ?;
+
+updateJobApplication:
+UPDATE JobApplication SET jobTitle = ?, companyName = ?, status = ?, source = ?, jobUrl = ?, province = ?, salaryMin = ?, salaryMax = ?, notes = ?, updatedAt = ? WHERE id = ?;
+
+deleteJobApplication:
+DELETE FROM JobApplication WHERE id = ?;
+
+-- Job Application Note queries
+selectNotesByApplicationId:
+SELECT * FROM JobApplicationNote WHERE applicationId = ? ORDER BY createdAt DESC;
+
+insertJobApplicationNote:
+INSERT INTO JobApplicationNote (id, applicationId, content, createdAt)
+VALUES (?, ?, ?, ?);
+
+deleteJobApplicationNote:
+DELETE FROM JobApplicationNote WHERE id = ?;
+
+-- ============================================
+-- Phase 4+: Sync metadata (offline operations)
+-- ============================================
+CREATE TABLE PendingSync (
+    id TEXT NOT NULL PRIMARY KEY,
+    entityType TEXT NOT NULL,
+    entityId TEXT NOT NULL,
+    operationType TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    retryCount INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'PENDING'
+);
+
+selectPendingSyncOperations:
+SELECT * FROM PendingSync WHERE status = 'PENDING' ORDER BY timestamp ASC;
+
+insertPendingSyncOperation:
+INSERT INTO PendingSync (id, entityType, entityId, operationType, payload, timestamp, retryCount, status)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+updatePendingSyncStatus:
+UPDATE PendingSync SET status = ?, retryCount = ? WHERE id = ?;
+
+deletePendingSyncOperation:
+DELETE FROM PendingSync WHERE id = ?;
+
+clearCompletedSyncOperations:
+DELETE FROM PendingSync WHERE status = 'COMPLETED';

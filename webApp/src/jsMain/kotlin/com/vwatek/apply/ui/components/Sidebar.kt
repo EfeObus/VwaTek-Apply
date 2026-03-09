@@ -189,8 +189,9 @@ fun Sidebar(
             }
         }
         
-        // Navigation Menu
+        // Navigation Menu — grouped by sections
         Ul(attrs = { classes("nav-menu") }) {
+            // Main section
             NavItem(
                 label = "Dashboard",
                 icon = Icons.DASHBOARD,
@@ -215,6 +216,9 @@ fun Sidebar(
                 isActive = currentScreen == Screen.COVER_LETTERS,
                 onClick = { onNavigate(Screen.COVER_LETTERS) }
             )
+            
+            // Career Tools section
+            NavSectionHeader("Career Tools")
             NavItem(
                 label = "Interview Prep",
                 icon = Icons.MICROPHONE,
@@ -228,17 +232,20 @@ fun Sidebar(
                 onClick = { onNavigate(Screen.TRACKER) }
             )
             NavItem(
-                label = "NOC Codes",
-                icon = Icons.CHART,
-                isActive = currentScreen == Screen.NOC,
-                onClick = { onNavigate(Screen.NOC) }
-            )
-            NavItem(
                 label = "Job Bank",
                 icon = Icons.SEARCH,
                 isActive = currentScreen == Screen.JOB_BANK,
                 onClick = { onNavigate(Screen.JOB_BANK) }
             )
+            NavItem(
+                label = "NOC Codes",
+                icon = Icons.CHART,
+                isActive = currentScreen == Screen.NOC,
+                onClick = { onNavigate(Screen.NOC) }
+            )
+            
+            // Insights section
+            NavSectionHeader("Insights")
             NavItem(
                 label = "Salary Insights",
                 icon = Icons.DOLLAR,
@@ -246,11 +253,35 @@ fun Sidebar(
                 onClick = { onNavigate(Screen.SALARY_INSIGHTS) }
             )
             NavItem(
+                label = "LinkedIn Optimizer",
+                icon = Icons.LINKEDIN,
+                isActive = currentScreen == Screen.LINKEDIN_OPTIMIZER,
+                onClick = { onNavigate(Screen.LINKEDIN_OPTIMIZER) }
+            )
+            
+            // Account section
+            NavSectionHeader("Account")
+            NavItem(
+                label = "Organization",
+                icon = Icons.ORGANIZATION,
+                isActive = currentScreen == Screen.ORGANIZATION,
+                onClick = { onNavigate(Screen.ORGANIZATION) }
+            )
+            NavItem(
                 label = "Subscription",
                 icon = Icons.STAR,
                 isActive = currentScreen == Screen.SUBSCRIPTION,
                 onClick = { onNavigate(Screen.SUBSCRIPTION) }
             )
+            
+            if (isAuthenticated) {
+                NavItem(
+                    label = "Profile",
+                    icon = Icons.USER,
+                    isActive = currentScreen == Screen.PROFILE,
+                    onClick = { onNavigate(Screen.PROFILE) }
+                )
+            }
         }
         
         // Spacer
@@ -289,6 +320,24 @@ private fun NavItem(
             RawHtml(icon)
         }
         Span { Text(label) }
+    }
+}
+
+@Composable
+private fun NavSectionHeader(title: String) {
+    Li(attrs = {
+        style {
+            property("list-style", "none")
+            property("padding", "16px 16px 4px 16px")
+            property("font-size", "0.7rem")
+            property("font-weight", "600")
+            property("text-transform", "uppercase")
+            property("letter-spacing", "0.05em")
+            property("color", "var(--text-secondary)")
+            property("user-select", "none")
+        }
+    }) {
+        Text(title)
     }
 }
 
@@ -392,6 +441,26 @@ private object Icons {
             <line x1="12" y1="20" x2="12" y2="10"/>
             <line x1="18" y1="20" x2="18" y2="4"/>
             <line x1="6" y1="20" x2="6" y2="16"/>
+        </svg>
+    """
+    
+    const val LINKEDIN = """
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+            <rect x="2" y="9" width="4" height="12"/>
+            <circle cx="4" cy="4" r="2"/>
+        </svg>
+    """
+    
+    const val ORGANIZATION = """
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 21h18"/>
+            <path d="M5 21V7l8-4v18"/>
+            <path d="M19 21V11l-6-4"/>
+            <path d="M9 9v.01"/>
+            <path d="M9 12v.01"/>
+            <path d="M9 15v.01"/>
+            <path d="M9 18v.01"/>
         </svg>
     """
 }

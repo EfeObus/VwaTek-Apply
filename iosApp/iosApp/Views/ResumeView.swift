@@ -180,8 +180,35 @@ struct ResumeRow: View {
             }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(resume.name)
-                    .font(.headline)
+                HStack {
+                    Text(resume.name)
+                        .font(.headline)
+                    
+                    if resume.sourceType == .uploaded {
+                        Text("📄 Uploaded")
+                            .font(.caption2)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.orange.opacity(0.15))
+                            .cornerRadius(4)
+                    } else if resume.sourceType == .linkedin {
+                        Text("in LinkedIn")
+                            .font(.caption2)
+                            .foregroundColor(Color(red: 0, green: 0.467, blue: 0.71))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(red: 0, green: 0.467, blue: 0.71).opacity(0.15))
+                            .cornerRadius(4)
+                    }
+                }
+                
+                if !resume.content.isEmpty {
+                    let preview = resume.content.prefix(120)
+                    Text(preview + (resume.content.count > 120 ? "..." : ""))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
                 
                 HStack {
                     if let industry = resume.industry {

@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.vwatek.apply.domain.model.*
 import com.vwatek.apply.presentation.tracker.*
+import com.vwatek.apply.presentation.tracker.StatusChange as TrackerStatusChange
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -217,6 +218,7 @@ private fun TrackerStatsBar(stats: TrackerStats) {
             StatItem("Interviews", stats.interviewCount.toString())
             StatItem("Offers", stats.offerCount.toString())
             StatItem("Interview Rate", "${(stats.interviewRate * 100).toInt()}%")
+            StatItem("Offer Rate", "${(stats.offerRate * 100).toInt()}%")
         }
     }
 }
@@ -249,12 +251,12 @@ private fun KanbanBoard(
     val activeStatuses = listOf(
         ApplicationStatus.SAVED,
         ApplicationStatus.APPLIED,
-        ApplicationStatus.SCREENING,
-        ApplicationStatus.PHONE_INTERVIEW,
-        ApplicationStatus.TECHNICAL_INTERVIEW,
-        ApplicationStatus.ONSITE_INTERVIEW,
-        ApplicationStatus.FINAL_INTERVIEW,
-        ApplicationStatus.OFFER_RECEIVED,
+        ApplicationStatus.VIEWED,
+        ApplicationStatus.PHONE_SCREEN,
+        ApplicationStatus.INTERVIEW,
+        ApplicationStatus.ASSESSMENT,
+        ApplicationStatus.FINAL_ROUND,
+        ApplicationStatus.OFFER,
         ApplicationStatus.NEGOTIATING
     )
     
@@ -294,7 +296,7 @@ private fun KanbanColumn(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(android.graphics.Color.parseColor(status.color)).copy(alpha = 0.2f))
+                    .background(Color(status.colorHex).copy(alpha = 0.2f))
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -305,7 +307,7 @@ private fun KanbanColumn(
                     fontWeight = FontWeight.Bold
                 )
                 Badge(
-                    containerColor = Color(android.graphics.Color.parseColor(status.color))
+                    containerColor = Color(status.colorHex)
                 ) {
                     Text(applications.size.toString())
                 }
@@ -433,9 +435,9 @@ private fun ApplicationCard(
             }
             
             // Salary
-            if (application.salaryDisplay.isNotEmpty()) {
+            if (!application.salaryDisplay.isNullOrEmpty()) {
                 Text(
-                    text = application.salaryDisplay,
+                    text = application.salaryDisplay!!,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -453,7 +455,7 @@ private fun ApplicationCard(
                         modifier = Modifier.height(24.dp)
                     )
                 }
-                if (application.requiresWorkPermit) {
+                if (application.requiresWorkPermit == true) {
                     SuggestionChip(
                         onClick = {},
                         label = { Text("Work Permit", style = MaterialTheme.typography.labelSmall) },
@@ -602,13 +604,13 @@ private fun ApplicationListItem(
                         }
                     }
                     
-                    if (application.salaryDisplay.isNotEmpty()) {
+                    if (!application.salaryDisplay.isNullOrEmpty()) {
                         Text(
                             text = "•",
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = application.salaryDisplay,
+                            text = application.salaryDisplay!!,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -622,14 +624,14 @@ private fun ApplicationListItem(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Surface(
-                    color = Color(android.graphics.Color.parseColor(application.status.color)).copy(alpha = 0.2f),
+                    color = Color(application.status.colorHex).copy(alpha = 0.2f),
                     shape = RoundedCornerShape(4.dp)
                 ) {
                     Text(
                         text = application.status.displayName,
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = Color(android.graphics.Color.parseColor(application.status.color))
+                        color = Color(application.status.colorHex)
                     )
                 }
                 
@@ -792,7 +794,7 @@ private fun AddApplicationDialog(
                         ) {
                             CanadianProvince.entries.forEach { province ->
                                 DropdownMenuItem(
-                                    text = { Text("${province.code} - ${province.displayName}") },
+                                    text = { Text("${province.code} - ${province.fullName}") },
                                     onClick = {
                                         selectedProvince = province
                                         showProvinceDropdown = false
@@ -991,6 +993,7 @@ private fun ApplicationDetailDialog(
     val application = detail.application
     var showStatusChangeDialog by remember { mutableStateOf(false) }
     var showAddNoteDialog by remember { mutableStateOf(false) }
+    var showAddReminderDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     
     var selectedTab by remember { mutableStateOf(0) }
@@ -1031,13 +1034,13 @@ private fun ApplicationDetailDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            color = Color(android.graphics.Color.parseColor(application.status.color)).copy(alpha = 0.2f),
+                            color = Color(application.status.colorHex).copy(alpha = 0.2f),
                             shape = RoundedCornerShape(8.dp)
                         ) {
                             Text(
                                 text = application.status.displayName,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                color = Color(android.graphics.Color.parseColor(application.status.color))
+                                color = Color(application.status.colorHex)
                             )
                         }
                         
@@ -1071,7 +1074,10 @@ private fun ApplicationDetailDialog(
                                 notes = detail.notes,
                                 onAddNote = { showAddNoteDialog = true }
                             )
-                            2 -> RemindersTabContent(detail.reminders)
+                            2 -> RemindersTabContent(
+                                reminders = detail.reminders,
+                                onAddReminder = { showAddReminderDialog = true }
+                            )
                             3 -> HistoryTabContent(detail.statusHistory)
                         }
                     }
@@ -1119,6 +1125,17 @@ private fun ApplicationDetailDialog(
         )
     }
     
+    // Add reminder dialog
+    if (showAddReminderDialog) {
+        AddReminderDialog(
+            onDismiss = { showAddReminderDialog = false },
+            onAdd = { reminder ->
+                onAddReminder(reminder)
+                showAddReminderDialog = false
+            }
+        )
+    }
+    
     // Delete confirmation
     if (showDeleteConfirmation) {
         AlertDialog(
@@ -1161,11 +1178,11 @@ private fun DetailTabContent(application: JobApplication) {
             )
         }
         
-        if (application.salaryDisplay.isNotEmpty()) {
+        if (!application.salaryDisplay.isNullOrEmpty()) {
             DetailRow(
                 icon = Icons.Default.AttachMoney,
                 label = "Salary",
-                value = application.salaryDisplay
+                value = application.salaryDisplay!!
             )
         }
         
@@ -1193,7 +1210,7 @@ private fun DetailTabContent(application: JobApplication) {
             )
         }
         
-        if (application.requiresWorkPermit) {
+        if (application.requiresWorkPermit == true) {
             DetailRow(
                 icon = Icons.Default.Work,
                 label = "Work Permit",
@@ -1201,7 +1218,7 @@ private fun DetailTabContent(application: JobApplication) {
             )
         }
         
-        if (application.isLmiaRequired) {
+        if (application.isLmiaRequired == true) {
             DetailRow(
                 icon = Icons.Default.Assignment,
                 label = "LMIA",
@@ -1327,7 +1344,22 @@ private fun NotesTabContent(
 }
 
 @Composable
-private fun RemindersTabContent(reminders: List<ApplicationReminder>) {
+private fun RemindersTabContent(
+    reminders: List<ApplicationReminder>,
+    onAddReminder: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            TextButton(onClick = onAddReminder) {
+                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Add Reminder")
+            }
+        }
+        
     if (reminders.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -1378,10 +1410,106 @@ private fun RemindersTabContent(reminders: List<ApplicationReminder>) {
             }
         }
     }
+    }
+}
+
+// ===== Add Reminder Dialog =====
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddReminderDialog(
+    onDismiss: () -> Unit,
+    onAdd: (CreateReminderRequest) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
+    var selectedTypeIndex by remember { mutableStateOf(0) }
+    var expanded by remember { mutableStateOf(false) }
+    
+    val reminderTypes = listOf(
+        "Follow Up" to com.vwatek.apply.domain.model.ReminderType.FOLLOW_UP,
+        "Interview" to com.vwatek.apply.domain.model.ReminderType.INTERVIEW,
+        "Deadline" to com.vwatek.apply.domain.model.ReminderType.DEADLINE,
+        "Assessment" to com.vwatek.apply.domain.model.ReminderType.ASSESSMENT,
+        "Custom" to com.vwatek.apply.domain.model.ReminderType.CUSTOM
+    )
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Reminder") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = message,
+                    onValueChange = { message = it },
+                    label = { Text("Message (optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = reminderTypes[selectedTypeIndex].first,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Type") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier.fillMaxWidth().menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        reminderTypes.forEachIndexed { index, (label, _) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    selectedTypeIndex = index
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val now = kotlinx.datetime.Clock.System.now()
+                    val tomorrow = kotlinx.datetime.Instant.fromEpochMilliseconds(now.toEpochMilliseconds() + 86_400_000L)
+                    val request = CreateReminderRequest(
+                        reminderType = reminderTypes[selectedTypeIndex].second,
+                        title = title,
+                        message = message.ifBlank { null },
+                        reminderAt = tomorrow.toString()
+                    )
+                    onAdd(request)
+                },
+                enabled = title.isNotBlank()
+            ) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
-private fun HistoryTabContent(history: List<StatusChange>) {
+private fun HistoryTabContent(history: List<TrackerStatusChange>) {
     if (history.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -1414,14 +1542,15 @@ private fun HistoryTabContent(history: List<StatusChange>) {
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Column(modifier = Modifier.weight(1f)) {
+                            val fromStatusName = change.fromStatus?.displayName
                             Text(
-                                text = if (change.fromStatus != null) 
-                                    "${change.fromStatus.displayName} → ${change.toStatus.displayName}"
+                                text = if (fromStatusName != null) 
+                                    "$fromStatusName → ${change.toStatus.displayName}"
                                 else "Created as ${change.toStatus.displayName}",
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text(
-                                text = formatDateTime(change.changedAt),
+                                text = formatDateTimeString(change.changedAt),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -1478,7 +1607,7 @@ private fun StatusChangeDialog(
                                 modifier = Modifier
                                     .size(12.dp)
                                     .background(
-                                        Color(android.graphics.Color.parseColor(status.color)),
+                                        Color(status.colorHex),
                                         CircleShape
                                     )
                             )
@@ -1587,21 +1716,28 @@ private fun AddNoteDialog(
 
 // ===== Helper Functions =====
 
-private fun formatDate(isoString: String): String {
+private fun formatDate(instant: Instant): String {
     return try {
-        val instant = Instant.parse(isoString)
         val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
         "${localDateTime.month.name.take(3)} ${localDateTime.dayOfMonth}, ${localDateTime.year}"
     } catch (e: Exception) {
-        isoString
+        instant.toString()
     }
 }
 
-private fun formatDateTime(isoString: String): String {
+private fun formatDateTime(instant: Instant): String {
     return try {
-        val instant = Instant.parse(isoString)
         val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
         "${localDateTime.month.name.take(3)} ${localDateTime.dayOfMonth}, ${localDateTime.year} at ${localDateTime.hour}:${localDateTime.minute.toString().padStart(2, '0')}"
+    } catch (e: Exception) {
+        instant.toString()
+    }
+}
+
+private fun formatDateTimeString(isoString: String): String {
+    return try {
+        val instant = Instant.parse(isoString)
+        formatDateTime(instant)
     } catch (e: Exception) {
         isoString
     }

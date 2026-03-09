@@ -12,11 +12,18 @@ import kotlinx.serialization.Serializable
  * Handles salary insights, offer evaluation, and negotiation coaching
  */
 class SalaryApiClient(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val getAuthToken: () -> String? = { null }
 ) {
     private val baseUrl = "${ApiConfig.apiV1Url}/salary"
     // Negotiation routes are nested under /salary in the backend
     private val negotiationBaseUrl = "${ApiConfig.apiV1Url}/salary"
+    
+    private fun HttpRequestBuilder.applyAuth() {
+        getAuthToken()?.let { token ->
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
     
     // ===== Salary Insights =====
     
@@ -26,6 +33,7 @@ class SalaryApiClient(
     suspend fun getSalaryInsights(request: SalaryInsightsRequest): Result<SalaryInsightsResponse> {
         return try {
             val response = httpClient.post("$baseUrl/insights") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -40,7 +48,9 @@ class SalaryApiClient(
      */
     suspend fun getSalaryHistory(): Result<SalaryHistoryResponse> {
         return try {
-            val response = httpClient.get("$baseUrl/history")
+            val response = httpClient.get("$baseUrl/history") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -55,6 +65,7 @@ class SalaryApiClient(
     suspend fun evaluateOffer(request: EvaluateOfferRequest): Result<OfferEvaluationResponse> {
         return try {
             val response = httpClient.post("$baseUrl/evaluate-offer") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -69,7 +80,9 @@ class SalaryApiClient(
      */
     suspend fun getOffers(): Result<OffersListResponse> {
         return try {
-            val response = httpClient.get("$baseUrl/offers")
+            val response = httpClient.get("$baseUrl/offers") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -82,6 +95,7 @@ class SalaryApiClient(
     suspend fun updateOfferStatus(offerId: String, status: String): Result<MessageResponse> {
         return try {
             val response = httpClient.put("$baseUrl/offers/$offerId/status") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(UpdateOfferStatusRequest(status))
             }
@@ -99,6 +113,7 @@ class SalaryApiClient(
     suspend fun createNegotiationSession(offerId: String): Result<NegotiationSessionResponse> {
         return try {
             val response = httpClient.post("$negotiationBaseUrl/sessions") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(CreateNegotiationSessionRequest(offerId))
             }
@@ -113,7 +128,9 @@ class SalaryApiClient(
      */
     suspend fun getNegotiationSession(sessionId: String): Result<NegotiationSessionResponse> {
         return try {
-            val response = httpClient.get("$negotiationBaseUrl/sessions/$sessionId")
+            val response = httpClient.get("$negotiationBaseUrl/sessions/$sessionId") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -129,6 +146,7 @@ class SalaryApiClient(
     ): Result<NegotiationSessionResponse> {
         return try {
             val response = httpClient.post("$negotiationBaseUrl/sessions/$sessionId/messages") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(SendMessageRequest(content))
             }

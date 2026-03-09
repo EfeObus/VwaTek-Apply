@@ -1,20 +1,20 @@
 # VwaTek Apply - Cloud Run Service Configuration
-# Deploy with: gcloud run services replace cloudrun-service.yaml --region us-central1
+# Deploy with: gcloud run services replace cloudrun-service.yaml --region northamerica-northeast1
 
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: vwatek-backend
   labels:
-    cloud.googleapis.com/location: us-central1
+    cloud.googleapis.com/location: northamerica-northeast1
 spec:
   template:
     metadata:
       annotations:
         # Cloud SQL connection
-        run.googleapis.com/cloudsql-instances: vwatek-apply:us-central1:vwatekapply
+        run.googleapis.com/cloudsql-instances: vwatek-apply:northamerica-northeast1:vwatekapply
         # VPC Connector for private networking
-        run.googleapis.com/vpc-access-connector: projects/vwatek-apply/locations/us-central1/connectors/vwatek-connector
+        run.googleapis.com/vpc-access-connector: projects/vwatek-apply/locations/northamerica-northeast1/connectors/vwatek-connector
         run.googleapis.com/vpc-access-egress: private-ranges-only
         # Auto-scaling
         autoscaling.knative.dev/minScale: "0"
@@ -23,7 +23,7 @@ spec:
         run.googleapis.com/cpu-throttling: "false"
     spec:
       serviceAccountName: vwatek-cloudrun-sa@vwatek-apply.iam.gserviceaccount.com
-      containerConcurrency: 80
+      containerConcurrency: 50
       timeoutSeconds: 300
       containers:
         - image: gcr.io/vwatek-apply/vwatek-backend:latest
@@ -32,7 +32,7 @@ spec:
           env:
             # Database configuration using Secret Manager
             - name: CLOUD_SQL_INSTANCE
-              value: "vwatek-apply:us-central1:vwatekapply"
+              value: "vwatek-apply:northamerica-northeast1:vwatekapply"
             - name: CLOUD_SQL_HOST
               value: "34.134.196.247"
             - name: CLOUD_SQL_PORT

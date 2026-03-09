@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Internet permission for API calls -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -61,8 +62,36 @@
                     android:scheme="vwatekapply"
                     android:host="auth" />
             </intent-filter>
+            
+            <!-- Deep links for in-app screen navigation -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="vwatekapply" android:host="home" />
+                <data android:scheme="vwatekapply" android:host="resume" />
+                <data android:scheme="vwatekapply" android:host="optimizer" />
+                <data android:scheme="vwatekapply" android:host="coverletter" />
+                <data android:scheme="vwatekapply" android:host="interview" />
+                <data android:scheme="vwatekapply" android:host="noc" />
+                <data android:scheme="vwatekapply" android:host="jobbank" />
+                <data android:scheme="vwatekapply" android:host="tracker" />
+                <data android:scheme="vwatekapply" android:host="salary" />
+                <data android:scheme="vwatekapply" android:host="linkedin" />
+                <data android:scheme="vwatekapply" android:host="organization" />
+                <data android:scheme="vwatekapply" android:host="subscription" />
+                <data android:scheme="vwatekapply" android:host="profile" />
+                <data android:scheme="vwatekapply" android:host="settings" />
+            </intent-filter>
         </activity>
         
+        <!-- Disable Firebase auto-init; we initialize manually in VwaTekApplication -->
+        <provider
+            android:name="com.google.firebase.provider.FirebaseInitProvider"
+            android:authorities="${applicationId}.firebaseinitprovider"
+            android:exported="false"
+            tools:node="remove" />
+
         <!-- FileProvider for sharing PDF exports -->
         <provider
             android:name="androidx.core.content.FileProvider"

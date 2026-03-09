@@ -8,6 +8,8 @@ import com.vwatek.apply.presentation.interview.InterviewViewModel
 import com.vwatek.apply.presentation.tracker.TrackerViewModel
 import com.vwatek.apply.presentation.noc.NOCViewModel
 import com.vwatek.apply.presentation.jobbank.JobBankViewModel
+import com.vwatek.apply.domain.usecase.SubscriptionManager
+import com.vwatek.apply.domain.usecase.SalaryIntelligenceManager
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -25,7 +27,11 @@ object KoinHelper : KoinComponent {
     private val trackerViewModel: TrackerViewModel by inject()
     private val nocViewModel: NOCViewModel by inject()
     private val jobBankViewModel: JobBankViewModel by inject()
+    private val subscriptionManager: SubscriptionManager by inject()
+    private val salaryIntelligenceManager: SalaryIntelligenceManager by inject()
     private val settingsRepository: SettingsRepository by inject()
+    private val linkedInOptimizerManager: com.vwatek.apply.domain.usecase.LinkedInOptimizerManager by inject()
+    private val organizationViewModel: com.vwatek.apply.presentation.organization.OrganizationViewModel by inject()
     
     fun getAuthViewModel(): AuthViewModel = authViewModel
     fun getResumeViewModel(): ResumeViewModel = resumeViewModel
@@ -34,7 +40,11 @@ object KoinHelper : KoinComponent {
     fun getTrackerViewModel(): TrackerViewModel = trackerViewModel
     fun getNOCViewModel(): NOCViewModel = nocViewModel
     fun getJobBankViewModel(): JobBankViewModel = jobBankViewModel
+    fun getSubscriptionManager(): SubscriptionManager = subscriptionManager
+    fun getSalaryIntelligenceManager(): SalaryIntelligenceManager = salaryIntelligenceManager
     fun getSettingsRepository(): SettingsRepository = settingsRepository
+    fun getLinkedInOptimizerManager(): com.vwatek.apply.domain.usecase.LinkedInOptimizerManager = linkedInOptimizerManager
+    fun getOrganizationViewModel(): com.vwatek.apply.presentation.organization.OrganizationViewModel = organizationViewModel
 }
 
 /**
@@ -79,7 +89,11 @@ fun getInterviewViewModel(): InterviewViewModel = KoinHelper.getInterviewViewMod
 fun getTrackerViewModel(): TrackerViewModel = KoinHelper.getTrackerViewModel()
 fun getNOCViewModel(): NOCViewModel = KoinHelper.getNOCViewModel()
 fun getJobBankViewModel(): JobBankViewModel = KoinHelper.getJobBankViewModel()
+fun getSubscriptionManager(): SubscriptionManager = KoinHelper.getSubscriptionManager()
+fun getSalaryIntelligenceManager(): SalaryIntelligenceManager = KoinHelper.getSalaryIntelligenceManager()
 fun getSettingsRepository(): SettingsRepository = KoinHelper.getSettingsRepository()
+fun getLinkedInOptimizerManager(): com.vwatek.apply.domain.usecase.LinkedInOptimizerManager = KoinHelper.getLinkedInOptimizerManager()
+fun getOrganizationViewModel(): com.vwatek.apply.presentation.organization.OrganizationViewModel = KoinHelper.getOrganizationViewModel()
 
 // Settings helper functions for Swift
 fun getSetting(key: String): String? = SettingsHelper.getSetting(key)

@@ -1,39 +1,60 @@
 package com.vwatek.apply.ui.screens
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
+import com.vwatek.apply.data.api.SubscriptionApiClient
 import com.vwatek.apply.domain.model.SubscriptionTier
 import com.vwatek.apply.domain.model.BillingPeriod
 import com.vwatek.apply.domain.model.FeatureLimits
 import com.vwatek.apply.domain.model.SubscriptionPricing
 import com.vwatek.apply.domain.model.PremiumFeature
+import com.vwatek.apply.domain.usecase.SubscriptionManager
+import com.vwatek.apply.domain.usecase.SubscriptionState
 import org.jetbrains.compose.web.attributes.*
 import org.jetbrains.compose.web.dom.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.koin.core.context.GlobalContext
 
 /**
  * Subscription Screen for Web
- * Shows pricing tiers and allows users to upgrade
- * Phase 4: Premium & Monetization
+ * Shows pricing tiers and allows users to upgrade via Stripe Checkout
+ * Wired to shared SubscriptionManager and SubscriptionApiClient
  */
 @Composable
 fun SubscriptionScreen() {
+    val subscriptionManager = remember { GlobalContext.get().get<SubscriptionManager>() }
+    val subscriptionApiClient = remember { GlobalContext.get().get<SubscriptionApiClient>() }
+    val subscriptionState by subscriptionManager.subscriptionState.collectAsState()
+    
     var selectedBillingPeriod by remember { mutableStateOf(BillingPeriod.YEARLY) }
-    var currentTier by remember { mutableStateOf(SubscriptionTier.FREE) }
-    var isLoading by remember { mutableStateOf(true) }
     var showCheckoutModal by remember { mutableStateOf(false) }
     var selectedTier by remember { mutableStateOf<SubscriptionTier?>(null) }
-    var isDemoMode by remember { mutableStateOf(true) } // Demo mode enabled during beta
+    var isCheckingOut by remember { mutableStateOf(false) }
+    var checkoutError by remember { mutableStateOf<String?>(null) }
     
+    val scope = remember { CoroutineScope(Dispatchers.Main) }
+    
+    // Derive state from SubscriptionManager
+    val currentTier = when (val state = subscriptionState) {
+        is SubscriptionState.Success -> state.tier
+        else -> SubscriptionTier.FREE
+    }
+    val isDemoMode = when (val state = subscriptionState) {
+        is SubscriptionState.Success -> state.isDemoMode
+        else -> SubscriptionManager.isDemoMode
+    }
+    val isLoading = subscriptionState is SubscriptionState.Loading
+    
+    // Refresh subscription on mount
     LaunchedEffect(Unit) {
-        // Load current subscription
-        isLoading = false
+        subscriptionManager.refreshSubscription()
     }
     
     Div(attrs = { classes("subscription-screen") }) {
@@ -62,7 +83,7 @@ fun SubscriptionScreen() {
                                 property("font-size", "14px")
                                 property("color", "#388E3C")
                             }
-                        }) { Text("Enjoy all Premium features free during our beta!") }
+                        }) { Text(SubscriptionManager.DEMO_MODE_MESSAGE) }
                     }
                 }
             }
@@ -86,7 +107,17 @@ fun SubscriptionScreen() {
                     }
                     Button(attrs = {
                         classes("btn", "btn-outline")
-                        onClick { /* Open billing portal */ }
+                        onClick {
+                            scope.launch {
+                                subscriptionApiClient.createPortalSession(
+                                    returnUrl = kotlinx.browser.window.location.href
+                                ).onSuccess { response ->
+                                    kotlinx.browser.window.location.href = response.portalUrl
+                                }.onFailure { error ->
+                                    checkoutError = "Failed to open billing portal: ${error.message}"
+                                }
+                            }
+                        }
                     }) {
                         Text("Manage Billing")
                     }
@@ -189,12 +220,48 @@ fun SubscriptionScreen() {
         CheckoutModal(
             tier = selectedTier!!,
             billingPeriod = selectedBillingPeriod,
+            isLoading = isCheckingOut,
             onClose = { showCheckoutModal = false },
             onCheckout = { tier, period ->
-                // Redirect to Stripe checkout
-                showCheckoutModal = false
+                isCheckingOut = true
+                checkoutError = null
+                scope.launch {
+                    val baseUrl = kotlinx.browser.window.location.origin
+                    subscriptionApiClient.createCheckoutSession(
+                        tier = tier,
+                        billingPeriod = period,
+                        successUrl = "$baseUrl/?checkout=success",
+                        cancelUrl = "$baseUrl/?checkout=cancel"
+                    ).onSuccess { response ->
+                        // Redirect to Stripe Checkout
+                        kotlinx.browser.window.location.href = response.checkoutUrl
+                    }.onFailure { error ->
+                        isCheckingOut = false
+                        checkoutError = "Failed to start checkout: ${error.message}"
+                    }
+                }
             }
         )
+    }
+    
+    // Error toast
+    checkoutError?.let { error ->
+        Div(attrs = { 
+            classes("alert", "alert-error", "mt-md")
+            style {
+                property("position", "fixed")
+                property("bottom", "24px")
+                property("right", "24px")
+                property("z-index", "1000")
+                property("max-width", "400px")
+            }
+        }) {
+            Text(error)
+            Button(attrs = {
+                classes("btn-icon", "ml-md")
+                onClick { checkoutError = null }
+            }) { Text("×") }
+        }
     }
 }
 
@@ -210,8 +277,8 @@ private fun PricingCard(
     val limits = FeatureLimits.forTier(tier)
     
     val displayPrice = when (billingPeriod) {
-        BillingPeriod.MONTHLY -> pricing.monthlyPrice
-        BillingPeriod.YEARLY -> pricing.yearlyPrice / 12
+        BillingPeriod.MONTHLY -> pricing?.monthlyPriceCad ?: 0.0
+        BillingPeriod.YEARLY -> (pricing?.yearlyPriceCad ?: 0.0) / 12
     }
     
     Div(attrs = {
@@ -236,15 +303,15 @@ private fun PricingCard(
             if (tier == SubscriptionTier.FREE) {
                 Span(attrs = { classes("price") }) { Text("Free") }
             } else {
-                Span(attrs = { classes("currency") }) { Text("$") }
-                Span(attrs = { classes("price") }) { Text("%.2f".format(displayPrice)) }
+                Span(attrs = { classes("currency") }) { Text("CA$") }
+                Span(attrs = { classes("price") }) { Text(displayPrice.asDynamic().toFixed(2) as String) }
                 Span(attrs = { classes("period") }) { Text("/mo") }
             }
         }
         
         if (billingPeriod == BillingPeriod.YEARLY && tier != SubscriptionTier.FREE) {
             P(attrs = { classes("billing-note", "text-secondary", "text-sm") }) {
-                Text("Billed $${pricing.yearlyPrice} yearly")
+                Text("Billed CA$${pricing?.yearlyPriceCad ?: 0.0} yearly")
             }
         }
         
@@ -276,7 +343,7 @@ private fun PricingCard(
             if (limits.linkedInOptimizerAccess) {
                 FeatureListItem(icon = "👤", text = "LinkedIn profile optimizer")
             }
-            if (limits.prioritySupport) {
+            if (tier == SubscriptionTier.PREMIUM) {
                 FeatureListItem(icon = "⭐", text = "Priority support")
             }
         }
@@ -348,13 +415,14 @@ private fun ComparisonRow(
 private fun CheckoutModal(
     tier: SubscriptionTier,
     billingPeriod: BillingPeriod,
+    isLoading: Boolean = false,
     onClose: () -> Unit,
     onCheckout: (SubscriptionTier, BillingPeriod) -> Unit
 ) {
     val pricing = SubscriptionPricing.forTier(tier)
     val price = when (billingPeriod) {
-        BillingPeriod.MONTHLY -> pricing.monthlyPrice
-        BillingPeriod.YEARLY -> pricing.yearlyPrice
+        BillingPeriod.MONTHLY -> pricing?.monthlyPriceCad ?: 0.0
+        BillingPeriod.YEARLY -> pricing?.yearlyPriceCad ?: 0.0
     }
     
     Div(attrs = { classes("modal-overlay") }) {
@@ -383,7 +451,7 @@ private fun CheckoutModal(
                     Div(attrs = { classes("flex", "justify-between", "font-bold") }) {
                         Span { Text("Total") }
                         Span { 
-                            Text("$${price}")
+                            Text("CA$$${price}")
                             Span(attrs = { classes("text-secondary", "text-sm") }) {
                                 Text(if (billingPeriod == BillingPeriod.MONTHLY) "/month" else "/year")
                             }
@@ -399,15 +467,20 @@ private fun CheckoutModal(
             Div(attrs = { classes("modal-footer") }) {
                 Button(attrs = {
                     classes("btn", "btn-outline")
-                    onClick { onClose() }
+                    if (!isLoading) onClick { onClose() }
                 }) {
                     Text("Cancel")
                 }
                 Button(attrs = {
                     classes("btn", "btn-primary")
-                    onClick { onCheckout(tier, billingPeriod) }
+                    if (isLoading) classes("btn-disabled")
+                    if (!isLoading) onClick { onCheckout(tier, billingPeriod) }
                 }) {
-                    Text("Proceed to Checkout")
+                    if (isLoading) {
+                        Text("Processing...")
+                    } else {
+                        Text("Proceed to Checkout")
+                    }
                 }
             }
         }

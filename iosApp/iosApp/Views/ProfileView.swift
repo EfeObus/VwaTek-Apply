@@ -9,9 +9,14 @@ struct ProfileView: View {
     @State private var showHelpSheet = false
     @State private var showFeedbackSheet = false
     @State private var showAboutSheet = false
+    @State private var showErrorAlert = false
     
     var body: some View {
         NavigationStack {
+            if viewModel.isLoading {
+                ProgressView("Loading profile...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
             ScrollView {
                 VStack(spacing: 24) {
                     // Profile header
@@ -193,6 +198,7 @@ struct ProfileView: View {
                 }
                 .padding()
             }
+            } // else - loading check
             .navigationTitle("Profile")
             .alert("Log Out", isPresented: $showLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -219,6 +225,16 @@ struct ProfileView: View {
             }
             .sheet(isPresented: $showAboutSheet) {
                 AboutSheet(onDismiss: { showAboutSheet = false })
+            }
+            .alert("Error", isPresented: $showErrorAlert) {
+                Button("OK") {
+                    viewModel.clearError()
+                }
+            } message: {
+                Text(viewModel.error ?? "An unknown error occurred")
+            }
+            .onChange(of: viewModel.error) { error in
+                showErrorAlert = error != nil
             }
         }
     }

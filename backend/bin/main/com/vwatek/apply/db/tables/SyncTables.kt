@@ -191,7 +191,7 @@ object UserDataRegionsTable : Table("user_data_regions") {
  */
 object ChangeFeedTable : Table("change_feed") {
     val id = long("id").autoIncrement()
-    val userId = varchar("user_id", 36)
+    val userId = varchar("user_id", 36).references(UsersTable.id)
     val entityType = varchar("entity_type", 50)
     val entityId = varchar("entity_id", 36)
     val changeType = varchar("change_type", 20) // INSERT, UPDATE, DELETE

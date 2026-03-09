@@ -28,8 +28,8 @@ object SentryConfig {
             return
         }
         
-        val environment = globalConfig?.ENVIRONMENT as? String ?: "development"
-        val release = globalConfig?.VERSION as? String ?: "unknown"
+        val environment = globalConfig.ENVIRONMENT as? String ?: "development"
+        val release = globalConfig.VERSION as? String ?: "unknown"
         
         try {
             js("""

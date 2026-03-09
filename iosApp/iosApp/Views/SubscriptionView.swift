@@ -3,33 +3,31 @@ import shared
 import StoreKit
 
 /// Subscription View for iOS
-/// Shows pricing tiers and allows users to upgrade
-/// Phase 4: Premium & Monetization
+/// Shows pricing tiers and allows users to upgrade via StoreKit
+/// Wired to shared SubscriptionManager via SubscriptionManagerWrapper
 struct SubscriptionView: View {
+    @StateObject private var viewModel = SubscriptionManagerWrapper()
     @State private var selectedBillingPeriod: BillingPeriod = .yearly
-    @State private var isLoading = true
-    @State private var currentTier: SubscriptionTier = .free
     @State private var showManageBilling = false
     @State private var showError: String? = nil
-    @State private var isDemoMode = true // Demo mode enabled by default during beta
+    @State private var isPurchasing = false
     
     // StoreKit products
     @State private var products: [Product] = []
     
     var onDismiss: () -> Void = {}
-    var onStartCheckout: (SubscriptionTier, BillingPeriod) -> Void = { _, _ in }
     
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
                     // Demo mode banner
-                    if isDemoMode {
+                    if viewModel.isDemoMode {
                         demoModeBanner
                     }
                     
                     // Current subscription banner
-                    if currentTier != .free {
+                    if viewModel.currentTierName != "FREE" {
                         currentSubscriptionBanner
                     }
                     
@@ -63,7 +61,6 @@ struct SubscriptionView: View {
             }
             .onAppear {
                 Task {
-                    await loadSubscription()
                     await loadProducts()
                 }
             }
@@ -74,6 +71,14 @@ struct SubscriptionView: View {
                 Button("OK", role: .cancel) { }
             } message: {
                 Text(showError ?? "An error occurred")
+            }
+            .overlay {
+                if isPurchasing {
+                    ProgressView("Processing purchase...")
+                        .padding()
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(12)
+                }
             }
         }
     }
@@ -89,7 +94,7 @@ struct SubscriptionView: View {
                     .font(.subheadline)
                     .fontWeight(.bold)
                     .foregroundColor(Color(red: 0.18, green: 0.49, blue: 0.2))
-                Text("Enjoy all Premium features free during our beta!")
+                Text(viewModel.demoModeMessage)
                     .font(.caption)
                     .foregroundColor(Color(red: 0.22, green: 0.56, blue: 0.24))
             }
@@ -110,7 +115,7 @@ struct SubscriptionView: View {
                 Text("Current Plan")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                Text(currentTier.rawValue)
+                Text(viewModel.currentTierName)
                     .font(.title2)
                     .fontWeight(.bold)
             }
@@ -166,8 +171,12 @@ struct SubscriptionView: View {
             PricingCard(
                 tier: .free,
                 billingPeriod: selectedBillingPeriod,
-                isCurrentPlan: currentTier == .free,
+                isCurrentPlan: viewModel.currentTierName == "FREE",
                 isPopular: false,
+                proMonthlyPrice: viewModel.proMonthlyPrice,
+                proYearlyPrice: viewModel.proYearlyPrice,
+                premiumMonthlyPrice: viewModel.premiumMonthlyPrice,
+                premiumYearlyPrice: viewModel.premiumYearlyPrice,
                 onSelect: { }
             )
             
@@ -175,10 +184,14 @@ struct SubscriptionView: View {
             PricingCard(
                 tier: .pro,
                 billingPeriod: selectedBillingPeriod,
-                isCurrentPlan: currentTier == .pro,
+                isCurrentPlan: viewModel.currentTierName == "PRO",
                 isPopular: true,
+                proMonthlyPrice: viewModel.proMonthlyPrice,
+                proYearlyPrice: viewModel.proYearlyPrice,
+                premiumMonthlyPrice: viewModel.premiumMonthlyPrice,
+                premiumYearlyPrice: viewModel.premiumYearlyPrice,
                 onSelect: {
-                    onStartCheckout(.pro, selectedBillingPeriod)
+                    Task { await purchaseProduct(tier: .pro) }
                 }
             )
             
@@ -186,10 +199,14 @@ struct SubscriptionView: View {
             PricingCard(
                 tier: .premium,
                 billingPeriod: selectedBillingPeriod,
-                isCurrentPlan: currentTier == .premium,
+                isCurrentPlan: viewModel.currentTierName == "PREMIUM",
                 isPopular: false,
+                proMonthlyPrice: viewModel.proMonthlyPrice,
+                proYearlyPrice: viewModel.proYearlyPrice,
+                premiumMonthlyPrice: viewModel.premiumMonthlyPrice,
+                premiumYearlyPrice: viewModel.premiumYearlyPrice,
                 onSelect: {
-                    onStartCheckout(.premium, selectedBillingPeriod)
+                    Task { await purchaseProduct(tier: .premium) }
                 }
             )
         }
@@ -244,12 +261,7 @@ struct SubscriptionView: View {
         }
     }
     
-    // MARK: - Data Loading
-    
-    private func loadSubscription() async {
-        // Load current subscription from backend
-        isLoading = false
-    }
+    // MARK: - Data Loading & StoreKit
     
     private func loadProducts() async {
         do {
@@ -262,6 +274,51 @@ struct SubscriptionView: View {
             products = try await Product.products(for: productIds)
         } catch {
             showError = "Failed to load products: \(error.localizedDescription)"
+        }
+    }
+    
+    private func purchaseProduct(tier: SubscriptionTier) async {
+        let productId: String
+        switch (tier, selectedBillingPeriod) {
+        case (.pro, .monthly): productId = "com.vwatek.apply.pro.monthly"
+        case (.pro, .yearly): productId = "com.vwatek.apply.pro.yearly"
+        case (.premium, .monthly): productId = "com.vwatek.apply.premium.monthly"
+        case (.premium, .yearly): productId = "com.vwatek.apply.premium.yearly"
+        default: return
+        }
+        
+        guard let product = products.first(where: { $0.id == productId }) else {
+            showError = "Product not available. Please try again later."
+            return
+        }
+        
+        isPurchasing = true
+        defer { isPurchasing = false }
+        
+        do {
+            let result = try await product.purchase()
+            
+            switch result {
+            case .success(let verification):
+                switch verification {
+                case .verified(let transaction):
+                    // Finish the transaction
+                    await transaction.finish()
+                    // Refresh subscription state from the shared manager
+                    await viewModel.refreshSubscription()
+                case .unverified(_, let error):
+                    showError = "Purchase verification failed: \(error.localizedDescription)"
+                }
+            case .userCancelled:
+                // User cancelled, do nothing
+                break
+            case .pending:
+                showError = "Purchase is pending approval."
+            @unknown default:
+                showError = "Unknown purchase result."
+            }
+        } catch {
+            showError = "Purchase failed: \(error.localizedDescription)"
         }
     }
 }
@@ -312,13 +369,17 @@ struct PricingCard: View {
     let billingPeriod: BillingPeriod
     let isCurrentPlan: Bool
     let isPopular: Bool
+    let proMonthlyPrice: Double
+    let proYearlyPrice: Double
+    let premiumMonthlyPrice: Double
+    let premiumYearlyPrice: Double
     let onSelect: () -> Void
     
     private var pricing: (monthly: Double, yearly: Double) {
         switch tier {
         case .free: return (0, 0)
-        case .pro: return (14.99, 149.99)
-        case .premium: return (29.99, 299.99)
+        case .pro: return (proMonthlyPrice, proYearlyPrice)
+        case .premium: return (premiumMonthlyPrice, premiumYearlyPrice)
         }
     }
     
@@ -363,7 +424,7 @@ struct PricingCard: View {
                         .font(.title)
                         .fontWeight(.bold)
                 } else {
-                    Text("$")
+                    Text("CA$")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     Text(String(format: "%.2f", displayPrice))
@@ -376,7 +437,7 @@ struct PricingCard: View {
             }
             
             if billingPeriod == .yearly && tier != .free {
-                Text("Billed $\(String(format: "%.2f", pricing.yearly)) yearly")
+                Text("Billed CA$\(String(format: "%.2f", pricing.yearly)) yearly")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

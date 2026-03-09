@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.vwatek.apply.domain.model.*
 import com.vwatek.apply.presentation.tracker.*
+import com.vwatek.apply.presentation.tracker.StatusChange
 import org.jetbrains.compose.web.attributes.*
 import org.jetbrains.compose.web.css.*
 import org.jetbrains.compose.web.dom.*
@@ -155,6 +156,9 @@ fun TrackerScreen() {
             onAddNote = { content, noteType ->
                 viewModel.onIntent(TrackerIntent.AddNote(detail.application.id, content, noteType))
             },
+            onAddReminder = { reminder ->
+                viewModel.onIntent(TrackerIntent.AddReminder(detail.application.id, reminder))
+            },
             onDelete = {
                 viewModel.onIntent(TrackerIntent.DeleteApplication(detail.application.id))
             }
@@ -223,12 +227,11 @@ private fun KanbanBoard(
     val activeStatuses = listOf(
         ApplicationStatus.SAVED,
         ApplicationStatus.APPLIED,
-        ApplicationStatus.SCREENING,
-        ApplicationStatus.PHONE_INTERVIEW,
-        ApplicationStatus.TECHNICAL_INTERVIEW,
-        ApplicationStatus.ONSITE_INTERVIEW,
-        ApplicationStatus.FINAL_INTERVIEW,
-        ApplicationStatus.OFFER_RECEIVED,
+        ApplicationStatus.PHONE_SCREEN,
+        ApplicationStatus.INTERVIEW,
+        ApplicationStatus.ASSESSMENT,
+        ApplicationStatus.FINAL_ROUND,
+        ApplicationStatus.OFFER,
         ApplicationStatus.NEGOTIATING
     )
     
@@ -285,7 +288,7 @@ private fun KanbanColumn(
         Div(attrs = {
             style {
                 padding(12.px, 16.px)
-                backgroundColor(Color(status.color).let { Color("${it}33") })
+                backgroundColor(Color("#${(status.colorHex and 0xFFFFFF).toString(16).padStart(6, '0')}33"))
                 property("border-radius", "12px 12px 0 0")
                 display(DisplayStyle.Flex)
                 justifyContent(JustifyContent.SpaceBetween)
@@ -300,7 +303,7 @@ private fun KanbanColumn(
             }
             Span(attrs = {
                 style {
-                    backgroundColor(Color(status.color))
+                    backgroundColor(Color("#${(status.colorHex and 0xFFFFFF).toString(16).padStart(6, '0')}"))
                     color(Color.white)
                     padding(2.px, 8.px)
                     borderRadius(999.px)
@@ -431,7 +434,7 @@ private fun ApplicationCard(
         }
         
         // Salary
-        if (application.salaryDisplay.isNotEmpty()) {
+        if (application.salaryDisplay?.isNotEmpty() == true) {
             Div(attrs = {
                 style {
                     fontSize(12.px)
@@ -439,7 +442,7 @@ private fun ApplicationCard(
                     marginBottom(8.px)
                 }
             }) {
-                Text(application.salaryDisplay)
+                Text(application.salaryDisplay ?: "")
             }
         }
         
@@ -448,7 +451,7 @@ private fun ApplicationCard(
             if (application.isRemote) {
                 Tag("Remote")
             }
-            if (application.requiresWorkPermit) {
+            if (application.requiresWorkPermit == true) {
                 Tag("Work Permit")
             }
         }
@@ -546,9 +549,9 @@ private fun ApplicationListItem(
                         if (application.locationDisplay.isNotBlank()) {
                             Span { Text("📍 ${application.locationDisplay}") }
                         }
-                        if (application.salaryDisplay.isNotEmpty()) {
+                        if (application.salaryDisplay?.isNotEmpty() == true) {
                             Span(attrs = { style { color(Color("#0066cc")) } }) {
-                                Text(application.salaryDisplay)
+                                Text(application.salaryDisplay ?: "")
                             }
                         }
                     }
@@ -559,8 +562,8 @@ private fun ApplicationListItem(
             Div(attrs = { classes("text-right") }) {
                 Span(attrs = {
                     style {
-                        backgroundColor(Color(application.status.color).let { Color("${it}33") })
-                        color(Color(application.status.color))
+                        backgroundColor(Color("#${(application.status.colorHex and 0xFFFFFF).toString(16).padStart(6, '0')}33"))
+                        color(Color("#${(application.status.colorHex and 0xFFFFFF).toString(16).padStart(6, '0')}"))
                         padding(4.px, 12.px)
                         borderRadius(4.px)
                         fontSize(12.px)
@@ -572,7 +575,7 @@ private fun ApplicationListItem(
                     P(attrs = {
                         classes("text-sm", "text-secondary", "mt-xs")
                     }) {
-                        Text(formatDate(date))
+                        Text(formatDate(date.toString()))
                     }
                 }
             }
@@ -697,7 +700,7 @@ private fun AddApplicationModal(
                     }) {
                         Option("") { Text("Select Province") }
                         CanadianProvince.entries.forEach { province ->
-                            Option(province.code) { Text("${province.code} - ${province.displayName}") }
+                            Option(province.code) { Text("${province.code} - ${province.fullName}") }
                         }
                     }
                 }
@@ -719,7 +722,7 @@ private fun AddApplicationModal(
                     Input(InputType.Number) {
                         classes("form-control")
                         value(salaryMin)
-                        onInput { salaryMin = it.value }
+                        onInput { salaryMin = it.value?.toString() ?: "" }
                     }
                 }
                 
@@ -728,7 +731,7 @@ private fun AddApplicationModal(
                     Input(InputType.Number) {
                         classes("form-control")
                         value(salaryMax)
-                        onInput { salaryMax = it.value }
+                        onInput { salaryMax = it.value?.toString() ?: "" }
                     }
                 }
             }
@@ -824,7 +827,7 @@ private fun FilterModal(
                     Option(province.code, attrs = {
                         if (currentProvince == province) selected()
                     }) {
-                        Text("${province.code} - ${province.displayName}")
+                        Text("${province.code} - ${province.fullName}")
                     }
                 }
             }
@@ -859,12 +862,14 @@ private fun ApplicationDetailModal(
     onClose: () -> Unit,
     onStatusChange: (ApplicationStatus, String?) -> Unit,
     onAddNote: (String, NoteType) -> Unit,
+    onAddReminder: (CreateReminderRequest) -> Unit,
     onDelete: () -> Unit
 ) {
     val application = detail.application
     var activeTab by remember { mutableStateOf(0) }
     var showStatusModal by remember { mutableStateOf(false) }
     var showAddNoteModal by remember { mutableStateOf(false) }
+    var showAddReminderModal by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     
     Modal(title = application.jobTitle, onClose = onClose, large = true) {
@@ -876,8 +881,8 @@ private fun ApplicationDetailModal(
             Div(attrs = { classes("flex", "justify-between", "items-center", "mt-sm") }) {
                 Span(attrs = {
                     style {
-                        backgroundColor(Color(application.status.color).let { Color("${it}33") })
-                        color(Color(application.status.color))
+                        backgroundColor(Color("#${(application.status.colorHex and 0xFFFFFF).toString(16).padStart(6, '0')}33"))
+                        color(Color("#${(application.status.colorHex and 0xFFFFFF).toString(16).padStart(6, '0')}"))
                         padding(6.px, 16.px)
                         borderRadius(6.px)
                         fontSize(14.px)
@@ -919,7 +924,7 @@ private fun ApplicationDetailModal(
                 when (activeTab) {
                     0 -> DetailsTab(application)
                     1 -> NotesTab(detail.notes) { showAddNoteModal = true }
-                    2 -> RemindersTab(detail.reminders)
+                    2 -> RemindersTab(detail.reminders) { showAddReminderModal = true }
                     3 -> HistoryTab(detail.statusHistory)
                 }
             }
@@ -965,6 +970,17 @@ private fun ApplicationDetailModal(
         )
     }
     
+    // Add Reminder Modal
+    if (showAddReminderModal) {
+        AddReminderModal(
+            onClose = { showAddReminderModal = false },
+            onAdd = { reminder ->
+                onAddReminder(reminder)
+                showAddReminderModal = false
+            }
+        )
+    }
+    
     // Delete Confirmation
     if (showDeleteConfirm) {
         ConfirmModal(
@@ -987,8 +1003,8 @@ private fun DetailsTab(application: JobApplication) {
         if (application.locationDisplay.isNotBlank()) {
             DetailRow("📍 Location", application.locationDisplay)
         }
-        if (application.salaryDisplay.isNotEmpty()) {
-            DetailRow("💰 Salary", application.salaryDisplay)
+        if (application.salaryDisplay?.isNotEmpty() == true) {
+            DetailRow("💰 Salary", application.salaryDisplay ?: "")
         }
         application.jobBoardSource?.let {
             DetailRow("🔗 Source", it.displayName)
@@ -997,12 +1013,12 @@ private fun DetailsTab(application: JobApplication) {
             DetailRow("📋 NOC Code", it)
         }
         application.appliedAt?.let {
-            DetailRow("📅 Applied", formatDate(it))
+            DetailRow("📅 Applied", formatDate(it.toString()))
         }
-        if (application.requiresWorkPermit) {
+        if (application.requiresWorkPermit == true) {
             DetailRow("📄 Work Permit", "Required")
         }
-        if (application.isLmiaRequired) {
+        if (application.isLmiaRequired == true) {
             DetailRow("📄 LMIA", "Required")
         }
         application.contactName?.let {
@@ -1049,7 +1065,7 @@ private fun NotesTab(notes: List<ApplicationNote>, onAddNote: () -> Unit) {
                             Text(note.noteType.displayName)
                         }
                         Span(attrs = { classes("text-secondary", "text-sm") }) {
-                            Text(formatDate(note.createdAt))
+                            Text(formatDate(note.createdAt.toString()))
                         }
                     }
                     P { Text(note.content) }
@@ -1060,7 +1076,15 @@ private fun NotesTab(notes: List<ApplicationNote>, onAddNote: () -> Unit) {
 }
 
 @Composable
-private fun RemindersTab(reminders: List<ApplicationReminder>) {
+private fun RemindersTab(reminders: List<ApplicationReminder>, onAddReminder: () -> Unit) {
+    Div(attrs = { classes("flex", "justify-end", "mb-sm") }) {
+        Button(attrs = {
+            classes("btn", "btn-outline", "btn-sm")
+            onClick { onAddReminder() }
+        }) {
+            Text("+ Add Reminder")
+        }
+    }
     if (reminders.isEmpty()) {
         Div(attrs = { classes("text-center", "text-secondary", "py-lg") }) {
             Text("No reminders")
@@ -1077,7 +1101,7 @@ private fun RemindersTab(reminders: List<ApplicationReminder>) {
                     Div {
                         P(attrs = { classes("font-medium") }) { Text(reminder.title) }
                         P(attrs = { classes("text-sm", "text-secondary") }) {
-                            Text(formatDateTime(reminder.reminderAt))
+                            Text(formatDateTime(reminder.reminderAt.toString()))
                         }
                     }
                 }
@@ -1154,7 +1178,7 @@ private fun StatusChangeModal(
                             style {
                                 width(12.px)
                                 height(12.px)
-                                backgroundColor(Color(status.color))
+                                backgroundColor(Color("#${(status.colorHex and 0xFFFFFF).toString(16).padStart(6, '0')}"))
                                 borderRadius(999.px)
                                 display(DisplayStyle.InlineBlock)
                             }
@@ -1239,6 +1263,86 @@ private fun AddNoteModal(
                 onClick { onAdd(content, selectedType) }
             }) {
                 Text("Add Note")
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddReminderModal(
+    onClose: () -> Unit,
+    onAdd: (CreateReminderRequest) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf(com.vwatek.apply.domain.model.ReminderType.FOLLOW_UP) }
+    
+    val reminderTypes = listOf(
+        "Follow Up" to com.vwatek.apply.domain.model.ReminderType.FOLLOW_UP,
+        "Interview" to com.vwatek.apply.domain.model.ReminderType.INTERVIEW,
+        "Deadline" to com.vwatek.apply.domain.model.ReminderType.DEADLINE,
+        "Assessment" to com.vwatek.apply.domain.model.ReminderType.ASSESSMENT,
+        "Custom" to com.vwatek.apply.domain.model.ReminderType.CUSTOM
+    )
+    
+    Modal(title = "Add Reminder", onClose = onClose) {
+        Div(attrs = { classes("form-group") }) {
+            Label { Text("Title") }
+            org.jetbrains.compose.web.dom.TextInput(value = title, attrs = {
+                classes("form-control")
+                onInput { title = it.value }
+            })
+        }
+        
+        Div(attrs = { classes("form-group") }) {
+            Label { Text("Message (optional)") }
+            TextArea(attrs = {
+                classes("form-control")
+                value(message)
+                onInput { message = it.value }
+                attr("rows", "3")
+            })
+        }
+        
+        Div(attrs = { classes("form-group") }) {
+            Label { Text("Reminder Type") }
+            Select(attrs = {
+                classes("form-control")
+                onChange { e ->
+                    val value = (e.target as? org.w3c.dom.HTMLSelectElement)?.value
+                    selectedType = reminderTypes.find { it.first == value }?.second
+                        ?: com.vwatek.apply.domain.model.ReminderType.FOLLOW_UP
+                }
+            }) {
+                reminderTypes.forEach { (label, _) ->
+                    Option(label) { Text(label) }
+                }
+            }
+        }
+        
+        Div(attrs = { classes("flex", "justify-end", "gap-sm", "mt-lg") }) {
+            Button(attrs = {
+                classes("btn", "btn-outline")
+                onClick { onClose() }
+            }) {
+                Text("Cancel")
+            }
+            Button(attrs = {
+                classes("btn", "btn-primary")
+                if (title.isBlank()) disabled()
+                onClick {
+                    val now = kotlinx.datetime.Clock.System.now()
+                    val tomorrow = kotlinx.datetime.Instant.fromEpochMilliseconds(now.toEpochMilliseconds() + 86_400_000L)
+                    val request = CreateReminderRequest(
+                        reminderType = selectedType,
+                        title = title,
+                        message = message.ifBlank { null },
+                        reminderAt = tomorrow.toString()
+                    )
+                    onAdd(request)
+                }
+            }) {
+                Text("Add Reminder")
             }
         }
     }

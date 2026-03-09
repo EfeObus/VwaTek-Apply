@@ -16,7 +16,6 @@ fun Application.configureCORS() {
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
         allowHeader(HttpHeaders.AccessControlAllowOrigin)
-        allowHeader("X-User-Id")
         
         // Allow requests from web frontends
         allowHost("storage.googleapis.com", schemes = listOf("https"))
@@ -24,10 +23,13 @@ fun Application.configureCORS() {
         allowHost("localhost:8080", schemes = listOf("http"))
         allowHost("127.0.0.1:8080", schemes = listOf("http"))
         
-        // For development - allow any host (comment out in strict production)
-        anyHost()
+        // Firebase Hosting domain
+        allowHost("vwatek-apply.web.app", schemes = listOf("https"))
+        allowHost("vwatek-apply.firebaseapp.com", schemes = listOf("https"))
         
-        allowCredentials = true
+        // Cloud Run backend (for same-origin requests)
+        allowHost("vwatek-backend-21443684777.northamerica-northeast1.run.app", schemes = listOf("https"))
+        
         allowNonSimpleContentTypes = true
         
         // Expose headers for the frontend

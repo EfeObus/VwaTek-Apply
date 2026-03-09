@@ -32,8 +32,8 @@ fun Route.jobTrackerRoutes() {
                 val source = call.request.queryParameters["source"]
                 val province = call.request.queryParameters["province"]
                 val search = call.request.queryParameters["search"]
-                val limit = call.request.queryParameters["limit"]?.toIntOrNull() ?: 100
-                val offset = call.request.queryParameters["offset"]?.toIntOrNull() ?: 0
+                val limit = (call.request.queryParameters["limit"]?.toIntOrNull() ?: 50).coerceIn(1, 100)
+                val offset = (call.request.queryParameters["offset"]?.toIntOrNull() ?: 0).coerceAtLeast(0)
                 
                 val applications = transaction {
                     JobApplicationsTable

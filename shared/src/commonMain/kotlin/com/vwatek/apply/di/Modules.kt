@@ -2,12 +2,12 @@ package com.vwatek.apply.di
 
 import com.vwatek.apply.data.api.GeminiService
 import com.vwatek.apply.data.api.JobTrackerApiClient
+import com.vwatek.apply.domain.repository.AuthRepository
 import com.vwatek.apply.domain.repository.ResumeRepository
 import com.vwatek.apply.domain.repository.AnalysisRepository
 import com.vwatek.apply.domain.repository.CoverLetterRepository
 import com.vwatek.apply.domain.repository.InterviewRepository
 import com.vwatek.apply.domain.repository.SettingsRepository
-import com.vwatek.apply.domain.repository.AuthRepository
 import com.vwatek.apply.domain.repository.LinkedInRepository
 import com.vwatek.apply.domain.repository.FileUploadRepository
 import com.vwatek.apply.domain.usecase.GetAllResumesUseCase
@@ -59,6 +59,26 @@ import com.vwatek.apply.presentation.tracker.TrackerViewModel
 import com.vwatek.apply.data.api.NOCApiClient
 import com.vwatek.apply.presentation.noc.NOCViewModel
 import com.vwatek.apply.data.api.JobBankApiClient
+import com.vwatek.apply.data.api.SubscriptionApiClient
+import com.vwatek.apply.data.api.SalaryApiClient
+import com.vwatek.apply.domain.usecase.GetSubscriptionUseCase
+import com.vwatek.apply.domain.usecase.GetPricingUseCase
+import com.vwatek.apply.domain.usecase.CreateCheckoutSessionUseCase
+import com.vwatek.apply.domain.usecase.CreatePortalSessionUseCase
+import com.vwatek.apply.domain.usecase.CancelSubscriptionUseCase
+import com.vwatek.apply.domain.usecase.ReactivateSubscriptionUseCase
+import com.vwatek.apply.domain.usecase.GetUsageLimitsUseCase
+import com.vwatek.apply.domain.usecase.CheckFeatureAccessUseCase
+import com.vwatek.apply.domain.usecase.SubscriptionManager
+import com.vwatek.apply.domain.usecase.GetSalaryInsightsUseCase
+import com.vwatek.apply.domain.usecase.GetSalaryHistoryUseCase
+import com.vwatek.apply.domain.usecase.EvaluateOfferUseCase
+import com.vwatek.apply.domain.usecase.GetSavedOffersUseCase
+import com.vwatek.apply.domain.usecase.UpdateOfferStatusUseCase
+import com.vwatek.apply.domain.usecase.StartNegotiationSessionUseCase
+import com.vwatek.apply.domain.usecase.GetNegotiationSessionUseCase
+import com.vwatek.apply.domain.usecase.SendNegotiationMessageUseCase
+import com.vwatek.apply.domain.usecase.SalaryIntelligenceManager
 import com.vwatek.apply.presentation.jobbank.JobBankViewModel
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -129,13 +149,31 @@ val sharedModule = module {
     factory { GetMaxFileSizeUseCase(get()) }
     
     // Phase 2: Job Tracker API Client
-    single { JobTrackerApiClient(get()) }
+    single { 
+        val authRepo: AuthRepository = get()
+        JobTrackerApiClient(get()) { authRepo.getAuthToken() }
+    }
     
     // Phase 3: NOC API Client
-    single { NOCApiClient(get()) }
+    single {
+        val authRepo: AuthRepository = get()
+        NOCApiClient(get()) { authRepo.getAuthToken() }
+    }
     
     // Phase 3: Job Bank API Client
     single { JobBankApiClient(get()) }
+    
+    // Phase 4: Subscription API Client
+    single {
+        val authRepo: AuthRepository = get()
+        SubscriptionApiClient(get()) { authRepo.getAuthToken() }
+    }
+    
+    // Phase 4: Salary API Client
+    single {
+        val authRepo: AuthRepository = get()
+        SalaryApiClient(get()) { authRepo.getAuthToken() }
+    }
     
     // Phase 2: Tracker Use Cases
     factory<com.vwatek.apply.presentation.tracker.GetJobApplicationsUseCase> { GetJobApplicationsUseCaseImpl(get()) }
@@ -170,4 +208,41 @@ val sharedModule = module {
     
     // Phase 3: Job Bank ViewModel
     factory { JobBankViewModel(get()) }
+    
+    // Phase 4: Subscription Use Cases
+    factory { GetSubscriptionUseCase(get()) }
+    factory { GetPricingUseCase(get()) }
+    factory { CreateCheckoutSessionUseCase(get()) }
+    factory { CreatePortalSessionUseCase(get()) }
+    factory { CancelSubscriptionUseCase(get()) }
+    factory { ReactivateSubscriptionUseCase(get()) }
+    factory { GetUsageLimitsUseCase(get()) }
+    factory { CheckFeatureAccessUseCase(get()) }
+    
+    // Phase 4: Subscription Manager (singleton - reactive state)
+    single { SubscriptionManager(get()) }
+    
+    // Phase 4: Salary Intelligence Use Cases
+    factory { GetSalaryInsightsUseCase(get(), get()) }
+    factory { GetSalaryHistoryUseCase(get()) }
+    factory { EvaluateOfferUseCase(get(), get()) }
+    factory { GetSavedOffersUseCase(get()) }
+    factory { UpdateOfferStatusUseCase(get()) }
+    factory { StartNegotiationSessionUseCase(get(), get()) }
+    factory { GetNegotiationSessionUseCase(get()) }
+    factory { SendNegotiationMessageUseCase(get(), get()) }
+    
+    // Phase 4: Salary Intelligence Manager (singleton - reactive state)
+    single { SalaryIntelligenceManager(get(), get()) }
+    
+    // Phase 12: LinkedIn Optimizer
+    single<com.vwatek.apply.domain.usecase.LinkedInApiClient> { com.vwatek.apply.data.api.LinkedInApiClientImpl(get()) }
+    single { com.vwatek.apply.domain.usecase.LinkedInOptimizerManager(get(), get()) }
+    
+    // Phase 13: Organization/Enterprise
+    single {
+        val authRepo: AuthRepository = get()
+        com.vwatek.apply.data.api.OrganizationApiClient(get()) { authRepo.getAuthToken() }
+    }
+    factory { com.vwatek.apply.presentation.organization.OrganizationViewModel(get()) }
 }

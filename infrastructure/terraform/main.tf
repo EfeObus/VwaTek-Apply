@@ -15,11 +15,14 @@ terraform {
     }
   }
   
-  # Store state in Cloud Storage (uncomment after creating bucket)
-  # backend "gcs" {
-  #   bucket = "vwatek-apply-terraform-state"
-  #   prefix = "terraform/state"
-  # }
+  # Store state in Cloud Storage
+  # To enable: 1) Run `terraform apply` once with local state to create the bucket
+  #            2) Uncomment the backend block below
+  #            3) Run `terraform init -migrate-state` to move state to GCS
+  backend "gcs" {
+    bucket = "vwatek-apply-terraform-state"
+    prefix = "terraform/state"
+  }
 }
 
 # ============================================
@@ -95,6 +98,31 @@ resource "google_project_service" "apis" {
 }
 
 # ============================================
+# Terraform State Bucket
+# ============================================
+resource "google_storage_bucket" "terraform_state" {
+  name          = "vwatek-apply-terraform-state"
+  project       = var.project_id
+  location      = var.region
+  force_destroy = false
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle_rule {
+    condition {
+      num_newer_versions = 5
+    }
+    action {
+      type = "Delete"
+    }
+  }
+
+  uniform_bucket_level_access = true
+}
+
+# ============================================
 # Cloud SQL Instance (Already exists - import or skip)
 # ============================================
 # Note: Your Cloud SQL instance already exists
@@ -143,7 +171,25 @@ resource "google_secret_manager_secret" "db_username" {
 
 resource "google_secret_manager_secret_version" "db_username" {
   secret      = google_secret_manager_secret.db_username.id
-  secret_data = "root"
+  secret_data = "vwatek_app"
+}
+
+# ============================================
+# Cloud SQL Application User (Least-Privilege)
+# ============================================
+# Creates a dedicated application user instead of using root.
+# After applying, run the following SQL as root to grant minimal privileges:
+#
+#   GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, REFERENCES
+#   ON Vwatek_Apply.* TO 'vwatek_app'@'%';
+#   FLUSH PRIVILEGES;
+#
+# This restricts the app user from DROP, GRANT, FILE, SUPER, etc.
+resource "google_sql_user" "app_user" {
+  name     = "vwatek_app"
+  instance = "vwatekapply"
+  password = var.db_password
+  host     = "%"
 }
 
 resource "google_secret_manager_secret" "db_password" {
@@ -424,6 +470,83 @@ resource "google_project_iam_member" "cloudbuild_roles" {
 }
 
 # ============================================
+# Staging Environment
+# ============================================
+
+# Staging Cloud Run service — separate from production
+resource "google_cloud_run_v2_service" "backend_staging" {
+  name     = "vwatek-backend-staging"
+  location = var.region
+
+  template {
+    containers {
+      image = "gcr.io/${var.project_id}/vwatek-backend-staging:latest"
+      
+      ports {
+        container_port = 8080
+      }
+
+      env {
+        name  = "CLOUD_SQL_DATABASE"
+        value = "Vwatek_Apply_Staging"
+      }
+      env {
+        name  = "ENVIRONMENT"
+        value = "staging"
+      }
+      env {
+        name = "CLOUD_SQL_USER"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.db_username.secret_id
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "CLOUD_SQL_PASSWORD"
+        value_source {
+          secret_key_ref {
+            secret  = google_secret_manager_secret.db_password.secret_id
+            version = "latest"
+          }
+        }
+      }
+
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+      }
+    }
+
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 3
+    }
+
+    service_account = google_service_account.cloud_run.email
+  }
+
+  traffic {
+    type    = "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST"
+    percent = 100
+  }
+}
+
+# Staging database (separate schema on same instance)
+resource "google_sql_database" "staging" {
+  name     = "Vwatek_Apply_Staging"
+  instance = "vwatekapply"
+}
+
+output "staging_backend_url" {
+  description = "Staging Cloud Run Backend URL"
+  value       = google_cloud_run_v2_service.backend_staging.uri
+}
+
+# ============================================
 # Outputs
 # ============================================
 output "backend_url" {
@@ -457,16 +580,12 @@ resource "google_sql_database_instance" "canada" {
     availability_type = "ZONAL"  # Can upgrade to REGIONAL for HA
     
     ip_configuration {
-      ipv4_enabled    = true
+      ipv4_enabled    = false  # Disable public IP — use private networking only
       private_network = google_compute_network.vpc_canada.id
       
       require_ssl = true
       
-      # Restrict to Cloud Run only
-      authorized_networks {
-        name  = "cloud-run"
-        value = "0.0.0.0/0"  # Will be restricted via IAM
-      }
+      # No authorized_networks needed — access via private VPC + Cloud SQL Auth Proxy only
     }
     
     backup_configuration {

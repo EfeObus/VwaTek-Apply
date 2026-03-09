@@ -55,6 +55,14 @@ fun SubscriptionScreen(
         isLoading = false
     }
     
+    // Show errors from subscription state
+    LaunchedEffect(subscriptionState) {
+        val errorState = subscriptionState as? SubscriptionState.Error
+        errorState?.let {
+            snackbarHostState.showSnackbar(message = it.message, duration = SnackbarDuration.Short)
+        }
+    }
+    
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -347,8 +355,8 @@ private fun PricingCard(
     val limits = FeatureLimits.forTier(tier)
     
     val price = when (billingPeriod) {
-        BillingPeriod.MONTHLY -> pricing.monthlyPrice
-        BillingPeriod.YEARLY -> pricing.yearlyPrice / 12 // Show monthly equivalent
+        BillingPeriod.MONTHLY -> pricing?.monthlyPriceCad ?: 0.0
+        BillingPeriod.YEARLY -> (pricing?.yearlyPriceCad ?: 0.0) / 12 // Show monthly equivalent
     }
     
     val borderColor = when {
@@ -408,7 +416,7 @@ private fun PricingCard(
                     )
                 } else {
                     Text(
-                        text = "$",
+                        text = "CA$",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -428,7 +436,7 @@ private fun PricingCard(
             
             if (billingPeriod == BillingPeriod.YEARLY && tier != SubscriptionTier.FREE) {
                 Text(
-                    text = "Billed $%.2f yearly".format(pricing.yearlyPrice),
+                    text = "Billed CA$%.2f yearly".format(pricing?.yearlyPriceCad ?: 0.0),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -472,9 +480,9 @@ private fun PricingCard(
                     text = "LinkedIn profile optimizer"
                 )
             }
-            if (limits.prioritySupport) {
+            if (tier == SubscriptionTier.PREMIUM) {
                 PricingFeatureItem(
-                    icon = Icons.Default.Support,
+                    icon = Icons.Default.SupportAgent,
                     text = "Priority support"
                 )
             }

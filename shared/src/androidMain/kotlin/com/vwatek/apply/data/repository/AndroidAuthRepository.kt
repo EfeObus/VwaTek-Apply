@@ -101,6 +101,8 @@ class AndroidAuthRepository(
     
     override fun getAuthState(): Flow<AuthState> = _authState.asStateFlow()
     
+    override fun getAuthToken(): String? = _authToken
+    
     override suspend fun getCurrentUser(): User? = _authState.value.user
     
     override suspend fun registerWithEmail(data: RegistrationData): Result<User> {
@@ -293,6 +295,28 @@ class AndroidAuthRepository(
             }
         } catch (e: Exception) {
             android.util.Log.e("AndroidAuthRepo", "Password reset error: ${e.message}")
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun refreshToken(): Result<String> {
+        val currentToken = _authToken ?: return Result.failure(Exception("No auth token"))
+        return try {
+            val response = httpClient.post("$apiBaseUrl/auth/refresh") {
+                contentType(ContentType.Application.Json)
+                bearerAuth(currentToken)
+            }
+            if (response.status.isSuccess()) {
+                val authResponse: AuthApiResponse = response.body()
+                val user = authResponse.user.toUser()
+                saveAuthData(user, authResponse.token)
+                android.util.Log.d("AndroidAuthRepo", "Token refreshed successfully")
+                Result.success(authResponse.token)
+            } else {
+                Result.failure(Exception("Token refresh failed: ${response.status}"))
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("AndroidAuthRepo", "Token refresh error: ${e.message}")
             Result.failure(e)
         }
     }

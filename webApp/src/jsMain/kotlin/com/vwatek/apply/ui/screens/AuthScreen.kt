@@ -96,7 +96,30 @@ fun AuthScreen(
             Text("Back to App")
         }
         
-        Div(attrs = { classes("auth-card") }) {
+        Div(attrs = { 
+            classes("auth-card")
+            style { property("position", "relative") }
+        }) {
+            // Loading overlay
+            if (state.isLoading) {
+                Div(attrs = {
+                    style {
+                        property("position", "absolute")
+                        property("top", "0")
+                        property("left", "0")
+                        property("right", "0")
+                        property("bottom", "0")
+                        property("background", "rgba(255,255,255,0.7)")
+                        property("display", "flex")
+                        property("align-items", "center")
+                        property("justify-content", "center")
+                        property("z-index", "10")
+                        property("border-radius", "var(--border-radius-lg)")
+                    }
+                }) {
+                    Span(attrs = { classes("spinner") })
+                }
+            }
             // Logo
             Div(attrs = { 
                 classes("text-center", "mb-lg")

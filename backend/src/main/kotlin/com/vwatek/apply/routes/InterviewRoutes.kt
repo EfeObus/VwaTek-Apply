@@ -9,6 +9,9 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import com.vwatek.apply.auth.requireUserId
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -63,18 +66,18 @@ data class InterviewSessionResponse(
 )
 
 fun Route.interviewRoutes() {
+    authenticate("jwt") {
     route("/interviews") {
         // Get all interview sessions
         get {
-            val userId = call.request.headers["X-User-Id"]
+            val userId = call.requireUserId() ?: return@get
+            val limit = (call.request.queryParameters["limit"]?.toIntOrNull() ?: 50).coerceIn(1, 100)
+            val offset = (call.request.queryParameters["offset"]?.toIntOrNull() ?: 0).coerceAtLeast(0)
             
             val sessions = transaction {
-                val query = if (userId != null) {
-                    InterviewSessionsTable.select { InterviewSessionsTable.userId eq userId }
-                } else {
-                    InterviewSessionsTable.selectAll()
-                }
-                query.orderBy(InterviewSessionsTable.createdAt, SortOrder.DESC)
+                InterviewSessionsTable.select { InterviewSessionsTable.userId eq userId }
+                    .orderBy(InterviewSessionsTable.createdAt, SortOrder.DESC)
+                    .limit(limit, offset.toLong())
                     .map { row ->
                         val sessionId = row[InterviewSessionsTable.id]
                         val questions = InterviewQuestionsTable
@@ -153,7 +156,7 @@ fun Route.interviewRoutes() {
         // Create interview session
         post {
             val request = call.receive<InterviewSessionRequest>()
-            val userId = call.request.headers["X-User-Id"]
+            val userId = call.requireUserId() ?: return@post
             
             val sessionId = UUID.randomUUID().toString()
             val now = Clock.System.now()
@@ -315,4 +318,5 @@ fun Route.interviewRoutes() {
             call.respond(HttpStatusCode.NoContent)
         }
     }
+    } // authenticate("jwt")
 }

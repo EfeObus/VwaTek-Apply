@@ -25,8 +25,15 @@ RUN chmod +x gradlew && ./gradlew :backend:shadowJar --no-daemon
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
+# Create non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 # Copy the fat jar (shadow jar with all dependencies)
 COPY --from=build /app/backend/build/libs/backend-all.jar app.jar
+
+# Set ownership and switch to non-root user
+RUN chown -R appuser:appgroup /app
+USER appuser
 
 # Cloud Run uses PORT environment variable
 ENV PORT=8080

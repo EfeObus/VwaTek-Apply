@@ -1,18 +1,14 @@
 /**
  * VwaTek Apply Configuration
  * 
- * Copy this file to 'config.js' and add your API keys.
- * DO NOT commit config.js to version control!
+ * SECURITY NOTE: AI API keys (Gemini, OpenAI) should NEVER be exposed to the browser.
+ * All AI operations are routed through the backend at /api/v1/ai/* endpoints.
+ * The backend holds the API keys securely as environment variables.
  * 
- * To use:
- * 1. Copy this file to config.js
- * 2. Replace the placeholder values with your actual API keys
- * 3. Uncomment the <script src="config.js"></script> line in index.html
+ * This file is no longer needed for API key configuration.
+ * If you need to configure the backend URL for development, use:
  */
 window.VWATEK_CONFIG = {
-    // Get your Gemini API key from https://aistudio.google.com/app/apikey
-    GEMINI_API_KEY: 'your-gemini-api-key-here',
-    
-    // Get your OpenAI API key from https://platform.openai.com/api-keys
-    OPENAI_API_KEY: 'your-openai-api-key-here'
+    // Backend API URL (only needed for non-standard deployments)
+    // API_BASE_URL: 'http://localhost:8090'
 };

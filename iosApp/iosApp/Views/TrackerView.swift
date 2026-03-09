@@ -103,6 +103,9 @@ struct TrackerView: View {
                     onAddNote: { content, noteType in
                         viewModel.addNote(applicationId: app.id, content: content, noteType: noteType)
                     },
+                    onAddReminder: { reminder in
+                        viewModel.addReminder(applicationId: app.id, reminder: reminder)
+                    },
                     onDelete: {
                         viewModel.deleteApplication(id: app.id)
                         selectedApplication = nil
@@ -140,6 +143,7 @@ struct TrackerStatsBar: View {
                 StatItem(label: "Interviews", value: "\(stats.interviewCount)")
                 StatItem(label: "Offers", value: "\(stats.offerCount)")
                 StatItem(label: "Interview Rate", value: "\(Int(stats.interviewRate * 100))%")
+                StatItem(label: "Offer Rate", value: "\(Int(stats.offerRate * 100))%")
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
@@ -619,12 +623,14 @@ struct ApplicationDetailSheet: View {
     let isLoading: Bool
     let onStatusChange: (ApplicationStatus, String?) -> Void
     let onAddNote: (String, NoteType) -> Void
+    let onAddReminder: (CreateReminderRequest) -> Void
     let onDelete: () -> Void
     let onDismiss: () -> Void
     
     @State private var selectedTab = 0
     @State private var showStatusChangeSheet = false
     @State private var showAddNoteSheet = false
+    @State private var showAddReminderSheet = false
     @State private var showDeleteConfirmation = false
     
     var body: some View {
@@ -679,7 +685,7 @@ struct ApplicationDetailSheet: View {
                             .tag(0)
                         NotesTab(notes: detail.notes, onAddNote: { showAddNoteSheet = true })
                             .tag(1)
-                        RemindersTab(reminders: detail.reminders)
+                        RemindersTab(reminders: detail.reminders, onAddReminder: { showAddReminderSheet = true })
                             .tag(2)
                         HistoryTab(history: detail.statusHistory)
                             .tag(3)
@@ -716,6 +722,12 @@ struct ApplicationDetailSheet: View {
             AddNoteSheet(onAdd: { content, noteType in
                 onAddNote(content, noteType)
                 showAddNoteSheet = false
+            })
+        }
+        .sheet(isPresented: $showAddReminderSheet) {
+            AddReminderSheet(onAdd: { reminder in
+                onAddReminder(reminder)
+                showAddReminderSheet = false
             })
         }
         .alert("Delete Application?", isPresented: $showDeleteConfirmation) {
@@ -829,13 +841,25 @@ struct NotesTab: View {
 
 struct RemindersTab: View {
     let reminders: [ApplicationReminder]
+    let onAddReminder: () -> Void
     
     var body: some View {
-        if reminders.isEmpty {
-            Text("No reminders")
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else {
+        VStack {
+            HStack {
+                Spacer()
+                Button(action: onAddReminder) {
+                    Label("Add Reminder", systemImage: "plus.circle")
+                        .font(.subheadline)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.top, 8)
+            
+            if reminders.isEmpty {
+                Text("No reminders")
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
             List(reminders, id: \.id) { reminder in
                 HStack(spacing: 12) {
                     Image(systemName: reminder.isCompleted ? "checkmark.circle.fill" : "bell")
@@ -850,6 +874,71 @@ struct RemindersTab: View {
                 }
             }
             .listStyle(.plain)
+        }
+        }
+    }
+}
+
+// MARK: - Add Reminder Sheet
+
+struct AddReminderSheet: View {
+    let onAdd: (CreateReminderRequest) -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var title = ""
+    @State private var message = ""
+    @State private var reminderDate = Date().addingTimeInterval(86400)
+    @State private var selectedType = 0
+    
+    private let reminderTypes: [(String, ReminderType)] = [
+        ("Follow Up", .followUp),
+        ("Interview", .interview_),
+        ("Deadline", .deadline),
+        ("Assessment", .assessmentDue),
+        ("Custom", .custom)
+    ]
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Reminder Details") {
+                    TextField("Title", text: $title)
+                    TextField("Message (optional)", text: $message)
+                }
+                
+                Section("Type") {
+                    Picker("Reminder Type", selection: $selectedType) {
+                        ForEach(0..<reminderTypes.count, id: \.self) { index in
+                            Text(reminderTypes[index].0).tag(index)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
+                Section("When") {
+                    DatePicker("Remind at", selection: $reminderDate, in: Date()...)
+                }
+            }
+            .navigationTitle("Add Reminder")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        let formatter = ISO8601DateFormatter()
+                        let request = CreateReminderRequest(
+                            reminderType: reminderTypes[selectedType].1,
+                            title: title,
+                            message: message.isEmpty ? nil : message,
+                            reminderAt: formatter.string(from: reminderDate)
+                        )
+                        onAdd(request)
+                    }
+                    .disabled(title.isEmpty)
+                }
+            }
         }
     }
 }

@@ -1,0 +1,9 @@
+[build]
+buildCommand = "./gradlew :backend:shadowJar -x check -x test"
+
+[deploy]
+startCommand = "java $JAVA_OPTS -jar backend/build/libs/backend-all.jar"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

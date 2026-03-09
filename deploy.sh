@@ -55,7 +55,7 @@ deploy_backend() {
         --platform managed \
         --region $REGION \
         --allow-unauthenticated \
-        --add-cloudsql-instances vwatek-apply:northamerica-northeast1:vwatekapply \
+        --add-cloudsql-instances vwatek-apply:us-central1:vwatekapply \
         --set-env-vars "CLOUD_SQL_DATABASE=Vwatek_Apply" \
         --set-secrets "CLOUD_SQL_USER=db-username:latest,CLOUD_SQL_PASSWORD=db-password:latest,GEMINI_API_KEY=gemini-api-key:latest${OPENAI_SECRET}" \
         --min-instances 0 \

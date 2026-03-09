@@ -3,6 +3,7 @@ package com.vwatek.apply.android.ui.screens
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,7 +26,7 @@ import org.koin.compose.koinInject
  * Phase 3: Job Bank Canada Search Screen
  * Allows users to search and explore Job Bank Canada job listings
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun JobBankScreen(
     onNavigateBack: () -> Unit = {},
@@ -414,6 +415,7 @@ private fun JobCard(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FilterSheet(
     provinces: List<CanadianProvince>,

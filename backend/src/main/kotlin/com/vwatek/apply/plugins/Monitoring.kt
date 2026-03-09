@@ -222,8 +222,16 @@ fun Application.configureMonitoring() {
  */
 fun Application.configureMonitoringRoutes() {
     routing {
-        // Prometheus metrics endpoint (for GCP Cloud Monitoring scraping)
+        // Prometheus metrics endpoint (protected — requires metrics token or internal access)
         get("/metrics") {
+            val metricsToken = System.getenv("METRICS_AUTH_TOKEN") ?: ""
+            if (metricsToken.isNotBlank()) {
+                val authHeader = call.request.headers["Authorization"]
+                if (authHeader != "Bearer $metricsToken") {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid metrics token"))
+                    return@get
+                }
+            }
             call.respondText(
                 appMeterRegistry.scrape(),
                 ContentType.parse("text/plain; version=0.0.4; charset=utf-8")
@@ -240,18 +248,41 @@ fun Application.configureMonitoringRoutes() {
         
         // Readiness probe (check that the service can handle requests)
         get("/health/ready") {
-            // TODO: Add database connectivity check
-            val isReady = true // Add actual readiness checks
+            val checks = mutableMapOf<String, String>()
+            var allHealthy = true
             
-            if (isReady) {
-                call.respond(HttpStatusCode.OK, mapOf(
-                    "status" to "ready",
-                    "checks" to "database:ok"
-                ))
+            // Check database connectivity
+            try {
+                org.jetbrains.exposed.sql.transactions.transaction {
+                    exec("SELECT 1")
+                }
+                checks["database"] = "ok"
+            } catch (e: Exception) {
+                checks["database"] = "error: ${e.message?.take(100)}"
+                allHealthy = false
+            }
+            
+            // Check AI service availability (key configured)
+            val geminiKey = System.getenv("GEMINI_API_KEY") ?: ""
+            checks["ai_service"] = if (geminiKey.isNotBlank()) "configured" else "not_configured"
+            
+            // Check memory pressure
+            val runtime = Runtime.getRuntime()
+            val usedMemory = runtime.totalMemory() - runtime.freeMemory()
+            val maxMemory = runtime.maxMemory()
+            val memoryUsagePercent = (usedMemory.toDouble() / maxMemory * 100).toInt()
+            checks["memory"] = "${memoryUsagePercent}% used"
+            if (memoryUsagePercent > 95) allHealthy = false
+            
+            // Build flat response map (all String values to avoid serialization issues)
+            val response = mutableMapOf<String, String>()
+            response["status"] = if (allHealthy) "ready" else "not_ready"
+            checks.forEach { (k, v) -> response["check_$k"] = v }
+            
+            if (allHealthy) {
+                call.respond(HttpStatusCode.OK, response)
             } else {
-                call.respond(HttpStatusCode.ServiceUnavailable, mapOf(
-                    "status" to "not_ready"
-                ))
+                call.respond(HttpStatusCode.ServiceUnavailable, response)
             }
         }
     }

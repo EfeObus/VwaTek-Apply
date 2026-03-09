@@ -154,11 +154,10 @@ class AuthViewModelWrapper: ObservableObject {
     
     /// Handle Apple Sign-In result
     func appleSignIn(email: String, firstName: String, lastName: String) {
-        let intent = AuthIntent.GoogleSignIn( // Reusing GoogleSignIn intent for now
+        let intent = AuthIntent.AppleSignIn(
             email: email,
             firstName: firstName,
-            lastName: lastName,
-            profilePicture: nil
+            lastName: lastName
         )
         viewModel.onIntent(intent: intent)
     }

@@ -25,12 +25,104 @@ fun DashboardScreen(
     val coverLetterState by coverLetterViewModel.state.collectAsState()
     val interviewState by interviewViewModel.state.collectAsState()
     
+    // Aggregate errors from all ViewModels
+    val activeError = resumeState.error ?: coverLetterState.error ?: interviewState.error
+    
     Div {
+        // Error banner
+        if (activeError != null) {
+            Div(attrs = {
+                classes("toast", "toast-error")
+                style {
+                    property("display", "flex")
+                    property("align-items", "center")
+                    property("justify-content", "space-between")
+                    property("padding", "12px 16px")
+                    property("margin-bottom", "16px")
+                    property("background", "#fef2f2")
+                    property("border", "1px solid #fca5a5")
+                    property("border-radius", "8px")
+                    property("color", "#dc2626")
+                }
+            }) {
+                Span { Text(activeError) }
+                Button(attrs = {
+                    style {
+                        property("background", "none")
+                        property("border", "none")
+                        property("cursor", "pointer")
+                        property("color", "#dc2626")
+                        property("font-size", "1.2rem")
+                    }
+                    onClick {
+                        resumeViewModel.onIntent(com.vwatek.apply.presentation.resume.ResumeIntent.ClearError)
+                        coverLetterViewModel.onIntent(com.vwatek.apply.presentation.coverletter.CoverLetterIntent.ClearError)
+                        interviewViewModel.onIntent(com.vwatek.apply.presentation.interview.InterviewIntent.ClearError)
+                    }
+                }) { Text("×") }
+            }
+        }
+        
+        // Loading state
+        val isLoading = resumeState.isLoading || coverLetterState.isLoading || interviewState.isLoading
+        if (isLoading) {
+            Div(attrs = {
+                classes("flex", "justify-center", "p-xl")
+            }) {
+                Span(attrs = { classes("spinner") })
+            }
+        } else {
         // Header
         Div(attrs = { classes("mb-lg") }) {
             H1 { Text("Welcome to VwaTek Apply") }
             P(attrs = { classes("text-secondary") }) {
                 Text("Your AI-powered career suite. Transform your job hunt into a data-driven strategy.")
+            }
+        }
+        
+        // Quick Stats
+        Div(attrs = { classes("grid", "grid-3", "mb-lg") }) {
+            // Resume count
+            Div(attrs = {
+                classes("card")
+                onClick { onNavigateToResumes() }
+                style {
+                    property("cursor", "pointer")
+                    property("text-align", "center")
+                }
+            }) {
+                H2(attrs = { style { property("color", "var(--color-primary)") } }) {
+                    Text("${resumeState.resumes.size}")
+                }
+                P(attrs = { classes("text-secondary", "text-sm") }) { Text("Resumes") }
+            }
+            // Cover Letter count
+            Div(attrs = {
+                classes("card")
+                onClick { onNavigateToCoverLetters() }
+                style {
+                    property("cursor", "pointer")
+                    property("text-align", "center")
+                }
+            }) {
+                H2(attrs = { style { property("color", "var(--color-primary)") } }) {
+                    Text("${coverLetterState.coverLetters.size}")
+                }
+                P(attrs = { classes("text-secondary", "text-sm") }) { Text("Cover Letters") }
+            }
+            // Interview count
+            Div(attrs = {
+                classes("card")
+                onClick { onNavigateToInterview() }
+                style {
+                    property("cursor", "pointer")
+                    property("text-align", "center")
+                }
+            }) {
+                H2(attrs = { style { property("color", "var(--color-primary)") } }) {
+                    Text("${interviewState.sessions.size}")
+                }
+                P(attrs = { classes("text-secondary", "text-sm") }) { Text("Interviews") }
             }
         }
         
@@ -74,7 +166,7 @@ fun DashboardScreen(
         }
         
         // Quick Actions Grid
-        Div(attrs = { classes("grid", "grid-3", "mb-lg") }) {
+        Div(attrs = { classes("grid", "grid-4", "mb-lg") }) {
             // Resume Card
             Div(attrs = {
                 classes("card")
@@ -131,6 +223,42 @@ fun DashboardScreen(
                     }
                 }
             }
+            
+            // Resume Optimizer Card
+            Div(attrs = {
+                classes("card")
+                onClick { onNavigateToOptimizer() }
+                style { property("cursor", "pointer") }
+            }) {
+                Div(attrs = { classes("card-header") }) {
+                    H3(attrs = { classes("card-title") }) { Text("Resume Optimizer") }
+                }
+                P(attrs = { classes("text-secondary", "text-sm") }) {
+                    Text("Check ATS compatibility and rewrite resume sections with AI.")
+                }
+                Div(attrs = { classes("mt-md") }) {
+                    Button(attrs = { classes("btn", "btn-primary") }) {
+                        Text("Optimize")
+                    }
+                }
+            }
+        }
+        
+        // Pro Tip Card
+        Div(attrs = {
+            classes("card", "mb-lg")
+            style {
+                property("background", "linear-gradient(135deg, var(--color-primary-light, #e3f2fd), var(--color-surface))")
+                property("border-left", "4px solid var(--color-primary)")
+            }
+        }) {
+            H3(attrs = {
+                classes("card-title", "mb-sm")
+                style { property("color", "var(--color-primary)") }
+            }) { Text("\uD83D\uDCA1 Pro Tip") }
+            P(attrs = { classes("text-secondary") }) {
+                Text("Tailor your resume for each job application. Use keywords from the job description to improve your chances of passing ATS systems.")
+            }
         }
         
         // Features Section
@@ -156,6 +284,7 @@ fun DashboardScreen(
                 )
             }
         }
+        } // else (loading)
     }
 }
 

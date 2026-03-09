@@ -38,6 +38,10 @@ object ResumesTable : Table("resumes") {
     val updatedAt = timestamp("updated_at")
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, userId)
+    }
 }
 
 // Resume Versions Table
@@ -50,6 +54,10 @@ object ResumeVersionsTable : Table("resume_versions") {
     val createdAt = timestamp("created_at")
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, resumeId)
+    }
 }
 
 // Resume Analyses Table
@@ -63,6 +71,10 @@ object ResumeAnalysesTable : Table("resume_analyses") {
     val createdAt = timestamp("created_at")
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, resumeId)
+    }
 }
 
 // Cover Letters Table
@@ -77,6 +89,10 @@ object CoverLettersTable : Table("cover_letters") {
     val createdAt = timestamp("created_at")
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, userId)
+    }
 }
 
 // Interview Sessions Table
@@ -91,6 +107,10 @@ object InterviewSessionsTable : Table("interview_sessions") {
     val completedAt = timestamp("completed_at").nullable()
     
     override val primaryKey = PrimaryKey(id)
+    
+    init {
+        index(false, userId)
+    }
 }
 
 // Interview Questions Table

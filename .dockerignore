@@ -1,0 +1,57 @@
+# Version control
+.git
+.gitignore
+
+# IDE
+.idea
+*.iml
+.vscode
+
+# Secrets
+secrets.properties
+local.properties
+*.keystore
+*.jks
+
+# Documentation
+docs/
+*.md
+LICENSE
+CHANGELOG.md
+
+# Mobile platform builds
+androidApp/build/
+iosApp/build/
+iosApp/VwaTekApply.xcodeproj/
+iosApp/*.xcworkspace
+
+# Web builds
+webApp/build/
+build/
+
+# Shared module builds
+shared/build/
+
+# Google Cloud SDK (large, not needed in Docker)
+google-cloud-sdk/
+
+# Node modules
+node_modules/
+kotlin-js-store/
+
+# CI/CD configs
+cloudbuild.yaml
+cloudrun-service.yaml
+firebase.json
+deploy.sh
+infrastructure/
+
+# Gradle caches
+.gradle/
+**/build/
+
+# Chrome extension
+chromeExtension/
+
+# macOS
+.DS_Store

@@ -46,35 +46,34 @@ object DatabaseConfig {
         return System.getenv(key) ?: secrets.getProperty(key, default)
     }
     
-    // Cloud Run detection - check for K_SERVICE env var which Cloud Run sets
-    private val isRunningOnCloudRun by lazy { System.getenv("K_SERVICE") != null }
+    // Railway PostgreSQL configuration (via DATABASE_URL or individual env vars)
+    private val DB_HOST by lazy { getConfig("DB_HOST", "mainline.proxy.rlwy.net") }
+    private val DB_PORT by lazy { getConfig("DB_PORT", "56544").toInt() }
+    private val DB_NAME by lazy { getConfig("DB_NAME", "railway") }
+    private val DB_USER by lazy { getConfig("DB_USER", "postgres") }
+    private val DB_PASSWORD by lazy { getConfig("DB_PASSWORD", "") }
     
-    // Cloud SQL Instance Connection Name (format: project:region:instance)
-    private val CLOUD_SQL_INSTANCE by lazy { getConfig("CLOUD_SQL_INSTANCE", "vwatek-apply:us-central1:vwatekapply") }
-    
-    // Google Cloud SQL MySQL Configuration
-    private val CLOUD_SQL_HOST by lazy { getConfig("CLOUD_SQL_HOST", "34.134.196.247") }
-    private val CLOUD_SQL_PORT by lazy { getConfig("CLOUD_SQL_PORT", "3306").toInt() }
-    private val CLOUD_SQL_DATABASE by lazy { getConfig("CLOUD_SQL_DATABASE", "Vwatek_Apply") }
-    private val CLOUD_SQL_USER by lazy { getConfig("CLOUD_SQL_USER", "root") }
-    private val CLOUD_SQL_PASSWORD by lazy { getConfig("CLOUD_SQL_PASSWORD", "") }
-    
-    // Local MySQL fallback configuration
-    private val LOCAL_HOST by lazy { getConfig("LOCAL_MYSQL_HOST", "localhost") }
-    private val LOCAL_PORT by lazy { getConfig("LOCAL_MYSQL_PORT", "3306").toInt() }
-    private val LOCAL_DATABASE by lazy { getConfig("LOCAL_MYSQL_DATABASE", "Vwatek_Apply") }
-    private val LOCAL_USER by lazy { getConfig("LOCAL_MYSQL_USER", "root") }
-    private val LOCAL_PASSWORD by lazy { getConfig("LOCAL_MYSQL_PASSWORD", "") }
+    // Local PostgreSQL fallback configuration
+    private val LOCAL_HOST by lazy { getConfig("LOCAL_DB_HOST", "localhost") }
+    private val LOCAL_PORT by lazy { getConfig("LOCAL_DB_PORT", "5432").toInt() }
+    private val LOCAL_DATABASE by lazy { getConfig("LOCAL_DB_NAME", "vwatek_apply") }
+    private val LOCAL_USER by lazy { getConfig("LOCAL_DB_USER", "postgres") }
+    private val LOCAL_PASSWORD by lazy { getConfig("LOCAL_DB_PASSWORD", "") }
     
     private var dataSource: HikariDataSource? = null
-    private var isCloudConnected = false
     
     fun init() {
-        // Try Cloud SQL first, fall back to local
-        if (!tryConnectCloudSQL()) {
-            logger.warn("Cloud SQL connection failed, falling back to local MySQL")
-            if (!tryConnectLocalMySQL()) {
-                logger.error("Both Cloud SQL and local MySQL connections failed!")
+        // Check for DATABASE_URL first (Railway sets this automatically)
+        val databaseUrl = System.getenv("DATABASE_URL")
+        
+        if (databaseUrl != null) {
+            logger.info("Found DATABASE_URL, connecting to Railway PostgreSQL...")
+            if (!tryConnectWithUrl(databaseUrl)) {
+                throw RuntimeException("Unable to connect to Railway PostgreSQL via DATABASE_URL")
+            }
+        } else if (!tryConnectPostgres(DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, useSSL = true)) {
+            logger.warn("Railway PostgreSQL connection failed, falling back to local PostgreSQL")
+            if (!tryConnectPostgres(LOCAL_HOST, LOCAL_PORT, LOCAL_DATABASE, LOCAL_USER, LOCAL_PASSWORD, useSSL = false)) {
                 throw RuntimeException("Unable to connect to any database")
             }
         }
@@ -83,143 +82,86 @@ object DatabaseConfig {
         runMigrations()
     }
     
-    private fun tryConnectCloudSQL(): Boolean {
+    private fun tryConnectWithUrl(url: String): Boolean {
         return try {
-            if (isRunningOnCloudRun) {
-                logger.info("Running on Cloud Run - connecting via Unix socket to $CLOUD_SQL_INSTANCE...")
-                connectViaUnixSocket()
-            } else {
-                logger.info("Attempting to connect to Google Cloud SQL at $CLOUD_SQL_HOST:$CLOUD_SQL_PORT...")
-                connectViaTcp()
-            }
-        } catch (e: Exception) {
-            logger.error("❌ Cloud SQL connection failed: ${e.message}")
-            dataSource?.close()
-            dataSource = null
-            false
-        }
-    }
-    
-    private fun connectViaUnixSocket(): Boolean {
-        val socketPath = "/cloudsql/$CLOUD_SQL_INSTANCE"
-        logger.info("Using socket path: $socketPath")
-        logger.info("Connecting with user: $CLOUD_SQL_USER, database: $CLOUD_SQL_DATABASE")
-        logger.info("Password length: ${CLOUD_SQL_PASSWORD.length}")
-        
-        val config = HikariConfig().apply {
-            // Cloud SQL Socket Factory connection - MUST use allowPublicKeyRetrieval for caching_sha2_password
-            jdbcUrl = "jdbc:mysql:///$CLOUD_SQL_DATABASE?cloudSqlInstance=$CLOUD_SQL_INSTANCE&socketFactory=com.google.cloud.sql.mysql.SocketFactory&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC"
-            driverClassName = "com.mysql.cj.jdbc.Driver"
-            username = CLOUD_SQL_USER
-            password = CLOUD_SQL_PASSWORD
-            maximumPoolSize = 10
-            minimumIdle = 2
-            idleTimeout = 30000
-            connectionTimeout = 30000  // Longer timeout for Cloud SQL
-            maxLifetime = 1800000
-            connectionTestQuery = "SELECT 1"
-        }
-        
-        dataSource = HikariDataSource(config)
-        Database.connect(dataSource!!)
-        
-        // Test connection
-        transaction {
-            exec("SELECT 1")
-        }
-        
-        isCloudConnected = true
-        logger.info("✅ Successfully connected to Google Cloud SQL via Unix socket!")
-        return true
-    }
-    
-    private fun connectViaTcp(): Boolean {
-        val config = createHikariConfig(
-            host = CLOUD_SQL_HOST,
-            port = CLOUD_SQL_PORT,
-            database = CLOUD_SQL_DATABASE,
-            user = CLOUD_SQL_USER,
-            password = CLOUD_SQL_PASSWORD,
-            useSSL = true  // Cloud SQL requires SSL for TCP
-        )
-        
-        dataSource = HikariDataSource(config)
-        Database.connect(dataSource!!)
-        
-        // Test connection
-        transaction {
-            exec("SELECT 1")
-        }
-        
-        isCloudConnected = true
-        logger.info("✅ Successfully connected to Google Cloud SQL via TCP!")
-        return true
-    }
-    
-    private fun tryConnectLocalMySQL(): Boolean {
-        return try {
-            logger.info("Attempting to connect to local MySQL at $LOCAL_HOST:$LOCAL_PORT...")
+            // Railway DATABASE_URL format: postgresql://user:pass@host:port/db
+            // JDBC needs: jdbc:postgresql://host:port/db
+            val jdbcUrl = if (url.startsWith("jdbc:")) url
+                else "jdbc:${url.replace("postgres://", "postgresql://")}"
             
-            val config = createHikariConfig(
-                host = LOCAL_HOST,
-                port = LOCAL_PORT,
-                database = LOCAL_DATABASE,
-                user = LOCAL_USER,
-                password = LOCAL_PASSWORD
-            )
+            val config = HikariConfig().apply {
+                this.jdbcUrl = jdbcUrl
+                driverClassName = "org.postgresql.Driver"
+                maximumPoolSize = 5
+                minimumIdle = 1
+                idleTimeout = 30000
+                connectionTimeout = 15000
+                maxLifetime = 1800000
+                leakDetectionThreshold = 60000
+                connectionTestQuery = "SELECT 1"
+            }
             
             dataSource = HikariDataSource(config)
             Database.connect(dataSource!!)
-            
-            // Test connection
-            transaction {
-                exec("SELECT 1")
-            }
-            
-            isCloudConnected = false
-            logger.info("✅ Successfully connected to local MySQL!")
+            transaction { exec("SELECT 1") }
+            logger.info("✅ Connected to PostgreSQL via DATABASE_URL")
             true
         } catch (e: Exception) {
-            logger.error("❌ Local MySQL connection failed: ${e.message}")
+            logger.error("❌ DATABASE_URL connection failed: ${e.message}")
             dataSource?.close()
             dataSource = null
             false
         }
     }
     
-    private fun createHikariConfig(
-        host: String,
-        port: Int,
-        database: String,
-        user: String,
-        password: String,
-        useSSL: Boolean = false
-    ): HikariConfig {
-        val sslParams = if (useSSL) {
-            "useSSL=true&requireSSL=true&sslMode=REQUIRED"
-        } else {
-            "useSSL=false"
-        }
-        
-        return HikariConfig().apply {
-            jdbcUrl = "jdbc:mysql://$host:$port/$database?$sslParams&allowPublicKeyRetrieval=true&serverTimezone=UTC"
-            driverClassName = "com.mysql.cj.jdbc.Driver"
-            username = user
-            this.password = password
-            maximumPoolSize = 10
-            minimumIdle = 2
-            idleTimeout = 30000
-            connectionTimeout = 10000
-            maxLifetime = 1800000
+    private fun tryConnectPostgres(
+        host: String, port: Int, database: String,
+        user: String, password: String, useSSL: Boolean
+    ): Boolean {
+        return try {
+            logger.info("Connecting to PostgreSQL at $host:$port/$database...")
+            val sslParam = if (useSSL) "?sslmode=require" else ""
             
-            // Connection validation
-            connectionTestQuery = "SELECT 1"
+            val config = HikariConfig().apply {
+                jdbcUrl = "jdbc:postgresql://$host:$port/$database$sslParam"
+                driverClassName = "org.postgresql.Driver"
+                username = user
+                this.password = password
+                maximumPoolSize = 5
+                minimumIdle = 1
+                idleTimeout = 30000
+                connectionTimeout = 15000
+                maxLifetime = 1800000
+                leakDetectionThreshold = 60000
+                connectionTestQuery = "SELECT 1"
+            }
+            
+            dataSource = HikariDataSource(config)
+            Database.connect(dataSource!!)
+            transaction { exec("SELECT 1") }
+            logger.info("✅ Connected to PostgreSQL at $host:$port")
+            true
+        } catch (e: Exception) {
+            logger.error("❌ PostgreSQL connection to $host:$port failed: ${e.message}")
+            dataSource?.close()
+            dataSource = null
+            false
         }
     }
     
     private fun runMigrations() {
         logger.info("Running database migrations...")
         
+        // Run Flyway versioned migrations first
+        dataSource?.let { ds ->
+            try {
+                FlywayMigration.migrate(ds)
+            } catch (e: Exception) {
+                logger.warn("Flyway migration failed, falling back to Exposed SchemaUtils: ${e.message}")
+            }
+        }
+        
+        // Exposed SchemaUtils as safety net — creates any tables Flyway missed
         transaction {
             SchemaUtils.createMissingTablesAndColumns(
                 // Core tables
@@ -297,8 +239,6 @@ object DatabaseConfig {
         
         logger.info("✅ Database migrations completed!")
     }
-    
-    fun isUsingCloudSQL(): Boolean = isCloudConnected
     
     fun close() {
         dataSource?.close()

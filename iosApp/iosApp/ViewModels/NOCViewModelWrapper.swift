@@ -88,6 +88,9 @@ enum AppLocale {
     case french
 }
 
+/// Shared locale type alias for Job Bank compatibility
+typealias AppLocaleJB = AppLocale
+
 /// Wrapper class to make Kotlin NOCViewModel observable in SwiftUI
 @MainActor
 class NOCViewModelWrapper: ObservableObject {

@@ -2,13 +2,18 @@ package com.vwatek.apply.routes
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.transactions.transaction
 import com.vwatek.apply.db.tables.*
+import com.vwatek.apply.auth.requireUserId
 import java.util.UUID
 
 /**
@@ -30,32 +35,30 @@ fun Route.nocRoutes() {
             val pageSize = call.request.queryParameters["pageSize"]?.toIntOrNull() ?: 20
             
             val result = transaction {
-                var baseQuery = NOCCodesTable.selectAll()
-                    .where { NOCCodesTable.isActive eq true }
-                
-                if (query.isNotBlank()) {
-                    baseQuery = baseQuery.andWhere {
-                        (NOCCodesTable.code like "%$query%") or
-                        (NOCCodesTable.titleEn.lowerCase() like "%${query.lowercase()}%") or
-                        (NOCCodesTable.titleFr.lowerCase() like "%${query.lowercase()}%") or
-                        (NOCCodesTable.descriptionEn.lowerCase() like "%${query.lowercase()}%")
+                val baseQuery = NOCCodesTable
+                    .select { NOCCodesTable.isActive eq true }
+                    .apply {
+                        if (query.isNotBlank()) {
+                            andWhere {
+                                (NOCCodesTable.code like "%$query%") or
+                                (NOCCodesTable.titleEn.lowerCase() like "%${query.lowercase()}%") or
+                                (NOCCodesTable.titleFr.lowerCase() like "%${query.lowercase()}%") or
+                                (NOCCodesTable.descriptionEn.lowerCase() like "%${query.lowercase()}%")
+                            }
+                        }
+                        if (!teerLevels.isNullOrEmpty()) {
+                            andWhere { NOCCodesTable.teerLevel inList teerLevels }
+                        }
+                        if (!category.isNullOrBlank()) {
+                            andWhere { NOCCodesTable.category eq category }
+                        }
                     }
-                }
-                
-                if (!teerLevels.isNullOrEmpty()) {
-                    baseQuery = baseQuery.andWhere { NOCCodesTable.teerLevel inList teerLevels }
-                }
-                
-                if (!category.isNullOrBlank()) {
-                    baseQuery = baseQuery.andWhere { NOCCodesTable.category eq category }
-                }
                 
                 val totalCount = baseQuery.count().toInt()
                 val codes = baseQuery
-                    .limit(pageSize)
-                    .offset(((page - 1) * pageSize).toLong())
                     .orderBy(NOCCodesTable.code)
-                    .map { row ->
+                    .limit(pageSize, ((page - 1) * pageSize).toLong())
+                    .map { row: ResultRow ->
                         NOCCodeResponse(
                             code = row[NOCCodesTable.code],
                             titleEn = row[NOCCodesTable.titleEn],
@@ -87,15 +90,15 @@ fun Route.nocRoutes() {
             )
             
             val details = transaction {
-                val nocRow = NOCCodesTable.selectAll()
-                    .where { NOCCodesTable.code eq code }
+                val nocRow = NOCCodesTable
+                    .select { NOCCodesTable.code eq code }
                     .singleOrNull()
                     ?: return@transaction null
                 
-                val duties = NOCMainDutiesTable.selectAll()
-                    .where { NOCMainDutiesTable.nocCode eq code }
+                val duties = NOCMainDutiesTable
+                    .select { NOCMainDutiesTable.nocCode eq code }
                     .orderBy(NOCMainDutiesTable.orderIndex)
-                    .map { row ->
+                    .map { row: ResultRow ->
                         NOCDutyResponse(
                             id = row[NOCMainDutiesTable.id],
                             dutyEn = row[NOCMainDutiesTable.dutyEn],
@@ -103,10 +106,10 @@ fun Route.nocRoutes() {
                         )
                     }
                 
-                val requirements = NOCEmploymentRequirementsTable.selectAll()
-                    .where { NOCEmploymentRequirementsTable.nocCode eq code }
+                val requirements = NOCEmploymentRequirementsTable
+                    .select { NOCEmploymentRequirementsTable.nocCode eq code }
                     .orderBy(NOCEmploymentRequirementsTable.orderIndex)
-                    .map { row ->
+                    .map { row: ResultRow ->
                         NOCRequirementResponse(
                             id = row[NOCEmploymentRequirementsTable.id],
                             requirementEn = row[NOCEmploymentRequirementsTable.requirementEn],
@@ -114,9 +117,9 @@ fun Route.nocRoutes() {
                         )
                     }
                 
-                val additionalInfo = NOCAdditionalInfoTable.selectAll()
-                    .where { NOCAdditionalInfoTable.nocCode eq code }
-                    .singleOrNull()?.let { row ->
+                val additionalInfo = NOCAdditionalInfoTable
+                    .select { NOCAdditionalInfoTable.nocCode eq code }
+                    .singleOrNull()?.let { row: ResultRow ->
                         NOCAdditionalInfoResponse(
                             exampleTitlesEn = row[NOCAdditionalInfoTable.exampleTitlesEn],
                             exampleTitlesFr = row[NOCAdditionalInfoTable.exampleTitlesFr],
@@ -125,10 +128,10 @@ fun Route.nocRoutes() {
                         )
                     }
                 
-                val skills = NOCSkillsTable.selectAll()
-                    .where { NOCSkillsTable.nocCode eq code }
+                val skills = NOCSkillsTable
+                    .select { NOCSkillsTable.nocCode eq code }
                     .orderBy(NOCSkillsTable.skillLevel to SortOrder.DESC)
-                    .map { row ->
+                    .map { row: ResultRow ->
                         NOCSkillResponse(
                             id = row[NOCSkillsTable.id],
                             skillNameEn = row[NOCSkillsTable.skillNameEn],
@@ -138,10 +141,10 @@ fun Route.nocRoutes() {
                         )
                     }
                 
-                val provincialDemand = NOCProvincialDemandTable.selectAll()
-                    .where { NOCProvincialDemandTable.nocCode eq code }
+                val provincialDemand = NOCProvincialDemandTable
+                    .select { NOCProvincialDemandTable.nocCode eq code }
                     .orderBy(NOCProvincialDemandTable.provinceCode)
-                    .map { row ->
+                    .map { row: ResultRow ->
                         NOCProvincialDemandResponse(
                             provinceCode = row[NOCProvincialDemandTable.provinceCode],
                             demandLevel = row[NOCProvincialDemandTable.demandLevel],
@@ -153,9 +156,9 @@ fun Route.nocRoutes() {
                         )
                     }
                 
-                val immigrationPathways = NOCImmigrationPathwaysTable.selectAll()
-                    .where { NOCImmigrationPathwaysTable.nocCode eq code }
-                    .map { row ->
+                val immigrationPathways = NOCImmigrationPathwaysTable
+                    .select { NOCImmigrationPathwaysTable.nocCode eq code }
+                    .map { row: ResultRow ->
                         NOCImmigrationPathwayResponse(
                             pathwayName = row[NOCImmigrationPathwaysTable.pathwayName],
                             pathwayType = row[NOCImmigrationPathwaysTable.pathwayType],
@@ -211,11 +214,12 @@ fun Route.nocRoutes() {
         // Get categories (broad occupational categories)
         get("/categories") {
             val categories = transaction {
-                NOCCodesTable.select(NOCCodesTable.category, NOCCodesTable.majorGroup, NOCCodesTable.titleEn)
-                    .where { NOCCodesTable.isActive eq true }
+                NOCCodesTable
+                    .slice(NOCCodesTable.category, NOCCodesTable.majorGroup, NOCCodesTable.titleEn)
+                    .select { NOCCodesTable.isActive eq true }
                     .groupBy(NOCCodesTable.category, NOCCodesTable.majorGroup, NOCCodesTable.titleEn)
                     .orderBy(NOCCodesTable.category)
-                    .map { row ->
+                    .map { row: ResultRow ->
                         NOCCategoryResponse(
                             category = row[NOCCodesTable.category],
                             majorGroup = row[NOCCodesTable.majorGroup],
@@ -235,10 +239,10 @@ fun Route.nocRoutes() {
             )
             
             val demand = transaction {
-                NOCProvincialDemandTable.selectAll()
-                    .where { NOCProvincialDemandTable.nocCode eq code }
+                NOCProvincialDemandTable
+                    .select { NOCProvincialDemandTable.nocCode eq code }
                     .orderBy(NOCProvincialDemandTable.provinceCode)
-                    .map { row ->
+                    .map { row: ResultRow ->
                         NOCProvincialDemandResponse(
                             provinceCode = row[NOCProvincialDemandTable.provinceCode],
                             demandLevel = row[NOCProvincialDemandTable.demandLevel],
@@ -262,9 +266,9 @@ fun Route.nocRoutes() {
             )
             
             val pathways = transaction {
-                NOCImmigrationPathwaysTable.selectAll()
-                    .where { NOCImmigrationPathwaysTable.nocCode eq code }
-                    .map { row ->
+                NOCImmigrationPathwaysTable
+                    .select { NOCImmigrationPathwaysTable.nocCode eq code }
+                    .map { row: ResultRow ->
                         NOCImmigrationPathwayResponse(
                             pathwayName = row[NOCImmigrationPathwaysTable.pathwayName],
                             pathwayType = row[NOCImmigrationPathwaysTable.pathwayType],
@@ -278,62 +282,58 @@ fun Route.nocRoutes() {
             call.respond(NOCImmigrationListResponse(code, pathways))
         }
         
-        // Save user's NOC match
-        post("/users/{userId}/matches") {
-            val userId = call.parameters["userId"] ?: return@post call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse("Missing user ID")
-            )
+        // Save user's NOC match (JWT-protected)
+        authenticate("jwt") {
+            post("/users/me/matches") {
+                val userId = call.requireUserId() ?: return@post
             
-            val request = call.receive<CreateNOCMatchRequest>()
+                val request = call.receive<CreateNOCMatchRequest>()
             
-            val matchId = transaction {
-                val id = UUID.randomUUID().toString()
-                UserNOCMatchesTable.insert {
-                    it[UserNOCMatchesTable.id] = id
-                    it[UserNOCMatchesTable.userId] = userId
-                    it[resumeId] = request.resumeId
-                    it[nocCode] = request.nocCode
-                    it[matchScore] = request.matchScore
-                    it[teerLevelFit] = request.teerLevelFit
-                    it[matchedDuties] = request.matchedDuties.joinToString(",")
-                    it[missingSkills] = request.missingSkills.joinToString(",")
-                    it[recommendations] = request.recommendations.joinToString("|")
-                    it[createdAt] = java.time.Instant.now().toString()
-                }
-                id
-            }
-            
-            call.respond(HttpStatusCode.Created, CreateNOCMatchResponse(matchId))
-        }
-        
-        // Get user's NOC matches
-        get("/users/{userId}/matches") {
-            val userId = call.parameters["userId"] ?: return@get call.respond(
-                HttpStatusCode.BadRequest,
-                ErrorResponse("Missing user ID")
-            )
-            
-            val matches = transaction {
-                UserNOCMatchesTable.selectAll()
-                    .where { UserNOCMatchesTable.userId eq userId }
-                    .orderBy(UserNOCMatchesTable.createdAt to SortOrder.DESC)
-                    .map { row ->
-                        UserNOCMatchResponse(
-                            id = row[UserNOCMatchesTable.id],
-                            resumeId = row[UserNOCMatchesTable.resumeId],
-                            nocCode = row[UserNOCMatchesTable.nocCode],
-                            matchScore = row[UserNOCMatchesTable.matchScore],
-                            teerLevelFit = row[UserNOCMatchesTable.teerLevelFit],
-                            matchedDuties = row[UserNOCMatchesTable.matchedDuties].split(",").filter { it.isNotBlank() },
-                            missingSkills = row[UserNOCMatchesTable.missingSkills].split(",").filter { it.isNotBlank() },
-                            recommendations = row[UserNOCMatchesTable.recommendations].split("|").filter { it.isNotBlank() },
-                            createdAt = row[UserNOCMatchesTable.createdAt]
-                        )
+                val matchId = transaction {
+                    val id = UUID.randomUUID().toString()
+                    UserNOCMatchesTable.insert {
+                        it[UserNOCMatchesTable.id] = id
+                        it[UserNOCMatchesTable.userId] = userId
+                        it[resumeId] = request.resumeId
+                        it[nocCode] = request.nocCode
+                        it[matchScore] = request.matchScore
+                        it[teerLevelFit] = request.teerLevelFit
+                        it[matchedDuties] = request.matchedDuties.joinToString(",")
+                        it[missingSkills] = request.missingSkills.joinToString(",")
+                        it[recommendations] = request.recommendations.joinToString("|")
+                        it[createdAt] = java.time.Instant.now().toString()
                     }
-            }
+                    id
+                }
             
-            call.respond(UserNOCMatchListResponse(matches))
+                call.respond(HttpStatusCode.Created, CreateNOCMatchResponse(matchId))
+            }
+        
+            // Get current user's NOC matches
+            get("/users/me/matches") {
+                val userId = call.requireUserId() ?: return@get
+            
+                val matches = transaction {
+                    UserNOCMatchesTable
+                        .select { UserNOCMatchesTable.userId eq userId }
+                        .orderBy(UserNOCMatchesTable.createdAt to SortOrder.DESC)
+                        .map { row: ResultRow ->
+                            UserNOCMatchResponse(
+                                id = row[UserNOCMatchesTable.id],
+                                resumeId = row[UserNOCMatchesTable.resumeId],
+                                nocCode = row[UserNOCMatchesTable.nocCode],
+                                matchScore = row[UserNOCMatchesTable.matchScore],
+                                teerLevelFit = row[UserNOCMatchesTable.teerLevelFit],
+                                matchedDuties = row[UserNOCMatchesTable.matchedDuties].split(",").filter { it.isNotBlank() },
+                                missingSkills = row[UserNOCMatchesTable.missingSkills].split(",").filter { it.isNotBlank() },
+                                recommendations = row[UserNOCMatchesTable.recommendations].split("|").filter { it.isNotBlank() },
+                                createdAt = row[UserNOCMatchesTable.createdAt]
+                            )
+                        }
+                }
+            
+                call.respond(UserNOCMatchListResponse(matches))
+            }
         }
     }
 }

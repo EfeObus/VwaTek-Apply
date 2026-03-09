@@ -24,6 +24,8 @@ struct SettingsView: View {
     
     @State private var showExportAlert = false
     @State private var showDeleteAlert = false
+    @State private var showErrorAlert = false
+    @State private var errorMessage: String? = nil
     @State private var isLoading = true
     
     var body: some View {
@@ -222,6 +224,11 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("This action cannot be undone. All your data will be permanently deleted from our servers.")
+            }
+            .alert("Error", isPresented: $showErrorAlert) {
+                Button("OK") { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "An error occurred while saving settings")
             }
         }
     }

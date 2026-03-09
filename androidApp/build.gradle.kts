@@ -27,6 +27,7 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -60,6 +61,9 @@ kotlin {
             // Browser Custom Tabs for OAuth
             implementation(libs.androidx.browser)
             
+            // Image loading
+            implementation("io.coil-kt:coil-compose:2.5.0")
+            
             // Firebase (Crashlytics & Analytics)
             implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
             implementation(libs.firebase.crashlytics)
@@ -90,6 +94,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {

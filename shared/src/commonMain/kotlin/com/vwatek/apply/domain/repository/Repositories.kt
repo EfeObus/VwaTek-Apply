@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     fun getAuthState(): Flow<AuthState>
+    fun getAuthToken(): String?
     suspend fun getCurrentUser(): User?
     suspend fun registerWithEmail(data: RegistrationData): Result<User>
     suspend fun loginWithEmail(email: String, password: String, rememberMe: Boolean = true): Result<User>
@@ -23,6 +24,7 @@ interface AuthRepository {
     suspend fun logout()
     suspend fun updateProfile(user: User): Result<User>
     suspend fun resetPassword(email: String): Result<Unit>
+    suspend fun refreshToken(): Result<String>
     suspend fun isEmailAvailable(email: String): Boolean
     
     // Email verification methods (stub for future implementation)

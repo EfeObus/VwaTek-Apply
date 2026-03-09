@@ -38,8 +38,36 @@ fun HomeScreen(
     val coverLetterState by coverLetterViewModel.state.collectAsState()
     val interviewState by interviewViewModel.state.collectAsState()
     
+    val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Show errors from any ViewModel
+    val activeError = resumeState.error ?: coverLetterState.error ?: interviewState.error
+    LaunchedEffect(activeError) {
+        activeError?.let {
+            snackbarHostState.showSnackbar(message = it, duration = SnackbarDuration.Short)
+            // Clear whichever error was shown
+            if (resumeState.error != null) resumeViewModel.onIntent(com.vwatek.apply.presentation.resume.ResumeIntent.ClearError)
+            if (coverLetterState.error != null) coverLetterViewModel.onIntent(com.vwatek.apply.presentation.coverletter.CoverLetterIntent.ClearError)
+            if (interviewState.error != null) interviewViewModel.onIntent(com.vwatek.apply.presentation.interview.InterviewIntent.ClearError)
+        }
+    }
+    
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
+    
+    val isLoading = resumeState.isLoading || coverLetterState.isLoading || interviewState.isLoading
+    
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+    } else {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(paddingValues),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -226,6 +254,8 @@ fun HomeScreen(
             }
         }
     }
+    } // else (loading)
+    } // Scaffold
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

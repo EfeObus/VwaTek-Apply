@@ -4,13 +4,53 @@ struct HomeView: View {
     let userName: String
     @Binding var selectedTab: Int
     @StateObject private var resumeViewModel = ResumeViewModelWrapper()
+    @StateObject private var coverLetterViewModel = CoverLetterViewModelWrapper()
+    @StateObject private var interviewViewModel = InterviewViewModelWrapper()
+    @State private var showError = false
     
     var body: some View {
         NavigationStack {
+            Group {
+            if resumeViewModel.isLoading || coverLetterViewModel.isLoading || interviewViewModel.isLoading {
+                ProgressView("Loading...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
             ScrollView {
                 VStack(spacing: 20) {
                     // Welcome Card
                     WelcomeCard(userName: userName)
+                    
+                    // Quick Stats
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Your Progress")
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        HStack(spacing: 12) {
+                            QuickStatCard(
+                                title: "Resumes",
+                                value: "\(resumeViewModel.resumes.count)",
+                                color: .blue
+                            ) {
+                                selectedTab = 1
+                            }
+                            QuickStatCard(
+                                title: "Cover Letters",
+                                value: "\(coverLetterViewModel.coverLetters.count)",
+                                color: .green
+                            ) {
+                                selectedTab = 3
+                            }
+                            QuickStatCard(
+                                title: "Interviews",
+                                value: "\(interviewViewModel.sessions.count)",
+                                color: .orange
+                            ) {
+                                selectedTab = 4
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
                     
                     // Quick Actions
                     VStack(alignment: .leading, spacing: 12) {
@@ -109,8 +149,56 @@ struct HomeView: View {
                 }
                 .padding(.vertical)
             }
+            } // else
+            } // Group
             .navigationTitle("Home")
         }
+        .alert("Error", isPresented: $showError) {
+            Button("OK") {
+                resumeViewModel.clearError()
+                coverLetterViewModel.clearError()
+                interviewViewModel.clearError()
+            }
+        } message: {
+            Text(resumeViewModel.error ?? coverLetterViewModel.error ?? interviewViewModel.error ?? "An unknown error occurred")
+        }
+        .onChange(of: resumeViewModel.error) { error in
+            if error != nil { showError = true }
+        }
+        .onChange(of: coverLetterViewModel.error) { error in
+            if error != nil { showError = true }
+        }
+        .onChange(of: interviewViewModel.error) { error in
+            if error != nil { showError = true }
+        }
+    }
+}
+
+// MARK: - Quick Stat Card
+
+struct QuickStatCard: View {
+    let title: String
+    let value: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Text(value)
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(color)
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -217,7 +217,7 @@ fun NOCScreen() {
                         Div(attrs = { classes("flex", "justify-center", "mt-md") }) {
                             Button(attrs = {
                                 classes("btn", "btn-outline")
-                                disabled(state.isLoadingMore)
+                                if (state.isLoadingMore) disabled()
                                 onClick { viewModel.loadMoreResults() }
                             }) {
                                 if (state.isLoadingMore) {
@@ -268,7 +268,7 @@ fun NOCScreen() {
 }
 
 @Composable
-private fun LanguageSwitcher(
+internal fun LanguageSwitcher(
     currentLocale: Locale,
     onLocaleChange: (Locale) -> Unit
 ) {
@@ -377,7 +377,7 @@ private fun NOCDetailsPanel(
                     Span(attrs = { classes("badge", getTeerBadgeClass(noc.teerLevel)) }) {
                         Text("TEER ${noc.teerLevel}")
                     }
-                </Div>
+                }
                 H3 { Text(if (currentLocale == Locale.FRENCH) noc.titleFr else noc.titleEn) }
             }
             Button(attrs = {

@@ -21,6 +21,9 @@ import com.vwatek.apply.domain.model.ATSAnalysis
 import com.vwatek.apply.domain.model.ATSIssue
 import com.vwatek.apply.domain.model.ATSRecommendation
 import com.vwatek.apply.domain.model.IssueSeverity
+import com.vwatek.apply.domain.model.GrammarIssue
+import com.vwatek.apply.domain.model.GrammarIssueType
+import com.vwatek.apply.domain.model.ImpactBullet
 import com.vwatek.apply.domain.usecase.SectionRewriteResult
 import com.vwatek.apply.presentation.resume.ResumeIntent
 import com.vwatek.apply.presentation.resume.ResumeViewModel
@@ -33,9 +36,9 @@ fun OptimizerScreen() {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     
-    // Tab state: 0 = ATS Score, 1 = Section Rewriter
+    // Tab state: 0 = ATS Score, 1 = Section Rewriter, 2 = Grammar, 3 = Impact Bullets
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabTitles = listOf("ATS Score", "Section Rewriter")
+    val tabTitles = listOf("ATS Score", "Section Rewriter", "Grammar", "Impact Bullets")
     
     var selectedResume by remember { mutableStateOf<Resume?>(null) }
     var jobDescription by remember { mutableStateOf("") }
@@ -47,6 +50,13 @@ fun OptimizerScreen() {
     var writingStyle by remember { mutableStateOf("professional") }
     var targetRole by remember { mutableStateOf("") }
     var targetIndustry by remember { mutableStateOf("") }
+    
+    // Grammar state
+    var grammarText by remember { mutableStateOf("") }
+    
+    // Impact Bullets state
+    var experienceText by remember { mutableStateOf("") }
+    var jobContext by remember { mutableStateOf("") }
     
     // Show error snackbar when error occurs
     val snackbarHostState = remember { SnackbarHostState() }
@@ -74,7 +84,7 @@ fun OptimizerScreen() {
                 .padding(paddingValues)
         ) {
             // Tab Row
-            TabRow(
+            ScrollableTabRow(
                 selectedTabIndex = selectedTabIndex
             ) {
                 tabTitles.forEachIndexed { index, title ->
@@ -86,6 +96,8 @@ fun OptimizerScreen() {
                             when (index) {
                                 0 -> Icon(Icons.Default.Star, contentDescription = null)
                                 1 -> Icon(Icons.Default.Edit, contentDescription = null)
+                                2 -> Icon(Icons.Default.CheckCircle, contentDescription = null)
+                                3 -> Icon(Icons.Default.ArrowUpward, contentDescription = null)
                             }
                         }
                     )
@@ -118,6 +130,22 @@ fun OptimizerScreen() {
                     onTargetRoleChange = { targetRole = it },
                     targetIndustry = targetIndustry,
                     onTargetIndustryChange = { targetIndustry = it },
+                    context = context
+                )
+                2 -> GrammarCheckContent(
+                    viewModel = viewModel,
+                    state = state,
+                    grammarText = grammarText,
+                    onGrammarTextChange = { grammarText = it },
+                    context = context
+                )
+                3 -> ImpactBulletsContent(
+                    viewModel = viewModel,
+                    state = state,
+                    experienceText = experienceText,
+                    onExperienceTextChange = { experienceText = it },
+                    jobContext = jobContext,
+                    onJobContextChange = { jobContext = it },
                     context = context
                 )
             }
@@ -1293,6 +1321,223 @@ private fun SectionRewriteResultCard(
                             text = tip,
                             style = MaterialTheme.typography.bodySmall
                         )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ========== Grammar Check Content ==========
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GrammarCheckContent(
+    viewModel: ResumeViewModel,
+    state: com.vwatek.apply.presentation.resume.ResumeState,
+    grammarText: String,
+    onGrammarTextChange: (String) -> Unit,
+    context: Context
+) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFF5C6BC0).copy(alpha = 0.1f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF5C6BC0))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Grammar & Tone Check", style = MaterialTheme.typography.titleMedium, color = Color(0xFF5C6BC0))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Paste text from your resume to check for grammar, spelling, tone, and clarity issues.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        item {
+            OutlinedTextField(
+                value = grammarText,
+                onValueChange = onGrammarTextChange,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp),
+                label = { Text("Text to Check") },
+                placeholder = { Text("Paste resume text here...") }
+            )
+        }
+        item {
+            Button(
+                onClick = { viewModel.onIntent(ResumeIntent.AnalyzeGrammar(grammarText)) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = grammarText.isNotBlank() && !state.isAnalyzingGrammar
+            ) {
+                if (state.isAnalyzingGrammar) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Analyzing...")
+                } else {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Check Grammar")
+                }
+            }
+        }
+        if (state.grammarIssues.isNotEmpty()) {
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Issues Found (${state.grammarIssues.size})", style = MaterialTheme.typography.titleMedium, color = Color(0xFFFF9800))
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = { viewModel.onIntent(ResumeIntent.ClearGrammarIssues) }) { Text("Clear") }
+                }
+            }
+            items(state.grammarIssues) { issue -> GrammarIssueCard(issue = issue) }
+        }
+    }
+}
+
+@Composable
+private fun GrammarIssueCard(issue: GrammarIssue) {
+    val typeColor = when (issue.type) {
+        GrammarIssueType.GRAMMAR -> Color(0xFFF44336)
+        GrammarIssueType.SPELLING -> Color(0xFFFF9800)
+        GrammarIssueType.TONE -> Color(0xFF9C27B0)
+        GrammarIssueType.CLARITY -> Color(0xFF2196F3)
+        GrammarIssueType.REDUNDANCY -> Color.Gray
+    }
+    val typeLabel = when (issue.type) {
+        GrammarIssueType.GRAMMAR -> "Grammar"
+        GrammarIssueType.SPELLING -> "Spelling"
+        GrammarIssueType.TONE -> "Tone"
+        GrammarIssueType.CLARITY -> "Clarity"
+        GrammarIssueType.REDUNDANCY -> "Redundancy"
+    }
+    @OptIn(ExperimentalMaterial3Api::class)
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            AssistChip(onClick = { }, label = { Text(typeLabel) }, colors = AssistChipDefaults.assistChipColors(containerColor = typeColor.copy(alpha = 0.15f), labelColor = typeColor))
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.Top) {
+                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFFF44336))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = issue.original, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.Top) {
+                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color(0xFF4CAF50))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = issue.corrected, style = MaterialTheme.typography.bodyMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(text = issue.explanation, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+// ========== Impact Bullets Content ==========
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+private fun ImpactBulletsContent(
+    viewModel: ResumeViewModel,
+    state: com.vwatek.apply.presentation.resume.ResumeState,
+    experienceText: String,
+    onExperienceTextChange: (String) -> Unit,
+    jobContext: String,
+    onJobContextChange: (String) -> Unit,
+    context: Context
+) {
+    val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        item {
+            Card(colors = CardDefaults.cardColors(containerColor = Color(0xFFFF9800).copy(alpha = 0.1f))) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.ArrowUpward, contentDescription = null, tint = Color(0xFFFF9800))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Impact Bullets Generator", style = MaterialTheme.typography.titleMedium, color = Color(0xFFFF9800))
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Transform plain experience descriptions into powerful XYZ-format impact bullets.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        item {
+            OutlinedTextField(value = experienceText, onValueChange = onExperienceTextChange, modifier = Modifier.fillMaxWidth().heightIn(min = 150.dp), label = { Text("Experience Descriptions") }, placeholder = { Text("Enter one experience per line...") })
+        }
+        item {
+            OutlinedTextField(value = jobContext, onValueChange = onJobContextChange, modifier = Modifier.fillMaxWidth(), label = { Text("Job Context (Optional)") }, placeholder = { Text("e.g., Senior Software Engineer at a fintech startup") })
+        }
+        item {
+            val experiences = experienceText.lines().filter { it.isNotBlank() }
+            Button(
+                onClick = { viewModel.onIntent(ResumeIntent.GenerateImpactBullets(experiences, jobContext)) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = experiences.isNotEmpty() && !state.isGeneratingBullets,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+            ) {
+                if (state.isGeneratingBullets) {
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Generating...")
+                } else {
+                    Icon(Icons.Default.Star, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Generate Impact Bullets")
+                }
+            }
+        }
+        if (state.impactBullets.isNotEmpty()) {
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Generated Bullets (${state.impactBullets.size})", style = MaterialTheme.typography.titleMedium, color = Color(0xFFFF9800))
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = { viewModel.onIntent(ResumeIntent.ClearImpactBullets) }) { Text("Clear") }
+                }
+            }
+            items(state.impactBullets) { bullet -> ImpactBulletCard(bullet = bullet, clipboardManager = clipboardManager) }
+        }
+    }
+}
+
+@Composable
+private fun ImpactBulletCard(bullet: ImpactBullet, clipboardManager: ClipboardManager) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.Top) {
+                Text("Before:", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = bullet.original, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.Top) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("After:", style = MaterialTheme.typography.labelSmall, color = Color(0xFF4CAF50))
+                    Text(text = bullet.improved, style = MaterialTheme.typography.bodyMedium, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)
+                }
+                IconButton(onClick = {
+                    clipboardManager.setPrimaryClip(ClipData.newPlainText("Impact Bullet", bullet.improved))
+                }) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = "Copy", modifier = Modifier.size(18.dp))
+                }
+            }
+            bullet.xyzFormat?.let { xyz ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(colors = CardDefaults.cardColors(containerColor = Color(0xFF2196F3).copy(alpha = 0.05f))) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("XYZ Breakdown:", style = MaterialTheme.typography.labelSmall, color = Color(0xFF2196F3))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        if (xyz.accomplished.isNotBlank()) { Text("X (Accomplished): ${xyz.accomplished}", style = MaterialTheme.typography.bodySmall) }
+                        if (xyz.measuredBy.isNotBlank()) { Text("Y (Measured by): ${xyz.measuredBy}", style = MaterialTheme.typography.bodySmall) }
+                        if (xyz.byDoing.isNotBlank()) { Text("Z (By doing): ${xyz.byDoing}", style = MaterialTheme.typography.bodySmall) }
                     }
                 }
             }

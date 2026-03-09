@@ -4,8 +4,8 @@ import com.vwatek.apply.data.api.SalaryApiClient
 import com.vwatek.apply.data.api.SalaryInsightsResponse
 import com.vwatek.apply.data.api.OfferEvaluationResponse
 import com.vwatek.apply.data.api.NegotiationSessionResponse
-import com.vwatek.apply.data.api.NegotiationMessageResponse
-import com.vwatek.apply.data.api.OfferStatus
+import com.vwatek.apply.data.api.OfferListItem
+import com.vwatek.apply.data.api.SalaryHistoryResponse
 import com.vwatek.apply.domain.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,11 +22,11 @@ class GetSalaryInsightsUseCase(
 ) {
     suspend operator fun invoke(
         jobTitle: String,
-        location: String,
-        yearsExperience: Int = 0,
-        skills: List<String> = emptyList(),
-        company: String? = null,
-        industry: String? = null
+        province: String,
+        city: String? = null,
+        nocCode: String? = null,
+        yearsExperience: Int? = null,
+        currentSalary: Double? = null
     ): Result<SalaryInsightsResponse> {
         // Check if user has access to salary insights
         if (!subscriptionManager.canUseFeature(PremiumFeature.SALARY_INSIGHTS)) {
@@ -42,17 +42,19 @@ class GetSalaryInsightsUseCase(
         if (jobTitle.isBlank()) {
             return Result.failure(IllegalArgumentException("Job title is required"))
         }
-        if (location.isBlank()) {
-            return Result.failure(IllegalArgumentException("Location is required"))
+        if (province.isBlank()) {
+            return Result.failure(IllegalArgumentException("Province is required"))
         }
         
         return salaryApiClient.getSalaryInsights(
-            jobTitle = jobTitle,
-            location = location,
-            yearsExperience = yearsExperience,
-            skills = skills,
-            company = company,
-            industry = industry
+            SalaryInsightsRequest(
+                jobTitle = jobTitle,
+                nocCode = nocCode,
+                province = province,
+                city = city,
+                yearsExperience = yearsExperience,
+                currentSalary = currentSalary
+            )
         )
     }
 }
@@ -61,7 +63,7 @@ class GetSalaryInsightsUseCase(
 class GetSalaryHistoryUseCase(
     private val salaryApiClient: SalaryApiClient
 ) {
-    suspend operator fun invoke(): Result<List<SalaryInsightsResponse>> {
+    suspend operator fun invoke(): Result<SalaryHistoryResponse> {
         return salaryApiClient.getSalaryHistory()
     }
 }
@@ -85,7 +87,7 @@ class EvaluateOfferUseCase(
         }
         
         // Validate offer
-        if (offer.companyName.isBlank()) {
+        if (offer.company.isBlank()) {
             return Result.failure(IllegalArgumentException("Company name is required"))
         }
         if (offer.jobTitle.isBlank()) {
@@ -95,7 +97,7 @@ class EvaluateOfferUseCase(
             return Result.failure(IllegalArgumentException("Base salary must be positive"))
         }
         
-        return salaryApiClient.evaluateOffer(offer)
+        return salaryApiClient.evaluateOffer(EvaluateOfferRequest(offer))
     }
 }
 
@@ -103,7 +105,7 @@ class EvaluateOfferUseCase(
 class GetSavedOffersUseCase(
     private val salaryApiClient: SalaryApiClient
 ) {
-    suspend operator fun invoke(): Result<List<JobOffer>> {
+    suspend operator fun invoke(): Result<List<OfferListItem>> {
         val result = salaryApiClient.getOffers()
         return result.map { response -> response.offers }
     }
@@ -113,7 +115,7 @@ class GetSavedOffersUseCase(
 class UpdateOfferStatusUseCase(
     private val salaryApiClient: SalaryApiClient
 ) {
-    suspend operator fun invoke(offerId: String, status: OfferStatus): Result<String> {
+    suspend operator fun invoke(offerId: String, status: String): Result<String> {
         val result = salaryApiClient.updateOfferStatus(offerId, status)
         return result.map { it.message }
     }
@@ -162,7 +164,7 @@ class SendNegotiationMessageUseCase(
     suspend operator fun invoke(
         sessionId: String,
         message: String
-    ): Result<NegotiationMessageResponse> {
+    ): Result<NegotiationSessionResponse> {
         // Check premium feature access
         if (!subscriptionManager.canUseFeature(PremiumFeature.NEGOTIATION_COACH)) {
             return Result.failure(
@@ -199,17 +201,19 @@ class SalaryIntelligenceManager(
     
     suspend fun searchSalary(
         jobTitle: String,
-        location: String,
-        yearsExperience: Int = 0,
-        skills: List<String> = emptyList()
+        province: String,
+        city: String? = null,
+        yearsExperience: Int? = null
     ) {
         _insightsState.value = SalaryInsightsState.Loading
         
         salaryApiClient.getSalaryInsights(
-            jobTitle = jobTitle,
-            location = location,
-            yearsExperience = yearsExperience,
-            skills = skills
+            SalaryInsightsRequest(
+                jobTitle = jobTitle,
+                province = province,
+                city = city,
+                yearsExperience = yearsExperience
+            )
         ).onSuccess { response ->
             _insightsState.value = SalaryInsightsState.Success(response)
         }.onFailure { error ->
@@ -232,7 +236,7 @@ class SalaryIntelligenceManager(
     suspend fun evaluateOffer(offer: JobOffer) {
         _insightsState.value = SalaryInsightsState.Loading
         
-        salaryApiClient.evaluateOffer(offer)
+        salaryApiClient.evaluateOffer(EvaluateOfferRequest(offer))
             .onSuccess { response ->
                 _insightsState.value = SalaryInsightsState.OfferEvaluated(response)
             }
@@ -289,7 +293,7 @@ sealed class SalaryInsightsState {
 
 sealed class OffersState {
     data object Loading : OffersState()
-    data class Success(val offers: List<JobOffer>) : OffersState()
+    data class Success(val offers: List<OfferListItem>) : OffersState()
     data class Error(val message: String) : OffersState()
 }
 

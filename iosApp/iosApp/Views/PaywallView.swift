@@ -168,7 +168,7 @@ struct PaywallView: View {
             HStack(spacing: 8) {
                 PaywallBillingOption(
                     title: "Monthly",
-                    price: "$\(String(format: "%.2f", pricing.monthly))/mo",
+                    price: "CA$\(String(format: "%.2f", pricing.monthly))/mo",
                     isSelected: selectedBillingPeriod == .monthly
                 ) {
                     selectedBillingPeriod = .monthly
@@ -176,7 +176,7 @@ struct PaywallView: View {
                 
                 PaywallBillingOption(
                     title: "Yearly",
-                    price: "$\(String(format: "%.2f", pricing.yearly / 12))/mo",
+                    price: "CA$\(String(format: "%.2f", pricing.yearly / 12))/mo",
                     savings: "Save 17%",
                     isSelected: selectedBillingPeriod == .yearly
                 ) {

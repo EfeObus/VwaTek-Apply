@@ -12,9 +12,16 @@ import kotlinx.serialization.Serializable
  * Handles all job application tracker communication with the backend
  */
 class JobTrackerApiClient(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val getAuthToken: () -> String? = { null }
 ) {
     private val baseUrl = "${ApiConfig.apiV1Url}/tracker"
+    
+    private fun HttpRequestBuilder.applyAuth() {
+        getAuthToken()?.let { token ->
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
     
     // ===== Job Applications =====
     
@@ -28,6 +35,7 @@ class JobTrackerApiClient(
     ): Result<JobApplicationsListDto> {
         return try {
             val response = httpClient.get(baseUrl) {
+                applyAuth()
                 status?.let { parameter("status", it) }
                 source?.let { parameter("source", it) }
                 province?.let { parameter("province", it) }
@@ -43,7 +51,9 @@ class JobTrackerApiClient(
     
     suspend fun getApplication(id: String): Result<JobApplicationDetailDto> {
         return try {
-            val response = httpClient.get("$baseUrl/$id")
+            val response = httpClient.get("$baseUrl/$id") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -53,6 +63,7 @@ class JobTrackerApiClient(
     suspend fun createApplication(request: CreateJobApplicationDto): Result<CreateJobApplicationResponseDto> {
         return try {
             val response = httpClient.post(baseUrl) {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -65,6 +76,7 @@ class JobTrackerApiClient(
     suspend fun quickSaveJob(request: QuickSaveJobDto): Result<QuickSaveResponseDto> {
         return try {
             val response = httpClient.post("$baseUrl/quick") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -77,6 +89,7 @@ class JobTrackerApiClient(
     suspend fun updateApplication(id: String, request: UpdateJobApplicationDto): Result<Unit> {
         return try {
             httpClient.put("$baseUrl/$id") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -89,6 +102,7 @@ class JobTrackerApiClient(
     suspend fun updateStatus(id: String, status: String, notes: String? = null): Result<Unit> {
         return try {
             httpClient.patch("$baseUrl/$id/status") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(UpdateStatusDto(status, notes))
             }
@@ -100,7 +114,9 @@ class JobTrackerApiClient(
     
     suspend fun deleteApplication(id: String): Result<Unit> {
         return try {
-            httpClient.delete("$baseUrl/$id")
+            httpClient.delete("$baseUrl/$id") {
+                applyAuth()
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -112,6 +128,7 @@ class JobTrackerApiClient(
     suspend fun addNote(applicationId: String, content: String, noteType: String = "GENERAL"): Result<String> {
         return try {
             val response = httpClient.post("$baseUrl/$applicationId/notes") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(CreateNoteDto(content, noteType))
             }
@@ -133,6 +150,7 @@ class JobTrackerApiClient(
     ): Result<String> {
         return try {
             val response = httpClient.post("$baseUrl/$applicationId/reminders") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(CreateReminderDto(reminderType, title, message, reminderAt))
             }
@@ -145,7 +163,9 @@ class JobTrackerApiClient(
     
     suspend fun completeReminder(applicationId: String, reminderId: String): Result<Unit> {
         return try {
-            httpClient.patch("$baseUrl/$applicationId/reminders/$reminderId/complete")
+            httpClient.patch("$baseUrl/$applicationId/reminders/$reminderId/complete") {
+                applyAuth()
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -166,6 +186,7 @@ class JobTrackerApiClient(
     ): Result<String> {
         return try {
             val response = httpClient.post("$baseUrl/$applicationId/interviews") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(CreateInterviewDto(
                     interviewType, scheduledAt, durationMinutes, location,
@@ -183,7 +204,9 @@ class JobTrackerApiClient(
     
     suspend fun getStats(): Result<TrackerStatsDto> {
         return try {
-            val response = httpClient.get("$baseUrl/stats")
+            val response = httpClient.get("$baseUrl/stats") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)

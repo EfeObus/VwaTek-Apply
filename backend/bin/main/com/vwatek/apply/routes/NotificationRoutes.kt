@@ -20,7 +20,7 @@ import java.util.*
  * Handles push notifications, preferences, and device tokens
  */
 fun Route.notificationRoutes() {
-    route("/api/v1/notifications") {
+    route("/notifications") {
         authenticate("jwt") {
             // Get user's notifications
             get {

@@ -35,10 +35,24 @@ import kotlinx.coroutines.launch
 @Composable
 fun AuthScreen(viewModel: AuthViewModel) {
     val state by viewModel.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Show Snackbar on error
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            snackbarHostState.showSnackbar(message = it, duration = SnackbarDuration.Short)
+            kotlinx.coroutines.delay(5000)
+            viewModel.onIntent(AuthIntent.ClearError)
+        }
+    }
     
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { scaffoldPadding ->
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .padding(scaffoldPadding)
             .padding(16.dp)
     ) {
         when (state.currentView) {
@@ -103,14 +117,9 @@ fun AuthScreen(viewModel: AuthViewModel) {
             }
         }
         
-        // Auto-clear error
-        if (state.error != null) {
-            LaunchedEffect(state.error) {
-                kotlinx.coroutines.delay(5000)
-                viewModel.onIntent(AuthIntent.ClearError)
-            }
-        }
+        // Auto-clear error handled by LaunchedEffect above
     }
+    } // Scaffold
 }
 
 @Composable
@@ -311,12 +320,22 @@ private fun LoginContent(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // Google "G" icon placeholder
-                    Text(
-                        text = "G",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color(0xFF4285F4) // Google Blue
-                    )
+                    // Google "G" icon with colored background
+                    Surface(
+                        shape = androidx.compose.foundation.shape.CircleShape,
+                        color = Color.White,
+                        border = BorderStroke(1.dp, Color(0xFFDDDDDD)),
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text(
+                                text = "G",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                color = Color(0xFF4285F4)
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Continue with Google",
@@ -341,12 +360,21 @@ private fun LoginContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                // LinkedIn "in" icon placeholder
-                Text(
-                    text = "in",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = Color(0xFF0A66C2) // LinkedIn Blue
-                )
+                // LinkedIn styled icon
+                Surface(
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp),
+                    color = Color(0xFF0A66C2),
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Text(
+                            text = "in",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Continue with LinkedIn",

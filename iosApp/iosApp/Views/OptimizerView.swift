@@ -4,6 +4,7 @@ import shared
 struct OptimizerView: View {
     @StateObject private var viewModel = ResumeViewModelWrapper()
     @State private var selectedTab = 0
+    @State private var showError = false
     
     var body: some View {
         NavigationStack {
@@ -12,6 +13,8 @@ struct OptimizerView: View {
                 Picker("Optimizer Section", selection: $selectedTab) {
                     Text("ATS Analysis").tag(0)
                     Text("Section Rewriter").tag(1)
+                    Text("Grammar").tag(2)
+                    Text("Impact Bullets").tag(3)
                 }
                 .pickerStyle(.segmented)
                 .padding()
@@ -19,11 +22,23 @@ struct OptimizerView: View {
                 // Tab Content
                 if selectedTab == 0 {
                     ATSAnalysisView(viewModel: viewModel)
-                } else {
+                } else if selectedTab == 1 {
                     SectionRewriterView(viewModel: viewModel)
+                } else if selectedTab == 2 {
+                    GrammarCheckView(viewModel: viewModel)
+                } else {
+                    ImpactBulletsView(viewModel: viewModel)
                 }
             }
             .navigationTitle("Resume Optimizer")
+            .alert("Error", isPresented: $showError) {
+                Button("OK") { viewModel.clearError() }
+            } message: {
+                Text(viewModel.error ?? "An unknown error occurred")
+            }
+            .onChange(of: viewModel.error) { error in
+                if error != nil { showError = true }
+            }
         }
     }
 }
@@ -161,8 +176,20 @@ struct ATSAnalysisView: View {
                 
                 // ATS Results
                 if let atsAnalysis = viewModel.atsAnalysis {
-                    ATSResultsView(analysis: atsAnalysis, onClear: { viewModel.clearATSAnalysis() })
+                    ATSResultsView(analysis: atsAnalysis, targetKeywords: targetKeywords, onClear: { viewModel.clearATSAnalysis() })
                         .padding(.horizontal)
+                } else if !viewModel.isATSAnalyzing {
+                    VStack(spacing: 8) {
+                        Image(systemName: "doc.text.magnifyingglass")
+                            .font(.system(size: 40))
+                            .foregroundColor(.secondary.opacity(0.5))
+                        Text("Select a resume and tap Analyze to check your ATS score")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
                 }
                 
                 Spacer(minLength: 40)
@@ -178,6 +205,7 @@ struct ATSAnalysisView: View {
 // MARK: - ATS Results View
 struct ATSResultsView: View {
     let analysis: ATSAnalysis
+    var targetKeywords: String = ""
     let onClear: () -> Void
     
     var scoreColor: Color {
@@ -250,6 +278,11 @@ struct ATSResultsView: View {
             .padding()
             .background(Color(.secondarySystemBackground))
             .cornerRadius(8)
+            
+            // Keyword Density
+            if !analysis.keywordDensity.isEmpty {
+                KeywordDensityView(keywordDensity: analysis.keywordDensity, missingKeywords: Array(analysis.missingKeywords), targetKeywords: targetKeywords)
+            }
             
             // Issues
             if !allIssues.isEmpty {
@@ -673,6 +706,77 @@ struct SectionRewriteResultsView: View {
     }
 }
 
+// MARK: - Keyword Density View
+struct KeywordDensityView: View {
+    let keywordDensity: [String: KotlinInt]
+    let missingKeywords: [String]
+    let targetKeywords: String
+    
+    var targetList: [String] {
+        targetKeywords.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty }
+    }
+    
+    var sortedEntries: [(key: String, value: Int)] {
+        keywordDensity.map { (key: $0.key, value: $0.value.intValue) }
+            .sorted { $0.value > $1.value }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("Keyword Density", systemImage: "magnifyingglass")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+            
+            FlowLayout(spacing: 8) {
+                ForEach(sortedEntries, id: \.key) { entry in
+                    let isTargeted = targetList.contains(entry.key.lowercased())
+                    HStack(spacing: 4) {
+                        if isTargeted {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10))
+                        }
+                        Text("\(entry.key) (\(entry.value))")
+                            .font(.caption)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(isTargeted ? Color.blue.opacity(0.2) : Color(.secondarySystemBackground))
+                    .foregroundColor(isTargeted ? .blue : .primary)
+                    .cornerRadius(16)
+                }
+            }
+            
+            // Missing target keywords
+            if !missingKeywords.isEmpty {
+                Text("Missing Target Keywords:")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.red)
+                    .padding(.top, 4)
+                
+                FlowLayout(spacing: 8) {
+                    ForEach(missingKeywords, id: \.self) { keyword in
+                        HStack(spacing: 4) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 10))
+                            Text(keyword)
+                                .font(.caption)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.red.opacity(0.1))
+                        .foregroundColor(.red)
+                        .cornerRadius(16)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(8)
+    }
+}
+
 // Simple FlowLayout for tags
 struct FlowLayout: Layout {
     var spacing: CGFloat = 8
@@ -713,6 +817,362 @@ struct FlowLayout: Layout {
             x += size.width + spacing
             rowHeight = max(rowHeight, size.height)
         }
+    }
+}
+
+// MARK: - Grammar Check View
+struct GrammarCheckView: View {
+    @ObservedObject var viewModel: ResumeViewModelWrapper
+    @State private var textToCheck = ""
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Instructions
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Grammar & Tone Check", systemImage: "textformat.abc")
+                        .font(.headline)
+                        .foregroundColor(.indigo)
+                    
+                    Text("Paste text from your resume to check for grammar, spelling, tone, and clarity issues.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(Color.indigo.opacity(0.1))
+                .cornerRadius(12)
+                .padding(.horizontal)
+                
+                // Text Input
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Text to Check")
+                        .font(.headline)
+                    
+                    TextEditor(text: $textToCheck)
+                        .frame(minHeight: 150)
+                        .padding(8)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                
+                // Analyze Button
+                Button(action: {
+                    viewModel.analyzeGrammar(text: textToCheck)
+                }) {
+                    HStack {
+                        if viewModel.isAnalyzingGrammar {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        } else {
+                            Image(systemName: "checkmark.circle")
+                        }
+                        Text(viewModel.isAnalyzingGrammar ? "Analyzing..." : "Check Grammar")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(textToCheck.isEmpty ? Color.gray : Color.indigo)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                }
+                .disabled(textToCheck.isEmpty || viewModel.isAnalyzingGrammar)
+                .padding(.horizontal)
+                
+                // Results
+                if !viewModel.grammarIssues.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("Issues Found (\(viewModel.grammarIssues.count))", systemImage: "exclamationmark.triangle.fill")
+                                .font(.headline)
+                                .foregroundColor(.orange)
+                            Spacer()
+                            Button(action: { viewModel.clearGrammarIssues() }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        ForEach(Array(viewModel.grammarIssues.enumerated()), id: \.offset) { _, issue in
+                            GrammarIssueRow(issue: issue)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .cornerRadius(12)
+                    .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                    .padding(.horizontal)
+                }
+                
+                Spacer(minLength: 40)
+            }
+            .padding(.top)
+        }
+    }
+}
+
+struct GrammarIssueRow: View {
+    let issue: GrammarIssue
+    
+    var typeColor: Color {
+        switch issue.type {
+        case .grammar: return .red
+        case .spelling: return .orange
+        case .tone: return .purple
+        case .clarity: return .blue
+        case .redundancy: return .gray
+        default: return .secondary
+        }
+    }
+    
+    var typeLabel: String {
+        switch issue.type {
+        case .grammar: return "Grammar"
+        case .spelling: return "Spelling"
+        case .tone: return "Tone"
+        case .clarity: return "Clarity"
+        case .redundancy: return "Redundancy"
+        default: return "Other"
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(typeLabel)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(typeColor.opacity(0.15))
+                    .foregroundColor(typeColor)
+                    .cornerRadius(4)
+                Spacer()
+            }
+            
+            // Original
+            HStack(alignment: .top, spacing: 4) {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.red)
+                    .font(.caption)
+                Text(issue.original)
+                    .font(.subheadline)
+                    .strikethrough()
+                    .foregroundColor(.secondary)
+            }
+            
+            // Corrected
+            HStack(alignment: .top, spacing: 4) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+                    .font(.caption)
+                Text(issue.corrected)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            
+            // Explanation
+            Text(issue.explanation)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(8)
+    }
+}
+
+// MARK: - Impact Bullets View
+struct ImpactBulletsView: View {
+    @ObservedObject var viewModel: ResumeViewModelWrapper
+    @State private var experienceText = ""
+    @State private var jobContext = ""
+    
+    var experiences: [String] {
+        experienceText.components(separatedBy: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+    }
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // Instructions
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Impact Bullets Generator", systemImage: "bolt.fill")
+                        .font(.headline)
+                        .foregroundColor(.orange)
+                    
+                    Text("Transform plain experience descriptions into powerful XYZ-format impact bullets (Accomplished X, as measured by Y, by doing Z).")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(12)
+                .padding(.horizontal)
+                
+                // Experience Input
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Experience Descriptions")
+                        .font(.headline)
+                    
+                    Text("Enter one experience per line")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    TextEditor(text: $experienceText)
+                        .frame(minHeight: 150)
+                        .padding(8)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(10)
+                }
+                .padding(.horizontal)
+                
+                // Job Context
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Job Context (Optional)")
+                        .font(.headline)
+                    
+                    TextField("e.g., Senior Software Engineer at a fintech startup", text: $jobContext)
+                        .textFieldStyle(.roundedBorder)
+                }
+                .padding(.horizontal)
+                
+                // Generate Button
+                Button(action: {
+                    viewModel.generateImpactBullets(experiences: experiences, jobContext: jobContext)
+                }) {
+                    HStack {
+                        if viewModel.isGeneratingBullets {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        } else {
+                            Image(systemName: "sparkles")
+                        }
+                        Text(viewModel.isGeneratingBullets ? "Generating..." : "Generate Impact Bullets")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(experiences.isEmpty ? Color.gray : Color.orange)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                }
+                .disabled(experiences.isEmpty || viewModel.isGeneratingBullets)
+                .padding(.horizontal)
+                
+                // Results
+                if !viewModel.impactBullets.isEmpty {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("Generated Bullets (\(viewModel.impactBullets.count))", systemImage: "bolt.fill")
+                                .font(.headline)
+                                .foregroundColor(.orange)
+                            Spacer()
+                            Button(action: { viewModel.clearImpactBullets() }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        ForEach(Array(viewModel.impactBullets.enumerated()), id: \.offset) { _, bullet in
+                            ImpactBulletRow(bullet: bullet)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemBackground))
+                    .cornerRadius(12)
+                    .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                    .padding(.horizontal)
+                }
+                
+                Spacer(minLength: 40)
+            }
+            .padding(.top)
+        }
+    }
+}
+
+struct ImpactBulletRow: View {
+    let bullet: ImpactBullet
+    @State private var copied = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Original
+            HStack(alignment: .top, spacing: 4) {
+                Text("Before:")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                Text(bullet.original)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            // Improved
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("After:")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.green)
+                    Text(bullet.improved)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+                Spacer()
+                Button(action: {
+                    UIPasteboard.general.string = bullet.improved
+                    copied = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false }
+                }) {
+                    Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                        .font(.caption)
+                }
+            }
+            
+            // XYZ Format Breakdown
+            if let xyz = bullet.xyzFormat {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("XYZ Breakdown:")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.blue)
+                    
+                    if !xyz.accomplished.isEmpty {
+                        HStack(alignment: .top, spacing: 4) {
+                            Text("X (Accomplished):")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(xyz.accomplished)
+                                .font(.caption)
+                        }
+                    }
+                    if !xyz.measuredBy.isEmpty {
+                        HStack(alignment: .top, spacing: 4) {
+                            Text("Y (Measured by):")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(xyz.measuredBy)
+                                .font(.caption)
+                        }
+                    }
+                    if !xyz.byDoing.isEmpty {
+                        HStack(alignment: .top, spacing: 4) {
+                            Text("Z (By doing):")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            Text(xyz.byDoing)
+                                .font(.caption)
+                        }
+                    }
+                }
+                .padding(8)
+                .background(Color.blue.opacity(0.05))
+                .cornerRadius(6)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(8)
     }
 }
 

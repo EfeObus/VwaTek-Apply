@@ -9,18 +9,19 @@ import kotlinx.serialization.Serializable
  */
 
 /**
- * LinkedIn profile data (imported or manually entered)
+ * LinkedIn profile data for optimizer (imported or manually entered)
+ * Note: This is different from the simpler LinkedInProfile in Models.kt which is used for basic import
  */
 @Serializable
-data class LinkedInProfile(
+data class FullLinkedInProfile(
     val id: String,
     val userId: String,
     val linkedInUrl: String? = null,
     val headline: String? = null,
     val summary: String? = null,
-    val currentPosition: LinkedInPosition? = null,
-    val positions: List<LinkedInPosition> = emptyList(),
-    val education: List<LinkedInEducation> = emptyList(),
+    val currentPosition: FullLinkedInPosition? = null,
+    val positions: List<FullLinkedInPosition> = emptyList(),
+    val education: List<FullLinkedInEducation> = emptyList(),
     val skills: List<String> = emptyList(),
     val endorsements: Map<String, Int> = emptyMap(),     // Skill -> endorsement count
     val recommendations: Int = 0,
@@ -36,10 +37,10 @@ data class LinkedInProfile(
 )
 
 /**
- * LinkedIn work position
+ * LinkedIn work position for optimizer
  */
 @Serializable
-data class LinkedInPosition(
+data class FullLinkedInPosition(
     val title: String,
     val company: String,
     val companyLinkedInUrl: String? = null,
@@ -51,10 +52,10 @@ data class LinkedInPosition(
 )
 
 /**
- * LinkedIn education entry
+ * LinkedIn education entry for optimizer
  */
 @Serializable
-data class LinkedInEducation(
+data class FullLinkedInEducation(
     val school: String,
     val degree: String? = null,
     val fieldOfStudy: String? = null,

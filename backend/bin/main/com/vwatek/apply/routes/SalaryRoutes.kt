@@ -13,6 +13,9 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import com.vwatek.apply.auth.requireUserId
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -86,11 +89,11 @@ data class SendMessageRequest(
 fun Route.salaryRoutes(httpClient: HttpClient) {
     val aiService = AIService(httpClient)
     
+    authenticate("jwt") {
     route("/salary") {
         
         // Check access (premium feature gate)
-        fun ApplicationCall.checkSalaryAccess(): Boolean {
-            val userId = request.headers["X-User-Id"] ?: return false
+        fun checkSalaryAccess(userId: String): Boolean {
             val subscription = transaction {
                 SubscriptionsTable.select { SubscriptionsTable.userId eq userId }
                     .singleOrNull()
@@ -102,13 +105,9 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
         
         // Get salary insights for a job
         post("/insights") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@post
-            }
+            val userId = call.requireUserId() ?: return@post
             
-            if (!call.checkSalaryAccess()) {
+            if (!checkSalaryAccess(userId)) {
                 call.respond(HttpStatusCode.Forbidden, mapOf(
                     "error" to "Salary Intelligence requires PRO or PREMIUM subscription",
                     "requiredTier" to "PRO"
@@ -260,11 +259,7 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
         
         // Get salary history for user
         get("/history") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@get
-            }
+            val userId = call.requireUserId() ?: return@get
             
             val history = transaction {
                 SalaryComparisonHistoryTable.select { SalaryComparisonHistoryTable.userId eq userId }
@@ -286,13 +281,9 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
         
         // Evaluate job offer
         post("/evaluate-offer") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@post
-            }
+            val userId = call.requireUserId() ?: return@post
             
-            if (!call.checkSalaryAccess()) {
+            if (!checkSalaryAccess(userId)) {
                 call.respond(HttpStatusCode.Forbidden, mapOf(
                     "error" to "Offer Evaluation requires PRO or PREMIUM subscription",
                     "requiredTier" to "PRO"
@@ -439,11 +430,7 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
         
         // Get user's saved offers
         get("/offers") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@get
-            }
+            val userId = call.requireUserId() ?: return@get
             
             val offers = transaction {
                 JobOffersTable.select { JobOffersTable.userId eq userId }
@@ -465,11 +452,7 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
         
         // Update offer status
         put("/offers/{id}/status") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@put
-            }
+            val userId = call.requireUserId() ?: return@put
             
             val offerId = call.parameters["id"]
             if (offerId == null) {
@@ -495,8 +478,7 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
     // Negotiation Coach routes (Premium feature)
     route("/negotiation") {
         
-        fun ApplicationCall.checkNegotiationAccess(): Boolean {
-            val userId = request.headers["X-User-Id"] ?: return false
+        fun checkNegotiationAccess(userId: String): Boolean {
             val subscription = transaction {
                 SubscriptionsTable.select { SubscriptionsTable.userId eq userId }
                     .singleOrNull()
@@ -508,13 +490,9 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
         
         // Start negotiation session
         post("/sessions") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@post
-            }
+            val userId = call.requireUserId() ?: return@post
             
-            if (!call.checkNegotiationAccess()) {
+            if (!checkNegotiationAccess(userId)) {
                 call.respond(HttpStatusCode.Forbidden, mapOf(
                     "error" to "Negotiation Coach requires PREMIUM subscription",
                     "requiredTier" to "PREMIUM"
@@ -607,11 +585,7 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
         
         // Get session
         get("/sessions/{id}") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@get
-            }
+            val userId = call.requireUserId() ?: return@get
             
             val sessionId = call.parameters["id"]
             if (sessionId == null) {
@@ -659,13 +633,9 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
         
         // Send message to coach
         post("/sessions/{id}/messages") {
-            val userId = call.request.headers["X-User-Id"]
-            if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "User not authenticated"))
-                return@post
-            }
+            val userId = call.requireUserId() ?: return@post
             
-            if (!call.checkNegotiationAccess()) {
+            if (!checkNegotiationAccess(userId)) {
                 call.respond(HttpStatusCode.Forbidden, mapOf(
                     "error" to "Negotiation Coach requires PREMIUM subscription",
                     "requiredTier" to "PREMIUM"
@@ -788,6 +758,7 @@ fun Route.salaryRoutes(httpClient: HttpClient) {
             ))
         }
     }
+    } // authenticate("jwt")
 }
 
 private suspend fun generateSalaryRecommendations(

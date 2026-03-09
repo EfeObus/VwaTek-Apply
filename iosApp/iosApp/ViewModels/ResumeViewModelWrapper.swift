@@ -13,12 +13,16 @@ class ResumeViewModelWrapper: ObservableObject {
     @Published var atsAnalysis: ATSAnalysis? = nil
     @Published var sectionRewriteResult: SectionRewriteResult? = nil
     @Published var optimizedContent: String? = nil
+    @Published var grammarIssues: [GrammarIssue] = []
+    @Published var impactBullets: [ImpactBullet] = []
     @Published var versionHistory: [ResumeVersion] = []
     @Published var isLoading: Bool = true
     @Published var isAnalyzing: Bool = false
     @Published var isOptimizing: Bool = false
     @Published var isATSAnalyzing: Bool = false
     @Published var isRewritingSection: Bool = false
+    @Published var isAnalyzingGrammar: Bool = false
+    @Published var isGeneratingBullets: Bool = false
     @Published var isLoadingVersions: Bool = false
     @Published var isRestoringVersion: Bool = false
     @Published var versionRestoreSuccess: Bool = false
@@ -47,12 +51,16 @@ class ResumeViewModelWrapper: ObservableObject {
                 self.atsAnalysis = resumeState.atsAnalysis
                 self.sectionRewriteResult = resumeState.sectionRewriteResult
                 self.optimizedContent = resumeState.optimizedContent
+                self.grammarIssues = resumeState.grammarIssues
+                self.impactBullets = resumeState.impactBullets
                 self.versionHistory = resumeState.versionHistory
                 self.isLoading = resumeState.isLoading
                 self.isAnalyzing = resumeState.isAnalyzing
                 self.isOptimizing = resumeState.isOptimizing
                 self.isATSAnalyzing = resumeState.isATSAnalyzing
                 self.isRewritingSection = resumeState.isRewritingSection
+                self.isAnalyzingGrammar = resumeState.isAnalyzingGrammar
+                self.isGeneratingBullets = resumeState.isGeneratingBullets
                 self.isLoadingVersions = resumeState.isLoadingVersions
                 self.isRestoringVersion = resumeState.isRestoringVersion
                 self.versionRestoreSuccess = resumeState.versionRestoreSuccess
@@ -127,6 +135,26 @@ class ResumeViewModelWrapper: ObservableObject {
         viewModel.onIntent(intent: ResumeIntent.ClearSectionRewrite.shared)
     }
     
+    // MARK: - Grammar Analysis
+    
+    func analyzeGrammar(text: String) {
+        viewModel.onIntent(intent: ResumeIntent.AnalyzeGrammar(text: text))
+    }
+    
+    func clearGrammarIssues() {
+        viewModel.onIntent(intent: ResumeIntent.ClearGrammarIssues.shared)
+    }
+    
+    // MARK: - Impact Bullets
+    
+    func generateImpactBullets(experiences: [String], jobContext: String) {
+        viewModel.onIntent(intent: ResumeIntent.GenerateImpactBullets(experiences: experiences, jobContext: jobContext))
+    }
+    
+    func clearImpactBullets() {
+        viewModel.onIntent(intent: ResumeIntent.ClearImpactBullets.shared)
+    }
+    
     // MARK: - Version History
     
     func loadVersionHistory(resumeId: String) {
@@ -152,8 +180,9 @@ class ResumeViewModelWrapper: ObservableObject {
         let intent = AuthIntent.ImportFromLinkedIn(authCode: authCode)
         authViewModel.onIntent(intent: intent)
         
-        // Refresh resumes list after a delay to allow import to complete
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+        // Observe auth state changes to refresh resumes when import completes
+        // Use a brief delay as a fallback to ensure the list refreshes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
             self?.loadResumes()
         }
     }

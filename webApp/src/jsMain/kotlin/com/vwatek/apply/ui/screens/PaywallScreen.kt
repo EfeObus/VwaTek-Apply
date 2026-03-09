@@ -12,6 +12,32 @@ import com.vwatek.apply.domain.model.SubscriptionPricing
 import org.jetbrains.compose.web.attributes.*
 import org.jetbrains.compose.web.dom.*
 
+/** JS-safe price formatting (replaces JVM-only String.format) */
+private fun Double.formatPrice(): String = asDynamic().toFixed(2) as String
+
+/** Feature descriptions per tier for the pricing cards */
+private fun getFeaturesForTier(tier: SubscriptionTier): List<String> = when (tier) {
+    SubscriptionTier.PRO -> listOf(
+        "15 resume versions/month",
+        "10 AI enhancements/day",
+        "20 cover letters/month",
+        "15 interview sessions/month",
+        "Salary insights access",
+        "Unlimited application tracking"
+    )
+    SubscriptionTier.PREMIUM -> listOf(
+        "Unlimited resume versions",
+        "Unlimited AI enhancements",
+        "Unlimited cover letters",
+        "Unlimited interview sessions",
+        "AI Negotiation Coach",
+        "LinkedIn Optimizer",
+        "Salary insights access",
+        "Priority support"
+    )
+    SubscriptionTier.FREE -> emptyList()
+}
+
 /**
  * Paywall Modal for Web
  * Shows when a user tries to access a premium feature
@@ -27,7 +53,7 @@ fun PaywallModal(
     var selectedBillingPeriod by remember { mutableStateOf(BillingPeriod.YEARLY) }
     
     val featureInfo = getFeatureInfo(feature)
-    val pricing = SubscriptionPricing.forTier(requiredTier)
+    val pricing = SubscriptionPricing.forTier(requiredTier)!!
     
     Div(attrs = { classes("modal-overlay") }) {
         Div(attrs = { classes("modal", "modal-md", "paywall-modal") }) {
@@ -66,7 +92,7 @@ fun PaywallModal(
                         onClick { selectedBillingPeriod = BillingPeriod.MONTHLY }
                     }) {
                         Div(attrs = { classes("toggle-label") }) { Text("Monthly") }
-                        Div(attrs = { classes("toggle-price") }) { Text("$${pricing.monthlyPrice}/mo") }
+                        Div(attrs = { classes("toggle-price") }) { Text("CA$${pricing.monthlyPriceCad}/mo") }
                     }
                     Button(attrs = {
                         classes("toggle-option", if (selectedBillingPeriod == BillingPeriod.YEARLY) "active" else "")
@@ -76,7 +102,7 @@ fun PaywallModal(
                             Text("Yearly") 
                             Span(attrs = { classes("savings-badge") }) { Text("Save 17%") }
                         }
-                        Div(attrs = { classes("toggle-price") }) { Text("$${pricing.yearlyPrice / 12}/mo") }
+                        Div(attrs = { classes("toggle-price") }) { Text("CA$${(pricing.yearlyPriceCad / 12).formatPrice()}/mo") }
                     }
                 }
                 
@@ -347,7 +373,7 @@ fun PaywallScreen(
             }
         }) {
             listOf(SubscriptionTier.PRO, SubscriptionTier.PREMIUM).forEach { tier ->
-                val pricing = SubscriptionPricing.forTier(tier)
+                val pricing = SubscriptionPricing.forTier(tier)!!
                 val isSelected = selectedTier == tier
                 
                 Div(attrs = { 
@@ -382,14 +408,14 @@ fun PaywallScreen(
                     
                     Div(attrs = { classes("price", "mb-md") }) {
                         val price = if (selectedBillingPeriod == BillingPeriod.YEARLY)
-                            pricing.yearlyCad / 12 else pricing.monthlyCad
+                            pricing.yearlyPriceCad / 12 else pricing.monthlyPriceCad
                         Span(attrs = { 
                             style { 
                                 property("font-size", "2.5rem")
                                 property("font-weight", "700")
                             }
                         }) {
-                            Text("$${"%.2f".format(price)}")
+                            Text("CA$${price.formatPrice()}")
                         }
                         Span(attrs = { classes("text-secondary") }) {
                             Text("/month")
@@ -400,7 +426,7 @@ fun PaywallScreen(
                         P(attrs = { 
                             classes("text-secondary", "text-sm", "mb-md")
                         }) {
-                            Text("Billed annually at $${"%.2f".format(pricing.yearlyCad)}")
+                            Text("Billed annually at CA$${pricing.yearlyPriceCad.formatPrice()}")
                         }
                     }
                     
@@ -411,7 +437,7 @@ fun PaywallScreen(
                             property("padding", "0")
                         }
                     }) {
-                        pricing.features.forEach { feature ->
+                        getFeaturesForTier(tier).forEach { feature ->
                             Li(attrs = { 
                                 classes("flex", "items-center", "gap-sm", "mb-sm")
                             }) {

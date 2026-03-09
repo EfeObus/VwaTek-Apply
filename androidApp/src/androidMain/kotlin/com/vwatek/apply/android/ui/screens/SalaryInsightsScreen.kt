@@ -45,9 +45,9 @@ fun SalaryInsightsScreen(
     
     // Search form state
     var jobTitle by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
+    var province by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
     var yearsExperience by remember { mutableStateOf("") }
-    var skills by remember { mutableStateOf("") }
     
     // Check feature access
     val hasAccess = subscriptionManager.canUseFeature(PremiumFeature.SALARY_INSIGHTS)
@@ -108,11 +108,22 @@ fun SalaryInsightsScreen(
                         Spacer(modifier = Modifier.height(12.dp))
                         
                         OutlinedTextField(
-                            value = location,
-                            onValueChange = { location = it },
-                            label = { Text("Location") },
-                            placeholder = { Text("e.g., Toronto, ON") },
+                            value = province,
+                            onValueChange = { province = it },
+                            label = { Text("Province") },
+                            placeholder = { Text("e.g., ON") },
                             leadingIcon = { Icon(Icons.Default.LocationOn, null) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        OutlinedTextField(
+                            value = city,
+                            onValueChange = { city = it },
+                            label = { Text("City (optional)") },
+                            placeholder = { Text("e.g., Toronto") },
+                            leadingIcon = { Icon(Icons.Default.LocationCity, null) },
                             modifier = Modifier.fillMaxWidth()
                         )
                         
@@ -128,17 +139,6 @@ fun SalaryInsightsScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                         
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        OutlinedTextField(
-                            value = skills,
-                            onValueChange = { skills = it },
-                            label = { Text("Key Skills (comma separated)") },
-                            placeholder = { Text("e.g., Kotlin, Android, AWS") },
-                            leadingIcon = { Icon(Icons.Default.Code, null) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        
                         Spacer(modifier = Modifier.height(16.dp))
                         
                         Button(
@@ -146,13 +146,13 @@ fun SalaryInsightsScreen(
                                 scope.launch {
                                     salaryManager.searchSalary(
                                         jobTitle = jobTitle,
-                                        location = location,
-                                        yearsExperience = yearsExperience.toIntOrNull() ?: 0,
-                                        skills = skills.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                                        province = province,
+                                        city = city.ifBlank { null },
+                                        yearsExperience = yearsExperience.toIntOrNull()
                                     )
                                 }
                             },
-                            enabled = jobTitle.isNotBlank() && location.isNotBlank(),
+                            enabled = jobTitle.isNotBlank() && province.isNotBlank(),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(Icons.Default.Search, null)
@@ -198,6 +198,8 @@ fun SalaryInsightsScreen(
 
 @Composable
 private fun SalaryInsightsResults(insights: SalaryInsightsResponse) {
+    val data = insights.insights
+    
     Column {
         // Salary Range Card
         Card(
@@ -210,13 +212,13 @@ private fun SalaryInsightsResults(insights: SalaryInsightsResponse) {
                 modifier = Modifier.padding(20.dp)
             ) {
                 Text(
-                    text = insights.jobTitle,
+                    text = data.jobTitle,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
-                    text = insights.location,
+                    text = data.location,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                 )
@@ -228,14 +230,15 @@ private fun SalaryInsightsResults(insights: SalaryInsightsResponse) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    SalaryDataPoint(label = "Min", value = insights.minSalary)
-                    SalaryDataPoint(label = "Median", value = insights.medianSalary, highlight = true)
-                    SalaryDataPoint(label = "Max", value = insights.maxSalary)
+                    SalaryDataPoint(label = "Min", value = data.salaryRange.low)
+                    SalaryDataPoint(label = "Median", value = data.medianSalary, highlight = true)
+                    SalaryDataPoint(label = "Max", value = data.salaryRange.high)
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 // Salary bar
+                val range = data.salaryRange.high - data.salaryRange.low
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -245,11 +248,12 @@ private fun SalaryInsightsResults(insights: SalaryInsightsResponse) {
                             RoundedCornerShape(4.dp)
                         )
                 ) {
-                    val medianPosition = (insights.medianSalary - insights.minSalary).toFloat() / 
-                                         (insights.maxSalary - insights.minSalary).toFloat()
+                    val medianPosition = if (range > 0) {
+                        ((data.medianSalary - data.salaryRange.low) / range).toFloat()
+                    } else 0.5f
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(medianPosition)
+                            .fillMaxWidth(medianPosition.coerceIn(0f, 1f))
                             .fillMaxHeight()
                             .background(
                                 MaterialTheme.colorScheme.primary,
@@ -277,20 +281,22 @@ private fun SalaryInsightsResults(insights: SalaryInsightsResponse) {
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                StatRow(label = "Data Points", value = "${insights.dataPoints} salaries")
-                StatRow(label = "Experience", value = "${insights.yearsExperience} years")
-                StatRow(label = "Confidence", value = "${insights.confidence}%")
+                StatRow(label = "Average Salary", value = formatSalary(data.salaryRange.average))
+                StatRow(label = "Market Trend", value = data.marketTrend.name.lowercase().replaceFirstChar { it.uppercase() })
                 
-                if (insights.percentile != null) {
-                    StatRow(label = "Your Position", value = "${insights.percentile}th percentile")
+                if (data.percentile != null) {
+                    StatRow(label = "Your Position", value = "${data.percentile}th percentile")
                 }
+                
+                StatRow(label = "vs Provincial Avg", value = "${if (data.comparisonToProvincialAverage >= 0) "+" else ""}${"%.1f".format(data.comparisonToProvincialAverage)}%")
+                StatRow(label = "vs National Avg", value = "${if (data.comparisonToNationalAverage >= 0) "+" else ""}${"%.1f".format(data.comparisonToNationalAverage)}%")
             }
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Insights
-        if (insights.insights.isNotEmpty()) {
+        // Related job salaries
+        if (data.relatedJobSalaries.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -298,15 +304,18 @@ private fun SalaryInsightsResults(insights: SalaryInsightsResponse) {
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Key Insights",
+                        text = "Related Roles",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    insights.insights.forEach { insight ->
-                        InsightItem(text = insight)
+                    data.relatedJobSalaries.forEach { related ->
+                        StatRow(
+                            label = related.jobTitle,
+                            value = formatSalary(related.medianSalary)
+                        )
                     }
                 }
             }
@@ -315,7 +324,7 @@ private fun SalaryInsightsResults(insights: SalaryInsightsResponse) {
         Spacer(modifier = Modifier.height(16.dp))
         
         // Recommendations
-        if (insights.recommendations.isNotEmpty()) {
+        if (data.recommendations.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -330,7 +339,7 @@ private fun SalaryInsightsResults(insights: SalaryInsightsResponse) {
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    insights.recommendations.forEach { recommendation ->
+                    data.recommendations.forEach { recommendation ->
                         RecommendationItem(text = recommendation)
                     }
                 }
@@ -342,7 +351,7 @@ private fun SalaryInsightsResults(insights: SalaryInsightsResponse) {
 @Composable
 private fun SalaryDataPoint(
     label: String,
-    value: Long,
+    value: Double,
     highlight: Boolean = false
 ) {
     Column(
@@ -426,14 +435,23 @@ private fun RecommendationItem(text: String) {
 
 @Composable
 private fun OfferEvaluationResults(evaluation: OfferEvaluationResponse) {
+    val eval = evaluation.evaluation
+    val ratingScore = when (eval.overallRating) {
+        OfferRating.EXCELLENT -> 95
+        OfferRating.GOOD -> 80
+        OfferRating.FAIR -> 65
+        OfferRating.BELOW_MARKET -> 45
+        OfferRating.POOR -> 25
+    }
+    
     Column {
         // Overall score
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = when {
-                    evaluation.overallScore >= 80 -> Color(0xFF4CAF50).copy(alpha = 0.1f)
-                    evaluation.overallScore >= 60 -> Color(0xFFFFC107).copy(alpha = 0.1f)
+                    ratingScore >= 80 -> Color(0xFF4CAF50).copy(alpha = 0.1f)
+                    ratingScore >= 60 -> Color(0xFFFFC107).copy(alpha = 0.1f)
                     else -> Color(0xFFF44336).copy(alpha = 0.1f)
                 }
             )
@@ -443,21 +461,21 @@ private fun OfferEvaluationResults(evaluation: OfferEvaluationResponse) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Offer Score",
+                    text = "Offer Rating",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "${evaluation.overallScore}",
-                    style = MaterialTheme.typography.displayMedium,
+                    text = eval.overallRating.name.replace("_", " "),
+                    style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold,
                     color = when {
-                        evaluation.overallScore >= 80 -> Color(0xFF4CAF50)
-                        evaluation.overallScore >= 60 -> Color(0xFFFFC107)
+                        ratingScore >= 80 -> Color(0xFF4CAF50)
+                        ratingScore >= 60 -> Color(0xFFFFC107)
                         else -> Color(0xFFF44336)
                     }
                 )
                 Text(
-                    text = evaluation.recommendation,
+                    text = eval.recommendation,
                     style = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 8.dp)
@@ -482,16 +500,30 @@ private fun OfferEvaluationResults(evaluation: OfferEvaluationResponse) {
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
-                StatRow(label = "Your Offer", value = formatSalary(evaluation.offeredSalary))
-                StatRow(label = "Market Median", value = formatSalary(evaluation.marketMedian))
-                StatRow(label = "Difference", value = "${if (evaluation.percentageDiff >= 0) "+" else ""}${evaluation.percentageDiff}%")
+                StatRow(label = "Your Offer", value = formatSalary(eval.offer.baseSalary))
+                StatRow(label = "Market Median", value = formatSalary(eval.marketAnalysis.marketMedian))
+                StatRow(label = "Difference", value = "${if (eval.marketAnalysis.comparisonToMarket >= 0) "+" else ""}${"%.1f".format(eval.marketAnalysis.comparisonToMarket)}%")
             }
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
+        // Strengths & Concerns
+        if (eval.strengths.isNotEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Strengths", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    eval.strengths.forEach { strength ->
+                        RecommendationItem(text = strength)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        
         // Negotiation opportunities
-        if (evaluation.negotiationOpportunities.isNotEmpty()) {
+        if (eval.negotiationOpportunities.isNotEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -506,7 +538,7 @@ private fun OfferEvaluationResults(evaluation: OfferEvaluationResponse) {
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    evaluation.negotiationOpportunities.forEach { opportunity ->
+                    eval.negotiationOpportunities.forEach { opportunity ->
                         NegotiationOpportunityItem(opportunity = opportunity)
                     }
                 }
@@ -516,7 +548,7 @@ private fun OfferEvaluationResults(evaluation: OfferEvaluationResponse) {
 }
 
 @Composable
-private fun NegotiationOpportunityItem(opportunity: NegotiationOpportunityDto) {
+private fun NegotiationOpportunityItem(opportunity: NegotiationOpportunity) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -534,20 +566,20 @@ private fun NegotiationOpportunityItem(opportunity: NegotiationOpportunityDto) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = opportunity.area.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
+                    text = opportunity.area.name.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() },
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Surface(
                     color = when (opportunity.priority) {
-                        "HIGH" -> MaterialTheme.colorScheme.error
-                        "MEDIUM" -> MaterialTheme.colorScheme.tertiary
-                        else -> MaterialTheme.colorScheme.outline
+                        NegotiationPriority.HIGH -> MaterialTheme.colorScheme.error
+                        NegotiationPriority.MEDIUM -> MaterialTheme.colorScheme.tertiary
+                        NegotiationPriority.LOW -> MaterialTheme.colorScheme.outline
                     }.copy(alpha = 0.2f),
                     shape = RoundedCornerShape(4.dp)
                 ) {
                     Text(
-                        text = opportunity.priority,
+                        text = opportunity.priority.name,
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
@@ -555,17 +587,15 @@ private fun NegotiationOpportunityItem(opportunity: NegotiationOpportunityDto) {
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = opportunity.suggestion,
+                text = "${opportunity.currentValue} → ${opportunity.suggestedTarget}",
                 style = MaterialTheme.typography.bodySmall
             )
-            if (opportunity.potentialValue != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Potential value: ${formatSalary(opportunity.potentialValue)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = opportunity.marketJustification,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -629,14 +659,6 @@ private fun ErrorMessage(message: String) {
     }
 }
 
-// Helper data class for negotiation opportunity
-data class NegotiationOpportunityDto(
-    val area: String,
-    val suggestion: String,
-    val priority: String,
-    val potentialValue: Long? = null
-)
-
-private fun formatSalary(amount: Long): String {
-    return "$${"%,.0f".format(amount.toDouble())}"
+private fun formatSalary(amount: Double): String {
+    return "$${"%,.0f".format(amount)}"
 }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,11 +44,26 @@ fun ProfileScreen(
     var showFeedbackDialog by remember { mutableStateOf(false) }
     var showApiSettingsDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var selectedLanguage by remember { mutableStateOf("English") }
     
+    // Error handling
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(authState.error) {
+        authState.error?.let {
+            snackbarHostState.showSnackbar(message = it, duration = SnackbarDuration.Short)
+            viewModel.onIntent(AuthIntent.ClearError)
+        }
+    }
+    
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(paddingValues)
             .padding(16.dp)
     ) {
         // Profile header
@@ -190,6 +206,48 @@ fun ProfileScreen(
                     subtitle = "Dark mode, theme settings",
                     onClick = { showAppearanceDialog = true }
                 )
+                
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                
+                ProfileListItem(
+                    icon = Icons.Default.Translate,
+                    title = "Language",
+                    subtitle = selectedLanguage,
+                    onClick = { showLanguageDialog = true }
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Connected Accounts section
+        Text(
+            text = "Connected Accounts",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column {
+                ConnectedAccountItem(
+                    icon = Icons.Default.AccountCircle,
+                    title = "Google",
+                    isConnected = authState.user?.authProvider?.name == "GOOGLE",
+                    onToggle = {
+                        // Google connection handled via auth flow
+                    }
+                )
+                
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                
+                ConnectedAccountItem(
+                    icon = Icons.Default.Person,
+                    title = "LinkedIn",
+                    isConnected = false,
+                    onToggle = {
+                        // LinkedIn OAuth flow placeholder
+                    }
+                )
             }
         }
         
@@ -258,6 +316,7 @@ fun ProfileScreen(
         
         Spacer(modifier = Modifier.height(32.dp))
     }
+    } // Scaffold
     
     if (showLogoutDialog) {
         AlertDialog(
@@ -364,6 +423,18 @@ fun ProfileScreen(
             onOpenTerms = {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://vwatek.com/terms"))
                 context.startActivity(intent)
+            }
+        )
+    }
+    
+    // Language Dialog
+    if (showLanguageDialog) {
+        LanguageDialog(
+            currentLanguage = selectedLanguage,
+            onDismiss = { showLanguageDialog = false },
+            onSelectLanguage = { lang ->
+                selectedLanguage = lang
+                showLanguageDialog = false
             }
         )
     }
@@ -1047,6 +1118,83 @@ private fun AboutDialog(
         confirmButton = {
             Button(onClick = onDismiss) {
                 Text("Close")
+            }
+        }
+    )
+}
+
+@Composable
+private fun ConnectedAccountItem(
+    icon: ImageVector,
+    title: String,
+    isConnected: Boolean,
+    onToggle: () -> Unit
+) {
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = {
+            Text(
+                if (isConnected) "Connected" else "Not connected",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (isConnected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        leadingContent = {
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = if (isConnected) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        trailingContent = {
+            Switch(
+                checked = isConnected,
+                onCheckedChange = { onToggle() }
+            )
+        },
+        modifier = Modifier.fillMaxWidth(),
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface)
+    )
+}
+
+@Composable
+private fun LanguageDialog(
+    currentLanguage: String,
+    onDismiss: () -> Unit,
+    onSelectLanguage: (String) -> Unit
+) {
+    val languages = listOf("English", "French")
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Language") },
+        text = {
+            Column {
+                languages.forEach { language ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = language == currentLanguage,
+                            onClick = { onSelectLanguage(language) }
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = language,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onDismiss) {
+                Text("Done")
             }
         }
     )
