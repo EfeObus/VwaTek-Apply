@@ -123,13 +123,9 @@ fun Application.configureRouting() {
             privacyRoutes()
         }
         
-        // Serve web frontend static files
-        // On Railway, the web build output is at /app/webApp/build/dist/js/productionExecutable/
-        val webDir = java.io.File("webApp/build/dist/js/productionExecutable")
-        if (webDir.exists()) {
-            staticFiles("/", webDir) {
-                default("index.html")
-            }
+        // Serve web frontend from embedded JAR resources
+        staticResources("/", "web") {
+            default("index.html")
         }
     }
 }

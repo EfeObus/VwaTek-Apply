@@ -13,6 +13,16 @@ application {
     mainClass.set("com.vwatek.apply.ApplicationKt")
 }
 
+// Copy web frontend assets into backend resources so they're embedded in the JAR
+val copyWebAssets by tasks.registering(Copy::class) {
+    from(rootProject.file("webApp/build/dist/js/productionExecutable"))
+    into(layout.buildDirectory.dir("resources/main/web"))
+}
+
+tasks.named("processResources") {
+    dependsOn(copyWebAssets)
+}
+
 // Shadow JAR configuration for fat JAR
 tasks.shadowJar {
     archiveBaseName.set("backend")
