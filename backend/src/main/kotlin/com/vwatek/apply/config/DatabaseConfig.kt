@@ -96,13 +96,27 @@ object DatabaseConfig {
     
     private fun tryConnectWithUrl(url: String): Boolean {
         return try {
-            // Railway DATABASE_URL format: postgresql://user:pass@host:port/db
-            // JDBC needs: jdbc:postgresql://host:port/db
-            val jdbcUrl = if (url.startsWith("jdbc:")) url
-                else "jdbc:${url.replace("postgres://", "postgresql://")}"
+            // Railway URL format: postgresql://user:pass@host:port/db
+            // Parse credentials from the URL for HikariCP
+            val normalized = url.replace("postgres://", "postgresql://")
+            
+            // Extract user:pass from URL
+            val regex = Regex("postgresql://([^:]+):([^@]+)@(.+)")
+            val match = regex.find(normalized)
+            
+            val (user, pass, hostAndDb) = if (match != null) {
+                Triple(match.groupValues[1], match.groupValues[2], match.groupValues[3])
+            } else {
+                Triple("", "", "")
+            }
+            
+            val jdbcUrl = "jdbc:postgresql://$hostAndDb"
+            logger.info("Connecting to PostgreSQL via URL: jdbc:postgresql://$hostAndDb (user=$user)")
             
             val config = HikariConfig().apply {
                 this.jdbcUrl = jdbcUrl
+                this.username = user
+                this.password = pass
                 driverClassName = "org.postgresql.Driver"
                 maximumPoolSize = 5
                 minimumIdle = 1
