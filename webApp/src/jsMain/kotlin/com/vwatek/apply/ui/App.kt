@@ -26,6 +26,7 @@ import com.vwatek.apply.ui.screens.PaywallScreen
 import com.vwatek.apply.ui.screens.SalaryInsightsScreen
 import com.vwatek.apply.ui.screens.LinkedInOptimizerScreen
 import com.vwatek.apply.ui.screens.OrganizationScreen
+import com.vwatek.apply.ui.screens.ProfileView
 import org.jetbrains.compose.web.dom.*
 import org.koin.core.context.GlobalContext
 import kotlinx.browser.window
@@ -174,15 +175,24 @@ fun App() {
                 )
                 Screen.SETTINGS -> SettingsScreen()
                 Screen.PROFILE -> {
-                    // Navigate to Auth screen with Profile view
-                    if (authState.isAuthenticated) {
-                        authViewModel.onIntent(AuthIntent.SwitchView(AuthView.PROFILE))
+                    if (authState.isAuthenticated && authState.user != null) {
+                        // Render profile directly when authenticated
+                        ProfileView(
+                            user = authState.user,
+                            onLogout = {
+                                authViewModel.onIntent(AuthIntent.Logout)
+                                currentScreen = Screen.DASHBOARD
+                            },
+                            onNavigateBack = { currentScreen = Screen.DASHBOARD }
+                        )
+                    } else {
+                        // Not authenticated — show auth screen
+                        AuthScreen(
+                            onNavigateBack = { currentScreen = Screen.DASHBOARD },
+                            onLoginSuccess = { currentScreen = Screen.DASHBOARD },
+                            onLogoutSuccess = { currentScreen = Screen.DASHBOARD }
+                        )
                     }
-                    AuthScreen(
-                        onNavigateBack = { currentScreen = Screen.DASHBOARD },
-                        onLoginSuccess = { currentScreen = Screen.DASHBOARD },
-                        onLogoutSuccess = { currentScreen = Screen.DASHBOARD }
-                    )
                 }
                 Screen.AUTH -> AuthScreen(
                     onNavigateBack = { currentScreen = Screen.DASHBOARD },

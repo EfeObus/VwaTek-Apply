@@ -177,28 +177,27 @@ fun Route.jobBankRoutes() {
                 
                 result.fold(
                     onSuccess = { searchResult ->
-                        call.respond(mapOf(
-                            "jobs" to searchResult.jobs.map { it.toResponse() },
-                            "province" to provinceCode,
-                            "count" to searchResult.totalCount
+                        call.respond(TrendingJobsServerResponse(
+                            jobs = searchResult.jobs.map { it.toResponse() },
+                            province = provinceCode,
+                            count = searchResult.totalCount
                         ))
                     },
                     onFailure = { e ->
                         // Return empty result instead of 500 so client can handle gracefully
-                        call.respond(mapOf(
-                            "jobs" to emptyList<Any>(),
-                            "province" to provinceCode,
-                            "count" to 0,
-                            "error" to (e.message ?: "Failed to fetch trending jobs")
+                        call.respond(TrendingJobsServerResponse(
+                            jobs = emptyList(),
+                            province = provinceCode,
+                            count = 0,
+                            error = e.message ?: "Failed to fetch trending jobs"
                         ))
                     }
                 )
             } catch (e: Exception) {
-                call.respond(mapOf(
-                    "jobs" to emptyList<Any>(),
-                    "province" to null,
-                    "count" to 0,
-                    "error" to (e.message ?: "Failed to fetch trending jobs")
+                call.respond(TrendingJobsServerResponse(
+                    jobs = emptyList(),
+                    count = 0,
+                    error = e.message ?: "Failed to fetch trending jobs"
                 ))
             }
         }
@@ -244,6 +243,14 @@ fun Route.jobBankRoutes() {
 }
 
 // Response DTOs
+@Serializable
+data class TrendingJobsServerResponse(
+    val jobs: List<JobBankJobResponse>,
+    val province: String? = null,
+    val count: Int,
+    val error: String? = null
+)
+
 @Serializable
 data class JobBankSearchResponse(
     val jobs: List<JobBankJobResponse>,

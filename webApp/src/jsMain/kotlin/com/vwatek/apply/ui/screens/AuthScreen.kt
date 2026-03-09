@@ -702,7 +702,7 @@ private fun ForgotPasswordForm(
 }
 
 @Composable
-private fun ProfileView(
+internal fun ProfileView(
     user: com.vwatek.apply.domain.model.User?,
     onLogout: () -> Unit,
     onNavigateBack: () -> Unit
@@ -894,7 +894,7 @@ private fun ProfileView(
 }
 
 @Composable
-private fun ProfileField(label: String, value: String) {
+internal fun ProfileField(label: String, value: String) {
     Div(attrs = { 
         classes("profile-field")
         style {

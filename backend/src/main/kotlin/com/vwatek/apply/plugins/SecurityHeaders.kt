@@ -30,7 +30,7 @@ fun Application.configureSecurityHeaders() {
             "Content-Security-Policy",
             "default-src 'self'; " +
             "script-src 'self' https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com; " +
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; " +
             "img-src 'self' data: https:; " +
             "font-src 'self' https://fonts.gstatic.com; " +
             "connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://accounts.google.com; " +
