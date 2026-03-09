@@ -17,225 +17,179 @@ struct ProfileView: View {
                 ProgressView("Loading profile...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Profile header
-                    VStack(spacing: 12) {
-                        // Avatar
-                        ZStack {
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 100, height: 100)
-                            
-                            Text(viewModel.initials)
-                                .font(.largeTitle)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                        }
-                        
-                        VStack(spacing: 4) {
-                            Text(viewModel.fullName)
-                                .font(.title2)
-                                .fontWeight(.bold)
-                            
-                            Text(viewModel.userEmail)
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                            
-                            HStack(spacing: 4) {
-                                Image(systemName: "checkmark.seal.fill")
-                                    .foregroundColor(.green)
-                                    .font(.caption)
-                                
-                                Text("Verified")
-                                    .font(.caption)
-                                    .foregroundColor(.green)
-                            }
-                        }
-                    }
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(16)
-                    
-                    // Account section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Account")
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        VStack(spacing: 0) {
-                            ProfileListItem(
-                                icon: "person.fill",
-                                title: "Edit Profile",
-                                subtitle: "Update your personal information"
-                            ) {
-                                showEditSheet = true
-                            }
-                            
-                            Divider().padding(.leading, 56)
-                            
-                            ProfileListItem(
-                                icon: "lock.fill",
-                                title: "Change Password",
-                                subtitle: "Update your security credentials"
-                            ) { }
-                            
-                            Divider().padding(.leading, 56)
-                            
-                            ProfileListItem(
-                                icon: "link",
-                                title: "Connected Accounts",
-                                subtitle: "Manage Google and LinkedIn"
-                            ) { }
-                        }
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(12)
-                    }
-                    
-                    // Preferences section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Preferences")
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        VStack(spacing: 0) {
-                            ProfileListItem(
-                                icon: "bell.fill",
-                                title: "Notifications",
-                                subtitle: "Manage push and email notifications"
-                            ) { }
-                            
-                            Divider().padding(.leading, 56)
-                            
-                            ProfileListItem(
-                                icon: "paintbrush.fill",
-                                title: "Appearance",
-                                subtitle: "Dark mode, theme settings"
-                            ) { }
-                            
-                            Divider().padding(.leading, 56)
-                            
-                            ProfileListItem(
-                                icon: "globe",
-                                title: "Language",
-                                subtitle: "English (US)"
-                            ) { }
-                        }
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(12)
-                    }
-                    
-                    // AI Configuration section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("AI Configuration")
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        VStack(spacing: 0) {
-                            ProfileListItem(
-                                icon: "key.fill",
-                                title: "API Keys",
-                                subtitle: "Configure optional custom API keys"
-                            ) {
-                                showApiSettingsSheet = true
-                            }
-                        }
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(12)
-                    }
-                    
-                    // Support section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Support")
-                            .font(.headline)
-                            .padding(.horizontal)
-                        
-                        VStack(spacing: 0) {
-                            ProfileListItem(
-                                icon: "questionmark.circle.fill",
-                                title: "Help Center",
-                                subtitle: "FAQs and support articles"
-                            ) { showHelpSheet = true }
-                            
-                            Divider().padding(.leading, 56)
-                            
-                            ProfileListItem(
-                                icon: "bubble.left.fill",
-                                title: "Send Feedback",
-                                subtitle: "Help us improve the app"
-                            ) { showFeedbackSheet = true }
-                            
-                            Divider().padding(.leading, 56)
-                            
-                            ProfileListItem(
-                                icon: "info.circle.fill",
-                                title: "About",
-                                subtitle: "Version 1.0.0"
-                            ) { showAboutSheet = true }
-                        }
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(12)
-                    }
-                    
-                    // Logout button
-                    Button(action: { showLogoutAlert = true }) {
-                        HStack {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                            Text("Log Out")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color(.secondarySystemBackground))
-                        .foregroundColor(.red)
-                        .cornerRadius(12)
-                    }
-                    
-                    // Version
-                    Text("VwaTek Apply v1.0.0")
+                profileContent
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var profileContent: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                profileHeader
+                accountSection
+                preferencesSection
+                aiConfigSection
+                supportSection
+                logoutButton
+                Text("VwaTek Apply v1.0.0")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+        }
+        .navigationTitle("Profile")
+        .alert("Log Out", isPresented: $showLogoutAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Log Out", role: .destructive) {
+                viewModel.logout()
+            }
+        } message: {
+            Text("Are you sure you want to log out?")
+        }
+        .sheet(isPresented: $showEditSheet) {
+            EditProfileSheet(
+                viewModel: viewModel,
+                onDismiss: { showEditSheet = false }
+            )
+        }
+        .sheet(isPresented: $showApiSettingsSheet) {
+            ApiSettingsSheet()
+        }
+        .sheet(isPresented: $showHelpSheet) {
+            HelpCenterSheet(onDismiss: { showHelpSheet = false })
+        }
+        .sheet(isPresented: $showFeedbackSheet) {
+            FeedbackSheet(onDismiss: { showFeedbackSheet = false })
+        }
+        .sheet(isPresented: $showAboutSheet) {
+            AboutSheet(onDismiss: { showAboutSheet = false })
+        }
+        .alert("Error", isPresented: $showErrorAlert) {
+            Button("OK") {
+                viewModel.clearError()
+            }
+        } message: {
+            Text(viewModel.error ?? "An unknown error occurred")
+        }
+        .onChange(of: viewModel.error) { error in
+            showErrorAlert = error != nil
+        }
+    }
+    
+    private var profileHeader: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.blue)
+                    .frame(width: 100, height: 100)
+                Text(viewModel.initials)
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .foregroundColor(.white)
+            }
+            VStack(spacing: 4) {
+                Text(viewModel.fullName)
+                    .font(.title2)
+                    .fontWeight(.bold)
+                Text(viewModel.userEmail)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundColor(.green)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                    Text("Verified")
+                        .font(.caption)
+                        .foregroundColor(.green)
                 }
-                .padding()
             }
-            } // else - loading check
-            .navigationTitle("Profile")
-            .alert("Log Out", isPresented: $showLogoutAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Log Out", role: .destructive) {
-                    viewModel.logout()
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color.blue.opacity(0.1))
+        .cornerRadius(16)
+    }
+    
+    private var accountSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Account")
+                .font(.headline)
+                .padding(.horizontal)
+            VStack(spacing: 0) {
+                ProfileListItem(icon: "person.fill", title: "Edit Profile", subtitle: "Update your personal information") {
+                    showEditSheet = true
                 }
-            } message: {
-                Text("Are you sure you want to log out?")
+                Divider().padding(.leading, 56)
+                ProfileListItem(icon: "lock.fill", title: "Change Password", subtitle: "Update your security credentials") { }
+                Divider().padding(.leading, 56)
+                ProfileListItem(icon: "link", title: "Connected Accounts", subtitle: "Manage Google and LinkedIn") { }
             }
-            .sheet(isPresented: $showEditSheet) {
-                EditProfileSheet(
-                    viewModel: viewModel,
-                    onDismiss: { showEditSheet = false }
-                )
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+        }
+    }
+    
+    private var preferencesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Preferences")
+                .font(.headline)
+                .padding(.horizontal)
+            VStack(spacing: 0) {
+                ProfileListItem(icon: "bell.fill", title: "Notifications", subtitle: "Manage push and email notifications") { }
+                Divider().padding(.leading, 56)
+                ProfileListItem(icon: "paintbrush.fill", title: "Appearance", subtitle: "Dark mode, theme settings") { }
+                Divider().padding(.leading, 56)
+                ProfileListItem(icon: "globe", title: "Language", subtitle: "English (US)") { }
             }
-            .sheet(isPresented: $showApiSettingsSheet) {
-                ApiSettingsSheet()
-            }
-            .sheet(isPresented: $showHelpSheet) {
-                HelpCenterSheet(onDismiss: { showHelpSheet = false })
-            }
-            .sheet(isPresented: $showFeedbackSheet) {
-                FeedbackSheet(onDismiss: { showFeedbackSheet = false })
-            }
-            .sheet(isPresented: $showAboutSheet) {
-                AboutSheet(onDismiss: { showAboutSheet = false })
-            }
-            .alert("Error", isPresented: $showErrorAlert) {
-                Button("OK") {
-                    viewModel.clearError()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+        }
+    }
+    
+    private var aiConfigSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("AI Configuration")
+                .font(.headline)
+                .padding(.horizontal)
+            VStack(spacing: 0) {
+                ProfileListItem(icon: "key.fill", title: "API Keys", subtitle: "Configure optional custom API keys") {
+                    showApiSettingsSheet = true
                 }
-            } message: {
-                Text(viewModel.error ?? "An unknown error occurred")
             }
-            .onChange(of: viewModel.error) { error in
-                showErrorAlert = error != nil
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+        }
+    }
+    
+    private var supportSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Support")
+                .font(.headline)
+                .padding(.horizontal)
+            VStack(spacing: 0) {
+                ProfileListItem(icon: "questionmark.circle.fill", title: "Help Center", subtitle: "FAQs and support articles") { showHelpSheet = true }
+                Divider().padding(.leading, 56)
+                ProfileListItem(icon: "bubble.left.fill", title: "Send Feedback", subtitle: "Help us improve the app") { showFeedbackSheet = true }
+                Divider().padding(.leading, 56)
+                ProfileListItem(icon: "info.circle.fill", title: "About", subtitle: "Version 1.0.0") { showAboutSheet = true }
             }
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+        }
+    }
+    
+    private var logoutButton: some View {
+        Button(action: { showLogoutAlert = true }) {
+            HStack {
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                Text("Log Out")
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .foregroundColor(.red)
+            .cornerRadius(12)
         }
     }
 }
@@ -430,13 +384,13 @@ struct ApiSettingsSheet: View {
         if !geminiApiKey.isEmpty {
             SettingsHelper.shared.setSetting(key: "gemini_api_key", value: geminiApiKey)
         } else {
-            SettingsHelper.shared.deleteSetting(key: "gemini_api_key")
+            SettingsHelper.shared.removeSetting(key: "gemini_api_key")
         }
         
         if !openAiApiKey.isEmpty {
             SettingsHelper.shared.setSetting(key: "openai_api_key", value: openAiApiKey)
         } else {
-            SettingsHelper.shared.deleteSetting(key: "openai_api_key")
+            SettingsHelper.shared.removeSetting(key: "openai_api_key")
         }
         
         // Show success message

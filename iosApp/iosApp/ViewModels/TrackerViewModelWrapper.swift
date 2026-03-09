@@ -97,79 +97,79 @@ class TrackerViewModelWrapper: ObservableObject {
         case .list: nextMode = .calendar
         case .calendar: nextMode = .kanban
         }
-        viewModel.onIntent(intent: TrackerIntent.SetViewMode(mode: nextMode))
+        viewModel.onIntent(intent: TrackerIntentSetViewMode(mode: nextMode))
     }
     
     func loadApplications() {
-        viewModel.onIntent(intent: TrackerIntent.LoadApplications.shared)
+        viewModel.onIntent(intent: TrackerIntentLoadApplications())
     }
     
     func refreshApplications() {
-        viewModel.onIntent(intent: TrackerIntent.RefreshApplications.shared)
+        viewModel.onIntent(intent: TrackerIntentRefreshApplications())
     }
     
     func selectApplication(id: String) {
-        viewModel.onIntent(intent: TrackerIntent.SelectApplication(id: id))
+        viewModel.onIntent(intent: TrackerIntentSelectApplication(id: id))
     }
     
     func clearSelectedApplication() {
-        viewModel.onIntent(intent: TrackerIntent.ClearSelectedApplication.shared)
+        viewModel.onIntent(intent: TrackerIntentClearSelectedApplication())
     }
     
     func createApplication(request: CreateJobApplicationRequest) {
-        viewModel.onIntent(intent: TrackerIntent.CreateApplication(request: request))
+        viewModel.onIntent(intent: TrackerIntentCreateApplication(request: request))
     }
     
     func updateApplication(id: String, request: UpdateJobApplicationRequest) {
-        viewModel.onIntent(intent: TrackerIntent.UpdateApplication(id: id, request: request))
+        viewModel.onIntent(intent: TrackerIntentUpdateApplication(id: id, request: request))
     }
     
     func updateStatus(id: String, newStatus: ApplicationStatus, notes: String?) {
-        viewModel.onIntent(intent: TrackerIntent.UpdateStatus(id: id, newStatus: newStatus, notes: notes))
+        viewModel.onIntent(intent: TrackerIntentUpdateStatus(id: id, newStatus: newStatus, notes: notes))
     }
     
     func deleteApplication(id: String) {
-        viewModel.onIntent(intent: TrackerIntent.DeleteApplication(id: id))
+        viewModel.onIntent(intent: TrackerIntentDeleteApplication(id: id))
     }
     
     func addNote(applicationId: String, content: String, noteType: NoteType) {
-        viewModel.onIntent(intent: TrackerIntent.AddNote(applicationId: applicationId, content: content, noteType: noteType))
+        viewModel.onIntent(intent: TrackerIntentAddNote(applicationId: applicationId, content: content, noteType: noteType))
     }
     
     func addReminder(applicationId: String, reminder: CreateReminderRequest) {
-        viewModel.onIntent(intent: TrackerIntent.AddReminder(applicationId: applicationId, reminder: reminder))
+        viewModel.onIntent(intent: TrackerIntentAddReminder(applicationId: applicationId, reminder: reminder))
     }
     
     func addInterview(applicationId: String, interview: CreateInterviewRequest) {
-        viewModel.onIntent(intent: TrackerIntent.AddInterview(applicationId: applicationId, interview: interview))
+        viewModel.onIntent(intent: TrackerIntentAddInterview(applicationId: applicationId, interview: interview))
     }
     
     func setFilterStatus(status: ApplicationStatus?) {
-        viewModel.onIntent(intent: TrackerIntent.SetFilterStatus(status: status))
+        viewModel.onIntent(intent: TrackerIntentSetFilterStatus(status: status))
     }
     
     func setFilterSource(source: JobBoardSource?) {
-        viewModel.onIntent(intent: TrackerIntent.SetFilterSource(source: source))
+        viewModel.onIntent(intent: TrackerIntentSetFilterSource(source: source))
     }
     
     func setFilterProvince(province: CanadianProvince?) {
-        viewModel.onIntent(intent: TrackerIntent.SetFilterProvince(province: province))
+        viewModel.onIntent(intent: TrackerIntentSetFilterProvince(province: province))
     }
     
     func setSearchQuery(query: String?) {
-        viewModel.onIntent(intent: TrackerIntent.SetSearchQuery(query: query))
+        viewModel.onIntent(intent: TrackerIntentSetSearchQuery(query: query))
     }
     
     func clearFilters() {
-        viewModel.onIntent(intent: TrackerIntent.ClearFilters.shared)
+        viewModel.onIntent(intent: TrackerIntentClearFilters())
     }
     
     func moveToStatus(applicationId: String, targetStatus: ApplicationStatus) {
-        viewModel.onIntent(intent: TrackerIntent.MoveToStatus(applicationId: applicationId, targetStatus: targetStatus))
+        viewModel.onIntent(intent: TrackerIntentMoveToStatus(applicationId: applicationId, targetStatus: targetStatus))
     }
     
     func clearError() {
-        viewModel.onIntent(intent: TrackerIntent.ClearError.shared)
+        viewModel.onIntent(intent: TrackerIntentClearError())
     }
 }
 

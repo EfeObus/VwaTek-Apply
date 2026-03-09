@@ -198,15 +198,15 @@ class NOCViewModelWrapper: ObservableObject {
             mainDuties: details.mainDuties.map { duty in
                 NOCMainDutyUI(
                     id: duty.id,
-                    dutyEn: duty.dutyTextEn,
-                    dutyFr: duty.dutyTextFr
+                    dutyEn: duty.dutyEn,
+                    dutyFr: duty.dutyFr
                 )
             },
             employmentRequirements: details.employmentRequirements.map { req in
                 NOCEmploymentRequirementUI(
                     id: req.id,
-                    requirementEn: req.requirementTextEn,
-                    requirementFr: req.requirementTextFr
+                    requirementEn: req.requirementEn,
+                    requirementFr: req.requirementFr
                 )
             },
             skills: details.skills.map { skill in
@@ -220,16 +220,16 @@ class NOCViewModelWrapper: ObservableObject {
         )
     }
     
-    private func convertProvincialDemand(_ demand: NOCProvincialDemand) -> ProvincialDemandUI {
+    private func convertProvincialDemand(_ demand: ProvincialDemandInfo) -> ProvincialDemandUI {
         return ProvincialDemandUI(
-            id: "\(demand.nocCode)_\(demand.provinceCode)",
+            id: "\(demand.provinceCode)",
             provinceCode: demand.provinceCode,
             demandLevel: demand.demandLevel,
-            medianSalary: demand.medianSalary
+            medianSalary: demand.medianSalary?.doubleValue ?? 0
         )
     }
     
-    private func convertImmigrationPathway(_ pathway: NOCImmigrationPathway) -> ImmigrationPathwayUI {
+    private func convertImmigrationPathway(_ pathway: ImmigrationPathwayInfo) -> ImmigrationPathwayUI {
         return ImmigrationPathwayUI(
             id: pathway.pathwayName,
             pathwayName: pathway.pathwayName,
@@ -249,14 +249,7 @@ class NOCViewModelWrapper: ObservableObject {
             return
         }
         
-        let filters = NOCSearchFilters(
-            query: query.isEmpty ? nil : query,
-            teerLevels: teerLevels?.map { Int32($0) },
-            category: category,
-            page: 0,
-            perPage: 20
-        )
-        viewModel.searchNOCCodes(filters: filters)
+        viewModel.searchNOCCodes(query: query.isEmpty ? "" : query, teerLevels: teerLevels?.map { KotlinInt(int: Int32($0)) }, category: category)
     }
     
     func clearSearch() {
@@ -288,14 +281,7 @@ class NOCViewModelWrapper: ObservableObject {
         guard hasMoreResults && !isLoadingMore else { return }
         isLoadingMore = true
         
-        let filters = NOCSearchFilters(
-            query: currentQuery.isEmpty ? nil : currentQuery,
-            teerLevels: selectedTeerLevels?.map { Int32($0) },
-            category: selectedCategory,
-            page: Int32(currentPage + 1),
-            perPage: 20
-        )
-        viewModel.searchNOCCodes(filters: filters)
+        viewModel.searchNOCCodes(query: currentQuery.isEmpty ? "" : currentQuery, teerLevels: selectedTeerLevels?.map { KotlinInt(int: Int32($0)) }, category: selectedCategory)
         isLoadingMore = false
     }
     

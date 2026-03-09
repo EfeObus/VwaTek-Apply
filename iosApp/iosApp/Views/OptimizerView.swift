@@ -281,7 +281,10 @@ struct ATSResultsView: View {
             
             // Keyword Density
             if !analysis.keywordDensity.isEmpty {
-                KeywordDensityView(keywordDensity: analysis.keywordDensity, missingKeywords: Array(analysis.missingKeywords), targetKeywords: targetKeywords)
+                let existingKeys = Set(analysis.keywordDensity.keys.map { $0.lowercased() })
+                let targetList = targetKeywords.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.filter { !$0.isEmpty }
+                let missing = targetList.filter { !existingKeys.contains($0) }
+                KeywordDensityView(keywordDensity: analysis.keywordDensity, missingKeywords: missing, targetKeywords: targetKeywords)
             }
             
             // Issues

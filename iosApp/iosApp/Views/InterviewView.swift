@@ -228,7 +228,7 @@ struct InterviewSetupView: View {
                             Button(action: { onSelectSession(session) }) {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(session.role)
+                                        Text(session.jobTitle)
                                             .font(.subheadline)
                                             .fontWeight(.medium)
                                             .foregroundColor(.primary)

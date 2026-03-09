@@ -189,8 +189,8 @@ class JobBankViewModelWrapper: ObservableObject {
         return CanadianProvinceUI(
             id: province.code,
             code: province.code,
-            name: province.name,
-            nameFr: province.nameFr
+            name: province.fullName,
+            nameFr: province.fullName
         )
     }
     
