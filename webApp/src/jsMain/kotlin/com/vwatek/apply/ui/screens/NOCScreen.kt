@@ -136,7 +136,7 @@ fun NOCScreen() {
                             }
                             state.categories.forEach { cat ->
                                 Div(attrs = {
-                                    classes("dropdown-item", if (state.selectedCategory == cat.category) "active" else "")
+                                    classes(buildList { add("dropdown-item"); if (state.selectedCategory == cat.category) add("active") })
                                     onClick { 
                                         viewModel.setCategoryFilter(cat.category)
                                         showCategoryFilter = false

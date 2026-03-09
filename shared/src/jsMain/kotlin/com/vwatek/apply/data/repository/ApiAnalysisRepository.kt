@@ -13,7 +13,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import org.w3c.fetch.RequestInit
 import kotlinx.coroutines.await
-import kotlin.js.json as jsJson
 
 /**
  * API-based Analysis Repository that communicates with the backend Cloud SQL database
@@ -36,7 +35,7 @@ class ApiAnalysisRepository : AnalysisRepository {
                     "${getApiBaseUrl()}/api/v1/resumes/$resumeId/analyses",
                     RequestInit(
                         method = "GET",
-                        headers = jsJson("Content-Type" to "application/json")
+                        headers = authHeaders()
                     )
                 ).await()
                 
@@ -70,7 +69,7 @@ class ApiAnalysisRepository : AnalysisRepository {
                 "${getApiBaseUrl()}/api/v1/analyses",
                 RequestInit(
                     method = "POST",
-                    headers = jsJson("Content-Type" to "application/json"),
+                    headers = authHeaders(),
                     body = requestBody
                 )
             ).await()
@@ -94,7 +93,7 @@ class ApiAnalysisRepository : AnalysisRepository {
                 "${getApiBaseUrl()}/api/v1/analyses/$id",
                 RequestInit(
                     method = "DELETE",
-                    headers = jsJson("Content-Type" to "application/json")
+                    headers = authHeaders()
                 )
             ).await()
             

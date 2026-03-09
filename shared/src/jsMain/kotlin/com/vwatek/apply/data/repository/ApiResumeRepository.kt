@@ -14,7 +14,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import org.w3c.fetch.RequestInit
 import kotlinx.coroutines.await
-import kotlin.js.json as jsJson
 
 /**
  * API-based Resume Repository that communicates with the backend Cloud SQL database
@@ -32,22 +31,18 @@ class ApiResumeRepository : ResumeRepository {
     private fun refreshResumes() {
         launchAsync {
             try {
-                val userId = getCurrentUserId()
                 val response = window.fetch(
                     "${getApiBaseUrl()}/api/v1/resumes",
                     RequestInit(
                         method = "GET",
-                        headers = jsJson(
-                            "Content-Type" to "application/json",
-                            "X-User-Id" to (userId ?: "")
-                        )
+                        headers = authHeaders()
                     )
                 ).await()
                 
                 if (response.ok) {
                     val responseText = response.text().await()
                     val apiResumes = apiJson.decodeFromString<List<ResumeApiResponse>>(responseText)
-                    _resumes.value = apiResumes.map { it.toResume(userId) }
+                    _resumes.value = apiResumes.map { it.toResume(getCurrentUserId()) }
                     console.log("Loaded ${apiResumes.size} resumes from API")
                 } else {
                     console.error("Failed to load resumes: ${response.status}")
@@ -64,7 +59,7 @@ class ApiResumeRepository : ResumeRepository {
                 "${getApiBaseUrl()}/api/v1/resumes/$id",
                 RequestInit(
                     method = "GET",
-                    headers = jsJson("Content-Type" to "application/json")
+                    headers = authHeaders()
                 )
             ).await()
             
@@ -87,7 +82,6 @@ class ApiResumeRepository : ResumeRepository {
     
     override suspend fun insertResume(resume: Resume) {
         try {
-            val userId = getCurrentUserId()
             val requestBody = apiJson.encodeToString(ResumeApiRequest(
                 name = resume.name,
                 content = resume.content,
@@ -99,17 +93,14 @@ class ApiResumeRepository : ResumeRepository {
                 "${getApiBaseUrl()}/api/v1/resumes",
                 RequestInit(
                     method = "POST",
-                    headers = jsJson(
-                        "Content-Type" to "application/json",
-                        "X-User-Id" to (userId ?: "")
-                    ),
+                    headers = authHeaders(),
                     body = requestBody
                 )
             ).await()
             
             if (response.ok) {
                 val responseText = response.text().await()
-                val newResume = apiJson.decodeFromString<ResumeApiResponse>(responseText).toResume(userId)
+                val newResume = apiJson.decodeFromString<ResumeApiResponse>(responseText).toResume(getCurrentUserId())
                 _resumes.value = _resumes.value + newResume
                 console.log("Resume created: ${newResume.id}")
             } else {
@@ -133,7 +124,7 @@ class ApiResumeRepository : ResumeRepository {
                 "${getApiBaseUrl()}/api/v1/resumes/${resume.id}",
                 RequestInit(
                     method = "PUT",
-                    headers = jsJson("Content-Type" to "application/json"),
+                    headers = authHeaders(),
                     body = requestBody
                 )
             ).await()
@@ -157,7 +148,7 @@ class ApiResumeRepository : ResumeRepository {
                 "${getApiBaseUrl()}/api/v1/resumes/$id",
                 RequestInit(
                     method = "DELETE",
-                    headers = jsJson("Content-Type" to "application/json")
+                    headers = authHeaders()
                 )
             ).await()
             

@@ -49,6 +49,36 @@ internal fun getCurrentUserId(): String? {
 }
 
 /**
+ * Get the current JWT auth token from cached session
+ */
+internal fun getCurrentAuthToken(): String? {
+    val sessionJson = localStorage.getItem("vwatek_auth_session") ?: return null
+    return try {
+        val session = apiJson.decodeFromString<ApiCachedSession>(sessionJson)
+        session.token
+    } catch (e: Exception) {
+        console.error("Error getting auth token: ${e.message}")
+        null
+    }
+}
+
+/**
+ * Build standard headers with Bearer auth token
+ */
+internal fun authHeaders(extraHeaders: Map<String, String> = emptyMap()): dynamic {
+    val token = getCurrentAuthToken()
+    val headers = js("{}")
+    headers["Content-Type"] = "application/json"
+    if (token != null) {
+        headers["Authorization"] = "Bearer $token"
+    }
+    for ((key, value) in extraHeaders) {
+        headers[key] = value
+    }
+    return headers
+}
+
+/**
  * Get the API base URL based on current hostname
  * Uses centralized ApiConfig (Canadian region in production)
  */

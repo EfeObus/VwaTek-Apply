@@ -184,11 +184,22 @@ fun Route.jobBankRoutes() {
                         ))
                     },
                     onFailure = { e ->
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                        // Return empty result instead of 500 so client can handle gracefully
+                        call.respond(mapOf(
+                            "jobs" to emptyList<Any>(),
+                            "province" to provinceCode,
+                            "count" to 0,
+                            "error" to (e.message ?: "Failed to fetch trending jobs")
+                        ))
                     }
                 )
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                call.respond(mapOf(
+                    "jobs" to emptyList<Any>(),
+                    "province" to null,
+                    "count" to 0,
+                    "error" to (e.message ?: "Failed to fetch trending jobs")
+                ))
             }
         }
         

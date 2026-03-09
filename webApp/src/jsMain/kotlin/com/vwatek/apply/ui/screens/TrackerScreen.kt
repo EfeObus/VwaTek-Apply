@@ -903,7 +903,7 @@ private fun ApplicationDetailModal(
         Div(attrs = { classes("tabs", "mb-md") }) {
             listOf("Details", "Notes", "Reminders", "History").forEachIndexed { index, tab ->
                 Button(attrs = {
-                    classes("tab", if (activeTab == index) "tab-active" else "")
+                    classes(buildList { add("tab"); if (activeTab == index) add("tab-active") })
                     onClick { activeTab = index }
                 }) {
                     Text(tab)
@@ -1362,7 +1362,7 @@ private fun Modal(
         onClick { onClose() }
     }) {
         Div(attrs = {
-            classes("modal", if (large) "modal-lg" else "")
+            classes(buildList { add("modal"); if (large) add("modal-lg") })
             onClick { it.stopPropagation() }
         }) {
             Div(attrs = { classes("modal-header") }) {

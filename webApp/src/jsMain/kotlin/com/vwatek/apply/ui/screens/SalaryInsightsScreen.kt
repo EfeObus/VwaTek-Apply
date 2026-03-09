@@ -75,11 +75,11 @@ fun SalaryInsightsScreen() {
         // Tab selector
         Div(attrs = { classes("tab-bar", "mb-lg") }) {
             Button(attrs = {
-                classes("tab-btn", if (!showOfferTab) "active" else "")
+                classes(buildList { add("tab-btn"); if (!showOfferTab) add("active") })
                 onClick { showOfferTab = false }
             }) { Text("Salary Search") }
             Button(attrs = {
-                classes("tab-btn", if (showOfferTab) "active" else "")
+                classes(buildList { add("tab-btn"); if (showOfferTab) add("active") })
                 onClick { showOfferTab = true }
             }) { Text("Offer Evaluation") }
         }

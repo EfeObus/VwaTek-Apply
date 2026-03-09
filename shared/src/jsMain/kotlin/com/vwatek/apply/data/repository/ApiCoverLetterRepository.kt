@@ -13,7 +13,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import org.w3c.fetch.RequestInit
 import kotlinx.coroutines.await
-import kotlin.js.json as jsJson
 
 /**
  * API-based Cover Letter Repository that communicates with the backend Cloud SQL database
@@ -30,15 +29,11 @@ class ApiCoverLetterRepository : CoverLetterRepository {
     private fun refreshCoverLetters() {
         launchAsync {
             try {
-                val userId = getCurrentUserId()
                 val response = window.fetch(
                     "${getApiBaseUrl()}/api/v1/cover-letters",
                     RequestInit(
                         method = "GET",
-                        headers = jsJson(
-                            "Content-Type" to "application/json",
-                            "X-User-Id" to (userId ?: "")
-                        )
+                        headers = authHeaders()
                     )
                 ).await()
                 
@@ -62,7 +57,7 @@ class ApiCoverLetterRepository : CoverLetterRepository {
                 "${getApiBaseUrl()}/api/v1/cover-letters/$id",
                 RequestInit(
                     method = "GET",
-                    headers = jsJson("Content-Type" to "application/json")
+                    headers = authHeaders()
                 )
             ).await()
             
@@ -81,7 +76,6 @@ class ApiCoverLetterRepository : CoverLetterRepository {
     
     override suspend fun insertCoverLetter(coverLetter: CoverLetter) {
         try {
-            val userId = getCurrentUserId()
             val requestBody = apiJson.encodeToString(CoverLetterApiRequest(
                 resumeId = coverLetter.resumeId,
                 jobTitle = coverLetter.jobTitle,
@@ -94,10 +88,7 @@ class ApiCoverLetterRepository : CoverLetterRepository {
                 "${getApiBaseUrl()}/api/v1/cover-letters",
                 RequestInit(
                     method = "POST",
-                    headers = jsJson(
-                        "Content-Type" to "application/json",
-                        "X-User-Id" to (userId ?: "")
-                    ),
+                    headers = authHeaders(),
                     body = requestBody
                 )
             ).await()
@@ -130,7 +121,7 @@ class ApiCoverLetterRepository : CoverLetterRepository {
                 "${getApiBaseUrl()}/api/v1/cover-letters/$id",
                 RequestInit(
                     method = "PUT",
-                    headers = jsJson("Content-Type" to "application/json"),
+                    headers = authHeaders(),
                     body = requestBody
                 )
             ).await()
@@ -154,7 +145,7 @@ class ApiCoverLetterRepository : CoverLetterRepository {
                 "${getApiBaseUrl()}/api/v1/cover-letters/$id",
                 RequestInit(
                     method = "DELETE",
-                    headers = jsJson("Content-Type" to "application/json")
+                    headers = authHeaders()
                 )
             ).await()
             

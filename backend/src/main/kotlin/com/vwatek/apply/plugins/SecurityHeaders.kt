@@ -29,11 +29,12 @@ fun Application.configureSecurityHeaders() {
         header(
             "Content-Security-Policy",
             "default-src 'self'; " +
-            "script-src 'self'; " +
-            "style-src 'self' 'unsafe-inline'; " +
+            "script-src 'self' https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com; " +
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
             "img-src 'self' data: https:; " +
-            "font-src 'self'; " +
-            "connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com; " +
+            "font-src 'self' https://fonts.gstatic.com; " +
+            "connect-src 'self' https://generativelanguage.googleapis.com https://api.openai.com https://accounts.google.com; " +
+            "frame-src https://accounts.google.com; " +
             "frame-ancestors 'none'; " +
             "base-uri 'self'; " +
             "form-action 'self'"

@@ -129,13 +129,13 @@ fun SubscriptionScreen() {
         Div(attrs = { classes("billing-toggle", "flex", "justify-center", "mb-xl") }) {
             Div(attrs = { classes("toggle-container") }) {
                 Button(attrs = {
-                    classes("toggle-btn", if (selectedBillingPeriod == BillingPeriod.MONTHLY) "active" else "")
+                    classes(buildList { add("toggle-btn"); if (selectedBillingPeriod == BillingPeriod.MONTHLY) add("active") })
                     onClick { selectedBillingPeriod = BillingPeriod.MONTHLY }
                 }) {
                     Text("Monthly")
                 }
                 Button(attrs = {
-                    classes("toggle-btn", if (selectedBillingPeriod == BillingPeriod.YEARLY) "active" else "")
+                    classes(buildList { add("toggle-btn"); if (selectedBillingPeriod == BillingPeriod.YEARLY) add("active") })
                     onClick { selectedBillingPeriod = BillingPeriod.YEARLY }
                 }) {
                     Text("Yearly")
@@ -387,21 +387,21 @@ private fun ComparisonRow(
 ) {
     Tr {
         Td { Text(feature) }
-        Td(attrs = { classes("text-center", if (free == "✗") "text-muted" else "") }) { 
+        Td(attrs = { classes(buildList { add("text-center"); if (free == "✗") add("text-muted") }) }) { 
             if (hasCheckmark && free == "✓") {
                 Span(attrs = { classes("checkmark") }) { Text("✓") }
             } else {
                 Text(free)
             }
         }
-        Td(attrs = { classes("text-center", if (pro == "✓") "text-success" else "") }) {
+        Td(attrs = { classes(buildList { add("text-center"); if (pro == "✓") add("text-success") }) }) {
             if (hasCheckmark && pro == "✓") {
                 Span(attrs = { classes("checkmark", "text-success") }) { Text("✓") }
             } else {
                 Text(pro)
             }
         }
-        Td(attrs = { classes("text-center", if (premium == "✓" || premium == "Unlimited") "text-success" else "", "font-bold") }) {
+        Td(attrs = { classes(buildList { add("text-center"); if (premium == "✓" || premium == "Unlimited") add("text-success"); add("font-bold") }) }) {
             if (hasCheckmark && premium == "✓") {
                 Span(attrs = { classes("checkmark", "text-success") }) { Text("✓") }
             } else {

@@ -14,7 +14,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import org.w3c.fetch.RequestInit
 import kotlinx.coroutines.await
-import kotlin.js.json as jsJson
 
 /**
  * API-based Interview Repository that communicates with the backend Cloud SQL database
@@ -31,15 +30,11 @@ class ApiInterviewRepository : InterviewRepository {
     private fun refreshSessions() {
         launchAsync {
             try {
-                val userId = getCurrentUserId()
                 val response = window.fetch(
                     "${getApiBaseUrl()}/api/v1/interviews",
                     RequestInit(
                         method = "GET",
-                        headers = jsJson(
-                            "Content-Type" to "application/json",
-                            "X-User-Id" to (userId ?: "")
-                        )
+                        headers = authHeaders()
                     )
                 ).await()
                 
@@ -63,7 +58,7 @@ class ApiInterviewRepository : InterviewRepository {
                 "${getApiBaseUrl()}/api/v1/interviews/$id",
                 RequestInit(
                     method = "GET",
-                    headers = jsJson("Content-Type" to "application/json")
+                    headers = authHeaders()
                 )
             ).await()
             
@@ -82,7 +77,6 @@ class ApiInterviewRepository : InterviewRepository {
     
     override suspend fun insertSession(session: InterviewSession) {
         try {
-            val userId = getCurrentUserId()
             val requestBody = apiJson.encodeToString(InterviewSessionApiRequest(
                 resumeId = session.resumeId,
                 jobTitle = session.jobTitle,
@@ -93,10 +87,7 @@ class ApiInterviewRepository : InterviewRepository {
                 "${getApiBaseUrl()}/api/v1/interviews",
                 RequestInit(
                     method = "POST",
-                    headers = jsJson(
-                        "Content-Type" to "application/json",
-                        "X-User-Id" to (userId ?: "")
-                    ),
+                    headers = authHeaders(),
                     body = requestBody
                 )
             ).await()
@@ -125,7 +116,7 @@ class ApiInterviewRepository : InterviewRepository {
                 "${getApiBaseUrl()}/api/v1/interviews/$id/status",
                 RequestInit(
                     method = "PUT",
-                    headers = jsJson("Content-Type" to "application/json"),
+                    headers = authHeaders(),
                     body = requestBody
                 )
             ).await()
@@ -153,7 +144,7 @@ class ApiInterviewRepository : InterviewRepository {
                 "${getApiBaseUrl()}/api/v1/interviews/$id",
                 RequestInit(
                     method = "DELETE",
-                    headers = jsJson("Content-Type" to "application/json")
+                    headers = authHeaders()
                 )
             ).await()
             
@@ -184,7 +175,7 @@ class ApiInterviewRepository : InterviewRepository {
                 "${getApiBaseUrl()}/api/v1/interviews/${question.sessionId}/questions",
                 RequestInit(
                     method = "POST",
-                    headers = jsJson("Content-Type" to "application/json"),
+                    headers = authHeaders(),
                     body = requestBody
                 )
             ).await()
@@ -211,7 +202,7 @@ class ApiInterviewRepository : InterviewRepository {
                 "${getApiBaseUrl()}/api/v1/interviews/questions/$id/answer",
                 RequestInit(
                     method = "PUT",
-                    headers = jsJson("Content-Type" to "application/json"),
+                    headers = authHeaders(),
                     body = requestBody
                 )
             ).await()

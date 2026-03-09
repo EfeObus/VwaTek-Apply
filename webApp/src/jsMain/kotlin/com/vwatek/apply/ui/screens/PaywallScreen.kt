@@ -88,14 +88,14 @@ fun PaywallModal(
                 // Billing period toggle
                 Div(attrs = { classes("billing-toggle-compact", "mb-lg") }) {
                     Button(attrs = {
-                        classes("toggle-option", if (selectedBillingPeriod == BillingPeriod.MONTHLY) "active" else "")
+                        classes(buildList { add("toggle-option"); if (selectedBillingPeriod == BillingPeriod.MONTHLY) add("active") })
                         onClick { selectedBillingPeriod = BillingPeriod.MONTHLY }
                     }) {
                         Div(attrs = { classes("toggle-label") }) { Text("Monthly") }
                         Div(attrs = { classes("toggle-price") }) { Text("CA$${pricing.monthlyPriceCad}/mo") }
                     }
                     Button(attrs = {
-                        classes("toggle-option", if (selectedBillingPeriod == BillingPeriod.YEARLY) "active" else "")
+                        classes(buildList { add("toggle-option"); if (selectedBillingPeriod == BillingPeriod.YEARLY) add("active") })
                         onClick { selectedBillingPeriod = BillingPeriod.YEARLY }
                     }) {
                         Div(attrs = { classes("toggle-label") }) { 

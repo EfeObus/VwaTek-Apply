@@ -77,8 +77,8 @@ fun AuthScreen(
         }
     }
     
-    // Navigate on successful login
-    if (state.isAuthenticated && state.user != null) {
+    // Navigate on successful login (but not when viewing profile)
+    if (state.isAuthenticated && state.user != null && state.currentView != AuthView.PROFILE) {
         onLoginSuccess()
     }
     
