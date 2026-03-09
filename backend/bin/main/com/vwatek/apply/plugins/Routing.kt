@@ -12,6 +12,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.http.content.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -39,31 +40,11 @@ data class EndpointInfo(
 
 fun Application.configureRouting() {
     routing {
-        // Root endpoint - API info
-        get("/") {
-            call.respond(ApiInfoResponse(
-                name = "VwaTek Apply API",
-                version = "1.0.0",
-                description = "AI-powered job application assistant - Resume optimization, cover letter generation, and interview preparation",
-                endpoints = listOf(
-                    EndpointInfo("/health", "Health check endpoint"),
-                    EndpointInfo("/api/v1/auth", "Authentication endpoints"),
-                    EndpointInfo("/api/v1/resumes", "Resume management and AI analysis"),
-                    EndpointInfo("/api/v1/cover-letters", "AI-powered cover letter generation"),
-                    EndpointInfo("/api/v1/interviews", "Interview preparation and practice"),
-                    EndpointInfo("/api/v1/tracker", "Job application tracking"),
-                    EndpointInfo("/api/v1/noc", "NOC 2021 codes and immigration pathways"),
-                    EndpointInfo("/api/v1/jobbank", "Job Bank Canada job listings")
-                ),
-                documentation = "https://github.com/EfeObus/VwaTek-Apply"
-            ))
-        }
-        
         // Health check endpoint
         get("/health") {
             call.respond(HealthResponse(
                 status = "healthy",
-                database = if (DatabaseConfig.isUsingCloudSQL()) "cloud-sql" else "local",
+                database = "postgresql",
                 timestamp = System.currentTimeMillis()
             ))
         }
@@ -128,6 +109,9 @@ fun Application.configureRouting() {
             }
             salaryRoutes(httpClient)
             
+            // Phase 5: LinkedIn Optimizer
+            linkedInRoutes(aiService)
+            
             // Phase 5: Enterprise & Organizations
             organizationRoutes()
         }
@@ -140,6 +124,11 @@ fun Application.configureRouting() {
         // Privacy routes for PIPEDA compliance
         authenticate("jwt") {
             privacyRoutes()
+        }
+        
+        // Serve web frontend from embedded JAR resources
+        staticResources("/", "web") {
+            default("index.html")
         }
     }
 }

@@ -8,8 +8,8 @@ import SwiftUI
 class TrackerViewModelWrapper: ObservableObject {
     private let viewModel: TrackerViewModel
     
-    @Published var applications: [JobApplication] = []
-    @Published var kanbanColumns: [ApplicationStatus: [JobApplication]] = [:]
+    @Published var applications: [JobApplication_] = []
+    @Published var kanbanColumns: [ApplicationStatus: [JobApplication_]] = [:]
     @Published var selectedApplicationDetail: JobApplicationDetail? = nil
     @Published var stats: TrackerStats? = nil
     @Published var viewMode: ViewMode = .kanban
@@ -73,8 +73,8 @@ class TrackerViewModelWrapper: ObservableObject {
         }
     }
     
-    private func convertKanbanColumns(_ kotlinMap: [ApplicationStatus: [JobApplication]]) -> [ApplicationStatus: [JobApplication]] {
-        var result: [ApplicationStatus: [JobApplication]] = [:]
+    private func convertKanbanColumns(_ kotlinMap: [ApplicationStatus: [JobApplication_]]) -> [ApplicationStatus: [JobApplication_]] {
+        var result: [ApplicationStatus: [JobApplication_]] = [:]
         for (key, value) in kotlinMap {
             result[key] = value
         }
@@ -175,10 +175,10 @@ class TrackerViewModelWrapper: ObservableObject {
 
 // MARK: - Swift Extensions for shared types
 
-extension ApplicationStatus: CaseIterable {
-    public static var allCases: [ApplicationStatus] = [
-        .saved, .applied, .screening, .phoneInterview, .technicalInterview,
-        .onsiteInterview, .finalInterview, .offerReceived, .negotiating,
+extension ApplicationStatus {
+    static var allCases: [ApplicationStatus] = [
+        .saved, .applied, .viewed, .phoneScreen, .interview,
+        .assessment, .finalRound, .offer, .negotiating,
         .accepted, .rejected, .withdrawn, .noResponse
     ]
     
@@ -186,12 +186,12 @@ extension ApplicationStatus: CaseIterable {
         switch self {
         case .saved: return Color.gray
         case .applied: return Color.blue
-        case .screening: return Color.cyan
-        case .phoneInterview: return Color.purple
-        case .technicalInterview: return Color.orange
-        case .onsiteInterview: return Color.pink
-        case .finalInterview: return Color.indigo
-        case .offerReceived: return Color.green
+        case .viewed: return Color.cyan
+        case .phoneScreen: return Color.purple
+        case .interview: return Color.orange
+        case .assessment: return Color.pink
+        case .finalRound: return Color.indigo
+        case .offer: return Color.green
         case .negotiating: return Color.yellow
         case .accepted: return Color(red: 0, green: 0.5, blue: 0)
         case .rejected: return Color.red
@@ -202,29 +202,27 @@ extension ApplicationStatus: CaseIterable {
     }
 }
 
-extension JobBoardSource: CaseIterable {
-    public static var allCases: [JobBoardSource] = [
-        .indeed, .linkedin, .glassdoor, .zipRecruiter, .monster,
-        .jobBank, .workopolis, .simplyHired, .careerBuilder, .dice,
-        .angelList, .companyWebsite, .referral, .other
+extension JobBoardSource {
+    static var allCases: [JobBoardSource] = [
+        .indeed, .indeedCa, .linkedin, .jobBank, .glassdoor,
+        .glassdoorCa, .workday, .monster, .workopolis, .companySite,
+        .referral, .networking, .recruiter, .manual
     ]
 }
 
-extension CanadianProvince: CaseIterable {
-    public static var allCases: [CanadianProvince] = [
-        .ontario, .quebec, .britishColumbia, .alberta, .manitoba,
-        .saskatchewan, .novascotia, .newBrunswick, .newfoundlandAndLabrador,
-        .princeEdwardIsland, .northwestTerritories, .nunavut, .yukon
+extension CanadianProvince {
+    static var allCases: [CanadianProvince] = [
+        .on, .qc, .bc, .ab, .mb, .sk, .ns, .nb, .nl, .pe, .nt, .nu, .yt
     ]
 }
 
-extension NoteType: CaseIterable {
-    public static var allCases: [NoteType] = [
-        .general, .interviewPrep, .companyResearch, .followUp, .feedback
+extension NoteType {
+    static var allCases: [NoteType] = [
+        .general, .interview, .followUp, .research, .feedback, .question
     ]
 }
 
-extension JobApplication: Identifiable {}
+extension JobApplication_: Identifiable {}
 extension ApplicationNote: Identifiable {}
 extension ApplicationReminder: Identifiable {}
-extension StatusChange: Identifiable {}
+extension StatusChange_: Identifiable {}

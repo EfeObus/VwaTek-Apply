@@ -126,7 +126,7 @@ class SubscriptionManagerWrapper: ObservableObject {
     }
     
     func canUseLinkedInOptimizer() -> Bool {
-        return manager.canUseFeature(feature: .linkedInOptimizer)
+        return manager.canUseFeature(feature: .linkedinOptimizer)
     }
     
     /// Get the demo mode message

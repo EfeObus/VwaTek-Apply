@@ -21,14 +21,18 @@ fun Application.configureCORS() {
         allowHost("storage.googleapis.com", schemes = listOf("https"))
         allowHost("vwatek-apply-frontend.storage.googleapis.com", schemes = listOf("https"))
         allowHost("localhost:8080", schemes = listOf("http"))
+        allowHost("localhost:8090", schemes = listOf("http"))
         allowHost("127.0.0.1:8080", schemes = listOf("http"))
         
         // Firebase Hosting domain
         allowHost("vwatek-apply.web.app", schemes = listOf("https"))
         allowHost("vwatek-apply.firebaseapp.com", schemes = listOf("https"))
         
-        // Cloud Run backend (for same-origin requests)
-        allowHost("vwatek-backend-21443684777.northamerica-northeast1.run.app", schemes = listOf("https"))
+        // Railway — allow any host temporarily until exact domain is known
+        anyHost()
+        
+        // Cloud Run backend (legacy)
+        allowHost("vwatek-backend-i6ex2rjk3a-nn.a.run.app", schemes = listOf("https"))
         
         allowNonSimpleContentTypes = true
         

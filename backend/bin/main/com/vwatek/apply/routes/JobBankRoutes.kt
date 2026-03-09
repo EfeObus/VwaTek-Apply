@@ -64,12 +64,16 @@ fun Route.jobBankRoutes() {
                             hasMore = searchResult.hasMore
                         ))
                     },
-                    onFailure = { e ->
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    onFailure = { _ ->
+                        call.respond(JobBankSearchResponse(
+                            jobs = emptyList(), page = page, perPage = perPage, total = 0, hasMore = false
+                        ))
                     }
                 )
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+            } catch (_: Exception) {
+                call.respond(JobBankSearchResponse(
+                    jobs = emptyList(), page = 0, perPage = 20, total = 0, hasMore = false
+                ))
             }
         }
         
@@ -119,12 +123,16 @@ fun Route.jobBankRoutes() {
                             hasMore = searchResult.hasMore
                         ))
                     },
-                    onFailure = { e ->
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    onFailure = { _ ->
+                        call.respond(JobBankSearchResponse(
+                            jobs = emptyList(), page = page, perPage = perPage, total = 0, hasMore = false
+                        ))
                     }
                 )
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+            } catch (_: Exception) {
+                call.respond(JobBankSearchResponse(
+                    jobs = emptyList(), page = 0, perPage = 20, total = 0, hasMore = false
+                ))
             }
         }
         
@@ -155,12 +163,16 @@ fun Route.jobBankRoutes() {
                             hasMore = searchResult.hasMore
                         ))
                     },
-                    onFailure = { e ->
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                    onFailure = { _ ->
+                        call.respond(JobBankSearchResponse(
+                            jobs = emptyList(), page = page, perPage = perPage, total = 0, hasMore = false
+                        ))
                     }
                 )
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+            } catch (_: Exception) {
+                call.respond(JobBankSearchResponse(
+                    jobs = emptyList(), page = 0, perPage = 20, total = 0, hasMore = false
+                ))
             }
         }
         
@@ -177,18 +189,28 @@ fun Route.jobBankRoutes() {
                 
                 result.fold(
                     onSuccess = { searchResult ->
-                        call.respond(mapOf(
-                            "jobs" to searchResult.jobs.map { it.toResponse() },
-                            "province" to provinceCode,
-                            "count" to searchResult.totalCount
+                        call.respond(TrendingJobsServerResponse(
+                            jobs = searchResult.jobs.map { it.toResponse() },
+                            province = provinceCode,
+                            count = searchResult.totalCount
                         ))
                     },
                     onFailure = { e ->
-                        call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                        // Return empty result instead of 500 so client can handle gracefully
+                        call.respond(TrendingJobsServerResponse(
+                            jobs = emptyList(),
+                            province = provinceCode,
+                            count = 0,
+                            error = e.message ?: "Failed to fetch trending jobs"
+                        ))
                     }
                 )
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to e.message))
+                call.respond(TrendingJobsServerResponse(
+                    jobs = emptyList(),
+                    count = 0,
+                    error = e.message ?: "Failed to fetch trending jobs"
+                ))
             }
         }
         
@@ -233,6 +255,14 @@ fun Route.jobBankRoutes() {
 }
 
 // Response DTOs
+@Serializable
+data class TrendingJobsServerResponse(
+    val jobs: List<JobBankJobResponse>,
+    val province: String? = null,
+    val count: Int,
+    val error: String? = null
+)
+
 @Serializable
 data class JobBankSearchResponse(
     val jobs: List<JobBankJobResponse>,

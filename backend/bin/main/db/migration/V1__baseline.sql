@@ -1,5 +1,5 @@
 -- V1__baseline.sql
--- Baseline migration: Creates all existing tables
+-- Baseline migration: Creates all existing tables (PostgreSQL)
 -- This migration represents the initial schema state.
 -- For existing databases, run: flyway baseline
 -- For new databases, this creates everything from scratch.
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     email_verified BOOLEAN NOT NULL DEFAULT FALSE,
     profile_picture TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS resumes (
@@ -30,10 +30,10 @@ CREATE TABLE IF NOT EXISTS resumes (
     industry VARCHAR(100),
     source_type VARCHAR(20) NOT NULL DEFAULT 'MANUAL',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_resumes_user FOREIGN KEY (user_id) REFERENCES users(id),
-    INDEX idx_resumes_user_id (user_id)
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_resumes_user FOREIGN KEY (user_id) REFERENCES users(id)
 );
+CREATE INDEX IF NOT EXISTS idx_resumes_user_id ON resumes(user_id);
 
 CREATE TABLE IF NOT EXISTS resume_versions (
     id VARCHAR(36) PRIMARY KEY,
@@ -42,9 +42,9 @@ CREATE TABLE IF NOT EXISTS resume_versions (
     content TEXT NOT NULL,
     change_description TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_resume_versions_resume FOREIGN KEY (resume_id) REFERENCES resumes(id),
-    INDEX idx_resume_versions_resume_id (resume_id)
+    CONSTRAINT fk_resume_versions_resume FOREIGN KEY (resume_id) REFERENCES resumes(id)
 );
+CREATE INDEX IF NOT EXISTS idx_resume_versions_resume_id ON resume_versions(resume_id);
 
 CREATE TABLE IF NOT EXISTS resume_analyses (
     id VARCHAR(36) PRIMARY KEY,
@@ -54,9 +54,9 @@ CREATE TABLE IF NOT EXISTS resume_analyses (
     missing_keywords TEXT NOT NULL,
     recommendations TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_resume_analyses_resume FOREIGN KEY (resume_id) REFERENCES resumes(id),
-    INDEX idx_resume_analyses_resume_id (resume_id)
+    CONSTRAINT fk_resume_analyses_resume FOREIGN KEY (resume_id) REFERENCES resumes(id)
 );
+CREATE INDEX IF NOT EXISTS idx_resume_analyses_resume_id ON resume_analyses(resume_id);
 
 CREATE TABLE IF NOT EXISTS cover_letters (
     id VARCHAR(36) PRIMARY KEY,
@@ -68,9 +68,9 @@ CREATE TABLE IF NOT EXISTS cover_letters (
     tone VARCHAR(50) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_cover_letters_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_cover_letters_resume FOREIGN KEY (resume_id) REFERENCES resumes(id),
-    INDEX idx_cover_letters_user_id (user_id)
+    CONSTRAINT fk_cover_letters_resume FOREIGN KEY (resume_id) REFERENCES resumes(id)
 );
+CREATE INDEX IF NOT EXISTS idx_cover_letters_user_id ON cover_letters(user_id);
 
 CREATE TABLE IF NOT EXISTS interview_sessions (
     id VARCHAR(36) PRIMARY KEY,
@@ -82,9 +82,9 @@ CREATE TABLE IF NOT EXISTS interview_sessions (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     completed_at TIMESTAMP,
     CONSTRAINT fk_interview_sessions_user FOREIGN KEY (user_id) REFERENCES users(id),
-    CONSTRAINT fk_interview_sessions_resume FOREIGN KEY (resume_id) REFERENCES resumes(id),
-    INDEX idx_interview_sessions_user_id (user_id)
+    CONSTRAINT fk_interview_sessions_resume FOREIGN KEY (resume_id) REFERENCES resumes(id)
 );
+CREATE INDEX IF NOT EXISTS idx_interview_sessions_user_id ON interview_sessions(user_id);
 
 CREATE TABLE IF NOT EXISTS interview_questions (
     id VARCHAR(36) PRIMARY KEY,
@@ -100,12 +100,12 @@ CREATE TABLE IF NOT EXISTS interview_questions (
 );
 
 CREATE TABLE IF NOT EXISTS settings (
-    `key` VARCHAR(255) NOT NULL,
-    `value` TEXT NOT NULL,
+    "key" VARCHAR(255) NOT NULL,
+    "value" TEXT NOT NULL,
     user_id VARCHAR(36),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`key`, user_id)
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY ("key", user_id)
 );
 
 -- ============================================
@@ -144,12 +144,12 @@ CREATE TABLE IF NOT EXISTS job_applications (
     contact_phone VARCHAR(50),
     sync_status VARCHAR(20) NOT NULL DEFAULT 'SYNCED',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_job_applications_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_job_applications_resume FOREIGN KEY (resume_id) REFERENCES resumes(id),
-    CONSTRAINT fk_job_applications_cover_letter FOREIGN KEY (cover_letter_id) REFERENCES cover_letters(id),
-    INDEX idx_job_applications_user_id (user_id),
-    INDEX idx_job_applications_status (status)
+    CONSTRAINT fk_job_applications_cover_letter FOREIGN KEY (cover_letter_id) REFERENCES cover_letters(id)
 );
+CREATE INDEX IF NOT EXISTS idx_job_applications_user_id ON job_applications(user_id);
+CREATE INDEX IF NOT EXISTS idx_job_applications_status ON job_applications(status);
 
 -- Baseline migration complete. Future changes go in V2, V3, etc.

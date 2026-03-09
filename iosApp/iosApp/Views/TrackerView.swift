@@ -9,7 +9,7 @@ struct TrackerView: View {
     @StateObject private var viewModel = TrackerViewModelWrapper()
     @State private var showAddSheet = false
     @State private var showFilterSheet = false
-    @State private var selectedApplication: JobApplication?
+    @State private var selectedApplication: JobApplication_?
     @State private var showError = false
     
     var body: some View {
@@ -171,14 +171,14 @@ struct StatItem: View {
 // MARK: - Kanban Board
 
 struct KanbanBoardView: View {
-    let columns: [ApplicationStatus: [JobApplication]]
-    let onApplicationTap: (JobApplication) -> Void
+    let columns: [ApplicationStatus: [JobApplication_]]
+    let onApplicationTap: (JobApplication_) -> Void
     let onStatusChange: (String, ApplicationStatus) -> Void
     
     private let activeStatuses: [ApplicationStatus] = [
-        .saved, .applied, .screening, .phoneInterview,
-        .technicalInterview, .onsiteInterview, .finalInterview,
-        .offerReceived, .negotiating
+        .saved, .applied, .viewed, .phoneScreen,
+        .interview, .assessment, .finalRound,
+        .offer, .negotiating
     ]
     
     var body: some View {
@@ -199,8 +199,8 @@ struct KanbanBoardView: View {
 
 struct KanbanColumnView: View {
     let status: ApplicationStatus
-    let applications: [JobApplication]
-    let onApplicationTap: (JobApplication) -> Void
+    let applications: [JobApplication_]
+    let onApplicationTap: (JobApplication_) -> Void
     
     var body: some View {
         VStack(spacing: 0) {
@@ -249,7 +249,7 @@ struct KanbanColumnView: View {
 }
 
 struct ApplicationCardView: View {
-    let application: JobApplication
+    let application: JobApplication_
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -292,8 +292,8 @@ struct ApplicationCardView: View {
             }
             
             // Salary
-            if !application.salaryDisplay.isEmpty {
-                Text(application.salaryDisplay)
+            if let salary = application.salaryDisplay, !salary.isEmpty {
+                Text(salary)
                     .font(.caption)
                     .foregroundColor(.blue)
             }
@@ -303,7 +303,7 @@ struct ApplicationCardView: View {
                 if application.isRemote {
                     TagView(text: "Remote")
                 }
-                if application.requiresWorkPermit {
+                if application.requiresWorkPermit?.boolValue == true {
                     TagView(text: "Work Permit")
                 }
             }
@@ -343,8 +343,8 @@ struct TagView: View {
 // MARK: - List View
 
 struct ApplicationListView: View {
-    let applications: [JobApplication]
-    let onApplicationTap: (JobApplication) -> Void
+    let applications: [JobApplication_]
+    let onApplicationTap: (JobApplication_) -> Void
     
     var body: some View {
         if applications.isEmpty {
@@ -372,7 +372,7 @@ struct ApplicationListView: View {
 }
 
 struct ApplicationListRow: View {
-    let application: JobApplication
+    let application: JobApplication_
     
     var body: some View {
         HStack(spacing: 12) {
@@ -413,10 +413,10 @@ struct ApplicationListRow: View {
                         .foregroundColor(.secondary)
                     }
                     
-                    if !application.salaryDisplay.isEmpty {
+                    if let salary = application.salaryDisplay, !salary.isEmpty {
                         Text("•")
                             .foregroundColor(.secondary)
-                        Text(application.salaryDisplay)
+                        Text(salary)
                             .font(.caption)
                             .foregroundColor(.blue)
                     }
@@ -508,7 +508,7 @@ struct AddApplicationSheet: View {
                     Picker("Province", selection: $selectedProvince) {
                         Text("Select Province").tag(nil as CanadianProvince?)
                         ForEach(CanadianProvince.allCases, id: \.self) { province in
-                            Text("\(province.code) - \(province.displayName)").tag(province as CanadianProvince?)
+                            Text("\(province.code) - \(province.fullName)").tag(province as CanadianProvince?)
                         }
                     }
                     
@@ -538,13 +538,30 @@ struct AddApplicationSheet: View {
                         let request = CreateJobApplicationRequest(
                             jobTitle: jobTitle,
                             companyName: companyName,
+                            resumeId: nil,
+                            coverLetterId: nil,
+                            companyLogo: nil,
                             jobUrl: jobUrl.isEmpty ? nil : jobUrl,
+                            jobDescription: nil,
                             jobBoardSource: selectedSource,
+                            externalJobId: nil,
                             city: city.isEmpty ? nil : city,
                             province: selectedProvince,
+                            country: "Canada",
                             isRemote: isRemote,
-                            salaryMin: Int(salaryMin),
-                            salaryMax: Int(salaryMax)
+                            isHybrid: false,
+                            salaryMin: Int32(salaryMin).map { KotlinInt(int: $0) },
+                            salaryMax: Int32(salaryMax).map { KotlinInt(int: $0) },
+                            salaryCurrency: "CAD",
+                            salaryPeriod: nil,
+                            status: .saved,
+                            appliedAt: nil,
+                            nocCode: nil,
+                            requiresWorkPermit: false,
+                            isLmiaRequired: false,
+                            contactName: nil,
+                            contactEmail: nil,
+                            contactPhone: nil
                         )
                         onAdd(request)
                     }
@@ -742,15 +759,15 @@ struct ApplicationDetailSheet: View {
 }
 
 struct DetailsTab: View {
-    let application: JobApplication
+    let application: JobApplication_
     
     var body: some View {
         List {
             if !application.locationDisplay.isEmpty {
                 DetailRow(icon: "mappin", label: "Location", value: application.locationDisplay)
             }
-            if !application.salaryDisplay.isEmpty {
-                DetailRow(icon: "dollarsign.circle", label: "Salary", value: application.salaryDisplay)
+            if let salary = application.salaryDisplay, !salary.isEmpty {
+                DetailRow(icon: "dollarsign.circle", label: "Salary", value: salary)
             }
             if let source = application.jobBoardSource {
                 DetailRow(icon: "link", label: "Source", value: source.displayName)
@@ -761,10 +778,10 @@ struct DetailsTab: View {
             if let appliedAt = application.appliedAt {
                 DetailRow(icon: "calendar", label: "Applied", value: formatDate(appliedAt))
             }
-            if application.requiresWorkPermit {
+            if application.requiresWorkPermit?.boolValue == true {
                 DetailRow(icon: "doc.badge.clock", label: "Work Permit", value: "Required")
             }
-            if application.isLmiaRequired {
+            if application.isLmiaRequired?.boolValue == true {
                 DetailRow(icon: "doc.text", label: "LMIA", value: "Required")
             }
             if let contact = application.contactName {
@@ -892,9 +909,9 @@ struct AddReminderSheet: View {
     
     private let reminderTypes: [(String, ReminderType)] = [
         ("Follow Up", .followUp),
-        ("Interview", .interview_),
+        ("Interview", .interview),
         ("Deadline", .deadline),
-        ("Assessment", .assessmentDue),
+        ("Assessment", .assessment),
         ("Custom", .custom)
     ]
     
@@ -944,7 +961,7 @@ struct AddReminderSheet: View {
 }
 
 struct HistoryTab: View {
-    let history: [StatusChange]
+    let history: [StatusChange_]
     
     var body: some View {
         if history.isEmpty {
@@ -1077,6 +1094,13 @@ struct AddNoteSheet: View {
 
 // MARK: - Helper Functions
 
+private func formatDate(_ instant: Kotlinx_datetimeInstant) -> String {
+    let date = Date(timeIntervalSince1970: TimeInterval(instant.epochSeconds))
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    return formatter.string(from: date)
+}
+
 private func formatDate(_ isoString: String) -> String {
     let formatter = ISO8601DateFormatter()
     if let date = formatter.date(from: isoString) {
@@ -1085,6 +1109,14 @@ private func formatDate(_ isoString: String) -> String {
         return displayFormatter.string(from: date)
     }
     return isoString
+}
+
+private func formatDateTime(_ instant: Kotlinx_datetimeInstant) -> String {
+    let date = Date(timeIntervalSince1970: TimeInterval(instant.epochSeconds))
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    formatter.timeStyle = .short
+    return formatter.string(from: date)
 }
 
 private func formatDateTime(_ isoString: String) -> String {
