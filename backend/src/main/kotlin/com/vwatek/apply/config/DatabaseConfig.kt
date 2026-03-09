@@ -63,18 +63,30 @@ object DatabaseConfig {
     private var dataSource: HikariDataSource? = null
     
     fun init() {
-        // Check for DATABASE_URL first (Railway sets this automatically)
+        // Try DATABASE_PUBLIC_URL first (works both inside and outside Railway network)
+        val publicUrl = System.getenv("DATABASE_PUBLIC_URL")
+        // Then try DATABASE_URL (Railway internal network)
         val databaseUrl = System.getenv("DATABASE_URL")
         
-        if (databaseUrl != null) {
-            logger.info("Found DATABASE_URL, connecting to Railway PostgreSQL...")
-            if (!tryConnectWithUrl(databaseUrl)) {
-                throw RuntimeException("Unable to connect to Railway PostgreSQL via DATABASE_URL")
+        val connected = when {
+            publicUrl != null -> {
+                logger.info("Found DATABASE_PUBLIC_URL, connecting to Railway PostgreSQL (public)...")
+                tryConnectWithUrl(publicUrl)
             }
-        } else if (!tryConnectPostgres(DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, useSSL = true)) {
-            logger.warn("Railway PostgreSQL connection failed, falling back to local PostgreSQL")
-            if (!tryConnectPostgres(LOCAL_HOST, LOCAL_PORT, LOCAL_DATABASE, LOCAL_USER, LOCAL_PASSWORD, useSSL = false)) {
-                throw RuntimeException("Unable to connect to any database")
+            databaseUrl != null -> {
+                logger.info("Found DATABASE_URL, connecting to Railway PostgreSQL (internal)...")
+                tryConnectWithUrl(databaseUrl)
+            }
+            else -> false
+        }
+        
+        if (!connected) {
+            logger.warn("Railway URLs not available or failed, trying explicit config...")
+            if (!tryConnectPostgres(DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, useSSL = true)) {
+                logger.warn("Remote PostgreSQL failed, falling back to local PostgreSQL")
+                if (!tryConnectPostgres(LOCAL_HOST, LOCAL_PORT, LOCAL_DATABASE, LOCAL_USER, LOCAL_PASSWORD, useSSL = false)) {
+                    throw RuntimeException("Unable to connect to any database")
+                }
             }
         }
         
