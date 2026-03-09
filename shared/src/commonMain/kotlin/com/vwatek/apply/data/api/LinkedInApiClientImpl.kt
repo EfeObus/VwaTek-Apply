@@ -19,9 +19,16 @@ import kotlinx.serialization.Serializable
  * Communicates with backend LinkedIn optimizer endpoints
  */
 class LinkedInApiClientImpl(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
+    private val getAuthToken: () -> String? = { null }
 ) : LinkedInApiClient {
     private val baseUrl = "${ApiConfig.apiV1Url}/linkedin"
+
+    private fun HttpRequestBuilder.applyAuth() {
+        getAuthToken()?.let { token ->
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+    }
 
     override suspend fun analyzeProfile(
         profileUrl: String?,
@@ -29,6 +36,7 @@ class LinkedInApiClientImpl(
     ): Result<LinkedInAnalysisResult> {
         return try {
             val response = httpClient.post("$baseUrl/analyze") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(AnalyzeProfileRequest(profileUrl, manualProfile))
             }
@@ -46,6 +54,7 @@ class LinkedInApiClientImpl(
     ): Result<OptimizedLinkedInContent> {
         return try {
             val response = httpClient.post("$baseUrl/optimize") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(OptimizeContentRequest(profileId, targetRole, targetIndustry, focusAreas))
             }
@@ -58,6 +67,7 @@ class LinkedInApiClientImpl(
     override suspend fun saveProfile(profile: LinkedInProfile): Result<LinkedInProfile> {
         return try {
             val response = httpClient.post("$baseUrl/profile") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(profile)
             }
@@ -69,7 +79,9 @@ class LinkedInApiClientImpl(
 
     override suspend fun getAnalysisHistory(): Result<List<LinkedInAnalysisResult>> {
         return try {
-            val response = httpClient.get("$baseUrl/history")
+            val response = httpClient.get("$baseUrl/history") {
+                applyAuth()
+            }
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -84,6 +96,7 @@ class LinkedInApiClientImpl(
     ): Result<List<HeadlineSuggestion>> {
         return try {
             val response = httpClient.post("$baseUrl/headlines") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(GenerateHeadlinesRequest(currentHeadline, targetRole, skills, yearsExperience))
             }
@@ -102,6 +115,7 @@ class LinkedInApiClientImpl(
     ): Result<SummarySuggestion> {
         return try {
             val response = httpClient.post("$baseUrl/summary") {
+                applyAuth()
                 contentType(ContentType.Application.Json)
                 setBody(GenerateSummaryRequest(currentSummary, experience, skills, targetRole, tone))
             }

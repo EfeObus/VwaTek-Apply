@@ -236,7 +236,10 @@ val sharedModule = module {
     single { SalaryIntelligenceManager(get(), get()) }
     
     // Phase 12: LinkedIn Optimizer
-    single<com.vwatek.apply.domain.usecase.LinkedInApiClient> { com.vwatek.apply.data.api.LinkedInApiClientImpl(get()) }
+    single<com.vwatek.apply.domain.usecase.LinkedInApiClient> {
+        val authRepo: AuthRepository = get()
+        com.vwatek.apply.data.api.LinkedInApiClientImpl(get()) { authRepo.getAuthToken() }
+    }
     single { com.vwatek.apply.domain.usecase.LinkedInOptimizerManager(get(), get()) }
     
     // Phase 13: Organization/Enterprise
