@@ -157,13 +157,13 @@ struct MainTabView: View {
                 OptimizerView()
             }
             .tabItem { Label("Optimizer", systemImage: "wand.and.stars") }
-            .tag(AppScreen.coverLetter)
+            .tag(AppScreen.optimizer)
             
             NavigationStack {
                 CoverLetterView()
             }
             .tabItem { Label("Letters", systemImage: "envelope.fill") }
-            .tag(AppScreen.optimizer)
+            .tag(AppScreen.coverLetter)
             
             // "More" tab with all remaining features
             NavigationStack {

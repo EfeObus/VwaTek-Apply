@@ -105,31 +105,25 @@ fun App() {
         }
     }
     
-    // Show auth screen if not authenticated and trying to access protected features
-    val showAuthScreen = currentScreen == Screen.AUTH || !authState.isAuthenticated
-    
-    // Redirect unauthenticated users to auth screen
-    LaunchedEffect(authState.isAuthenticated) {
-        if (!authState.isAuthenticated && currentScreen != Screen.AUTH) {
-            currentScreen = Screen.AUTH
-        }
-    }
+    // Gate: unauthenticated users only see auth screen
+    val isAuthenticated = authState.isAuthenticated
+    val effectiveScreen = if (!isAuthenticated && currentScreen != Screen.AUTH) Screen.AUTH else currentScreen
+    val showSidebar = isAuthenticated && effectiveScreen != Screen.AUTH
     
     Div(attrs = { classes("app-layout") }) {
-        if (!showAuthScreen) {
+        if (showSidebar) {
             Sidebar(
-                currentScreen = currentScreen,
+                currentScreen = effectiveScreen,
                 onNavigate = { screen ->
                     currentScreen = screen
                     isSidebarOpen = false
                 },
                 isOpen = isSidebarOpen,
                 onClose = { isSidebarOpen = false },
-                isAuthenticated = authState.isAuthenticated,
+                isAuthenticated = isAuthenticated,
                 userName = authState.user?.let { "${it.firstName} ${it.lastName}" },
                 onAuthClick = { 
-                    // If authenticated, switch to profile view; otherwise show login
-                    if (authState.isAuthenticated) {
+                    if (isAuthenticated) {
                         authViewModel.onIntent(AuthIntent.SwitchView(AuthView.PROFILE))
                     }
                     currentScreen = Screen.AUTH 
@@ -138,11 +132,11 @@ fun App() {
         }
         
         Div(attrs = { 
-            if (showAuthScreen) classes("main-content", "full-width") 
+            if (!showSidebar) classes("main-content", "full-width") 
             else classes("main-content") 
         }) {
             // Mobile header
-            if (!showAuthScreen) {
+            if (showSidebar) {
                 Div(attrs = { classes("mobile-header") }) {
                     Button(attrs = {
                         classes("menu-toggle")
@@ -156,11 +150,12 @@ fun App() {
                 }
             }
             
-            when (currentScreen) {
+            when (effectiveScreen) {
                 Screen.DASHBOARD -> DashboardScreen(
                     onNavigateToResumes = { currentScreen = Screen.RESUMES },
                     onNavigateToCoverLetters = { currentScreen = Screen.COVER_LETTERS },
-                    onNavigateToInterview = { currentScreen = Screen.INTERVIEW }
+                    onNavigateToInterview = { currentScreen = Screen.INTERVIEW },
+                    onNavigateToOptimizer = { currentScreen = Screen.RESUME_OPTIMIZER }
                 )
                 Screen.RESUMES -> ResumeScreen()
                 Screen.RESUME_OPTIMIZER -> ResumeOptimizerScreen()
