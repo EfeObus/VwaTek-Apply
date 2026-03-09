@@ -12,6 +12,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.http.content.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -39,26 +40,6 @@ data class EndpointInfo(
 
 fun Application.configureRouting() {
     routing {
-        // Root endpoint - API info
-        get("/") {
-            call.respond(ApiInfoResponse(
-                name = "VwaTek Apply API",
-                version = "1.0.0",
-                description = "AI-powered job application assistant - Resume optimization, cover letter generation, and interview preparation",
-                endpoints = listOf(
-                    EndpointInfo("/health", "Health check endpoint"),
-                    EndpointInfo("/api/v1/auth", "Authentication endpoints"),
-                    EndpointInfo("/api/v1/resumes", "Resume management and AI analysis"),
-                    EndpointInfo("/api/v1/cover-letters", "AI-powered cover letter generation"),
-                    EndpointInfo("/api/v1/interviews", "Interview preparation and practice"),
-                    EndpointInfo("/api/v1/tracker", "Job application tracking"),
-                    EndpointInfo("/api/v1/noc", "NOC 2021 codes and immigration pathways"),
-                    EndpointInfo("/api/v1/jobbank", "Job Bank Canada job listings")
-                ),
-                documentation = "https://github.com/EfeObus/VwaTek-Apply"
-            ))
-        }
-        
         // Health check endpoint
         get("/health") {
             call.respond(HealthResponse(
@@ -140,6 +121,15 @@ fun Application.configureRouting() {
         // Privacy routes for PIPEDA compliance
         authenticate("jwt") {
             privacyRoutes()
+        }
+        
+        // Serve web frontend static files
+        // On Railway, the web build output is at /app/webApp/build/dist/js/productionExecutable/
+        val webDir = java.io.File("webApp/build/dist/js/productionExecutable")
+        if (webDir.exists()) {
+            staticFiles("/", webDir) {
+                default("index.html")
+            }
         }
     }
 }
