@@ -28,19 +28,19 @@ object ApiConfig {
     }
     
     /**
-     * Production API URL (Canadian region - Montreal)
+     * Production API URL (Railway)
      */
-    private const val PRODUCTION_BASE_URL = "https://vwatek-backend-i6ex2rjk3a-nn.a.run.app"
+    private const val PRODUCTION_BASE_URL = "https://vwatek-apply-production.up.railway.app"
     
     /**
      * Staging API URL
      */
-    private const val STAGING_BASE_URL = "https://vwatek-backend-staging-i6ex2rjk3a-nn.a.run.app"
+    private const val STAGING_BASE_URL = "https://vwatek-apply-production.up.railway.app"
     
     /**
-     * Development API URL (local or us-central for dev)
+     * Development API URL (local)
      */
-    private const val DEVELOPMENT_BASE_URL = "https://vwatek-backend-21443684777.us-central1.run.app"
+    private const val DEVELOPMENT_BASE_URL = "http://localhost:8090"
     
     /**
      * Get the base API URL for the current environment

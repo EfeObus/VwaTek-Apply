@@ -10,7 +10,7 @@ class LinkedInAuthManager: NSObject, ObservableObject {
     
     // LinkedIn OAuth configuration
     private let clientId = "86zpbbqqqa32et"
-    private let redirectUri = "https://vwatek-backend-21443684777.us-central1.run.app/auth/linkedin/callback"
+    private let redirectUri = "https://vwatek-apply-production.up.railway.app/auth/linkedin/callback"
     private let scopes = ["openid", "profile", "email"]
     
     @Published var isSigningIn = false
