@@ -15,6 +15,7 @@ application {
 
 // Copy web frontend assets into backend resources so they're embedded in the JAR
 val copyWebAssets by tasks.registering(Copy::class) {
+    dependsOn(":webApp:jsBrowserDistribution")
     from(rootProject.file("webApp/build/dist/js/productionExecutable"))
     into(layout.buildDirectory.dir("resources/main/web"))
 }
