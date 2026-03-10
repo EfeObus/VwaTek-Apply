@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		03D0CD79B542D659ECFBD09C /* GoogleService-Info.plist.template in Resources */ = {isa = PBXBuildFile; fileRef = 1B89A103883C0378FCEFA281 /* GoogleService-Info.plist.template */; };
 		14F5D3834B3ADEF5E3933E4A /* LinkedInOptimizerViewModelWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06974F36F7D42C36FF9D02F6 /* LinkedInOptimizerViewModelWrapper.swift */; };
 		179BC0A14A59D1B2EB332F35 /* OrganizationViewModelWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8D5E854685847E3D60BE51 /* OrganizationViewModelWrapper.swift */; };
 		17A5949D86D7F4EF99877111 /* VwaTekApplyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40E9D196F4271F22B876911E /* VwaTekApplyApp.swift */; };
@@ -33,8 +32,6 @@
 		7D8AD8F4B64B80F43F1B2284 /* SubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2F00EC38FC424C23CF2D185 /* SubscriptionView.swift */; };
 		7E2C23EE0E4F5F0F0E0C889A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6F88C7C85B95DD89B6610D53 /* Assets.xcassets */; };
 		8471E1C8709EFBC9393F486A /* LinkedInImportSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B40FF7C25AFFB39E06A62ED5 /* LinkedInImportSheet.swift */; };
-		8F9A6616AF1930B22FB8E0A4 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 5DFA9FC1096264A3BC6D283E /* FirebaseCrashlytics */; };
-		9A658A42ED037BD5FAC0B6B3 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 12062B1C4B1E2245B4CD7FA4 /* FirebaseAnalytics */; };
 		9B3207C489974E2D026C9766 /* VersionHistorySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75C229E84379732A12395D78 /* VersionHistorySheet.swift */; };
 		A038C240468CBB527CABF9F5 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D004132C4947C7BF1067C59 /* libsqlite3.tbd */; };
 		AA52E3E81814674337D4F74A /* ResumeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C5B7A98948F343A5463D1B4 /* ResumeView.swift */; };
@@ -61,7 +58,6 @@
 		0D8D5E854685847E3D60BE51 /* OrganizationViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrganizationViewModelWrapper.swift; sourceTree = "<group>"; };
 		0F511144EA1CC9CB2BEF2705 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
 		1B45504EACEA683BAEA81AD4 /* TrackerViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackerViewModelWrapper.swift; sourceTree = "<group>"; };
-		1B89A103883C0378FCEFA281 /* GoogleService-Info.plist.template */ = {isa = PBXFileReference; path = "GoogleService-Info.plist.template"; sourceTree = "<group>"; };
 		296D9ED879E871D266A49AEB /* JobBankView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JobBankView.swift; sourceTree = "<group>"; };
 		2AB51E3D062E3B9D96899E3A /* CoverLetterViewModelWrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverLetterViewModelWrapper.swift; sourceTree = "<group>"; };
 		2C5B7A98948F343A5463D1B4 /* ResumeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeView.swift; sourceTree = "<group>"; };
@@ -107,8 +103,6 @@
 			files = (
 				A038C240468CBB527CABF9F5 /* libsqlite3.tbd in Frameworks */,
 				AC02865C31083C669DAF926A /* GoogleSignIn in Frameworks */,
-				8F9A6616AF1930B22FB8E0A4 /* FirebaseCrashlytics in Frameworks */,
-				9A658A42ED037BD5FAC0B6B3 /* FirebaseAnalytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -128,7 +122,6 @@
 			children = (
 				6F88C7C85B95DD89B6610D53 /* Assets.xcassets */,
 				A3FDF7F0B041A43B9251A7FB /* ContentView.swift */,
-				1B89A103883C0378FCEFA281 /* GoogleService-Info.plist.template */,
 				EC3F5B9BB97B532D640CF983 /* Info.plist */,
 				0253D32CDACC5880058C8BC6 /* iosApp.entitlements */,
 				40E9D196F4271F22B876911E /* VwaTekApplyApp.swift */,
@@ -232,7 +225,6 @@
 				91A72D8D7118FC7A10901DF4 /* Sources */,
 				7839B2EDFC1D4CDD3B7E42E5 /* Resources */,
 				5D28CBFF6BAF0519C45F6798 /* Frameworks */,
-				4DC9C5FFEBD3B66631A5A6B7 /* Upload dSYMs to Crashlytics */,
 			);
 			buildRules = (
 			);
@@ -241,8 +233,6 @@
 			name = iosApp;
 			packageProductDependencies = (
 				7D3B5A67C00F88B3B2DDF9C4 /* GoogleSignIn */,
-				5DFA9FC1096264A3BC6D283E /* FirebaseCrashlytics */,
-				12062B1C4B1E2245B4CD7FA4 /* FirebaseAnalytics */,
 			);
 			productName = iosApp;
 			productReference = 708549F41DBED85F7CEA6370 /* iosApp.app */;
@@ -274,7 +264,6 @@
 			mainGroup = 71A83B96EE7652FF7AC1F1B9;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				D1572BECC74FEE95D4B0E6AA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				DC63837165B5558C26FAFAD4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -292,33 +281,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				7E2C23EE0E4F5F0F0E0C889A /* Assets.xcassets in Resources */,
-				03D0CD79B542D659ECFBD09C /* GoogleService-Info.plist.template in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		4DC9C5FFEBD3B66631A5A6B7 /* Upload dSYMs to Crashlytics */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Upload dSYMs to Crashlytics";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "# Only run for Release builds\nif [ \"$CONFIGURATION\" = \"Release\" ]; then\n  \"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nfi\n";
-		};
-		65FC8A9AACB666540565FE7E /* Build Shared Framework */ = {
+			65FC8A9AACB666540565FE7E /* Build Shared Framework */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -586,15 +555,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		D1572BECC74FEE95D4B0E6AA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
-			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 11.0.0;
-			};
-		};
-		DC63837165B5558C26FAFAD4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			DC63837165B5558C26FAFAD4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
 			requirement = {
@@ -605,17 +566,7 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		12062B1C4B1E2245B4CD7FA4 /* FirebaseAnalytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D1572BECC74FEE95D4B0E6AA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAnalytics;
-		};
-		5DFA9FC1096264A3BC6D283E /* FirebaseCrashlytics */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D1572BECC74FEE95D4B0E6AA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseCrashlytics;
-		};
-		7D3B5A67C00F88B3B2DDF9C4 /* GoogleSignIn */ = {
+			7D3B5A67C00F88B3B2DDF9C4 /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DC63837165B5558C26FAFAD4 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignIn;
