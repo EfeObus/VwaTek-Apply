@@ -84,13 +84,6 @@
                 <data android:scheme="vwatekapply" android:host="settings" />
             </intent-filter>
         </activity>
-        
-        <!-- Disable Firebase auto-init; we initialize manually in VwaTekApplication -->
-        <provider
-            android:name="com.google.firebase.provider.FirebaseInitProvider"
-            android:authorities="${applicationId}.firebaseinitprovider"
-            android:exported="false"
-            tools:node="remove" />
 
         <!-- FileProvider for sharing PDF exports -->
         <provider

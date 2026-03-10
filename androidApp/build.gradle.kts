@@ -4,8 +4,6 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.googleServices)
-    alias(libs.plugins.firebaseCrashlytics)
 }
 
 kotlin {
@@ -63,11 +61,6 @@ kotlin {
             
             // Image loading
             implementation("io.coil-kt:coil-compose:2.5.0")
-            
-            // Firebase (Crashlytics & Analytics)
-            implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-            implementation(libs.firebase.crashlytics)
-            implementation(libs.firebase.analytics)
             
             // WorkManager for background sync
             implementation(libs.androidx.workmanager)
