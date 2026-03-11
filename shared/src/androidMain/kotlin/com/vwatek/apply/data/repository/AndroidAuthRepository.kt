@@ -44,13 +44,38 @@ class AndroidAuthRepository(
         .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
         .build()
     
-    private val prefs: SharedPreferences = EncryptedSharedPreferences.create(
-        context,
-        "vwatek_auth_prefs",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private val prefs: SharedPreferences = createEncryptedPreferences()
+    
+    /**
+     * Create encrypted preferences with fallback to clear corrupted data.
+     * AEADBadTagException can occur when the encryption key is invalidated
+     * (e.g., after app reinstall, backup restore, or OS update).
+     */
+    private fun createEncryptedPreferences(): SharedPreferences {
+        return try {
+            EncryptedSharedPreferences.create(
+                context,
+                "vwatek_auth_prefs",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            // Corrupted encryption data - clear and recreate
+            android.util.Log.w("AndroidAuthRepo", "Clearing corrupted encrypted prefs: ${e.message}")
+            context.getSharedPreferences("vwatek_auth_prefs", Context.MODE_PRIVATE)
+                .edit().clear().commit()
+            // Delete the encrypted prefs file and recreate
+            context.deleteSharedPreferences("vwatek_auth_prefs")
+            EncryptedSharedPreferences.create(
+                context,
+                "vwatek_auth_prefs",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        }
+    }
     
     private val _authState = MutableStateFlow(loadAuthState())
     private var _authToken: String? = loadSavedToken()
