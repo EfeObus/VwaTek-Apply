@@ -1,190 +1,84 @@
-# VwaTek Apply - Deployment Checklist
+# VwaTek Apply - Deployment Guide
 
-## Pre-Deployment Checklist Status
+## Overview
 
-###  Google Cloud Setup
-
-| Item | Status | Details |
-|------|--------|---------|
-| GCP Project |  Complete | `vwatek-apply` (Project ID: 21443684777) |
-| Authentication |  Complete | Logged in as `talk2efeprogress@gmail.com` |
-| APIs Enabled |  Complete | All required APIs enabled || **Region** |  Complete | **Canadian region: northamerica-northeast1 (Montreal)** |
-###  APIs Enabled
-
-| API | Status |
-|-----|--------|
-| Cloud Run |  Enabled |
-| Cloud Build |  Enabled |
-| Secret Manager |  Enabled |
-| Cloud SQL Admin |  Enabled |
-| Container Registry |  Enabled |
-| Resource Manager |  Enabled |
-| IAM |  Enabled |
-| VPC Access |  Enabled |
-| Compute Engine |  Enabled |
-
-###  Secret Manager Secrets
-
-| Secret Name | Status | Description |
-|-------------|--------|-------------|
-| `db-username` |  Created | Database username (root) |
-| `db-password` |  Created | Database password |
-| `gemini-api-key` |  Created | Gemini AI API key |
-
-###  Service Accounts
-
-| Service Account | Status | Purpose |
-|-----------------|--------|---------|
-| `vwatek-cloudrun-sa` |  Created | Cloud Run service runtime |
-| `vwatek-cicd-sa` |  Created | CI/CD pipeline automation |
-
-###  IAM Roles Assigned
-
-#### vwatek-cloudrun-sa (Cloud Run Service)
--  `roles/cloudsql.client` - Access Cloud SQL
--  `roles/secretmanager.secretAccessor` - Read secrets
-
-#### vwatek-cicd-sa (CI/CD Pipeline)
--  `roles/run.admin` - Deploy Cloud Run services
--  `roles/storage.admin` - Manage Cloud Storage
--  `roles/cloudbuild.builds.builder` - Run Cloud Build
--  `roles/iam.serviceAccountUser` - Use service accounts
--  `roles/secretmanager.secretAccessor` - Read secrets
--  `roles/cloudsql.client` - Access Cloud SQL
-
-###  Network Configuration
-
-| Item | Status | Details |
-|------|--------|---------|
-| VPC Network |  Using `default` | Standard GCP VPC |
-| VPC Connector |  Created | `vwatek-connector` (northamerica-northeast1) |
-| IP Range |  Configured | `10.8.0.0/28` |
-| Cloud SQL Auth Network |  Configured | `142.114.123.165/32` |
-| **Canadian Data Residency** |  Configured | All data in Montreal, QC |
-
-###  Cloud Storage
-
-| Bucket | Status | Purpose |
-|--------|--------|---------|
-| `vwatek-apply-web` |  Created | Frontend static hosting |
-
-###  Cloud SQL Database
-
-| Item | Status | Details |
-|------|--------|---------|
-| Instance |  Running | `vwatekapply` |
-| Region |  Configured | `northamerica-northeast1` (Montreal, Canada) |
-| IP Address |  Assigned | `34.134.196.247` |
-| Database |  Created | `Vwatek_Apply` |
-| SSL |  Required | SSL mode enabled |
-| Tables |  Migrated | 12 tables created (including Phase 1 sync/privacy tables) |
-
-###  Phase 1 Tables (February 2026)
-
-| Table | Purpose |
-|-------|----------|
-| `sync_operations` | Track sync operations per device |
-| `sync_conflicts` | Store unresolved sync conflicts |
-| `consent_records` | PIPEDA consent audit trail |
-| `data_export_requests` | User data export requests |
-| `deletion_requests` | Account deletion requests |
-
-###  CI/CD Configuration Files
-
-| File | Status | Purpose |
-|------|--------|---------|
-| `.github/workflows/ci.yml` |  Created | Continuous Integration |
-| `.github/workflows/cd.yml` |  Created | Continuous Deployment |
-| `.github/workflows/release.yml` |  Created | Release Management |
-| `cloudbuild.yaml` |  Created | Google Cloud Build |
-| `backend/Dockerfile` |  Created | Container image build |
-| `backend/cloudrun-service.yaml` |  Updated | Cloud Run service config |
-| `deploy.sh` |  Created | Manual deployment script |
-
-###  Infrastructure as Code
-
-| File | Status | Purpose |
-|------|--------|---------|
-| `infrastructure/terraform/main.tf` |  Created | Terraform IaC |
-| `infrastructure/terraform/terraform.tfvars.example` |  Created | Variable template |
+VwaTek Apply backend is deployed on **Railway** with automatic deployments triggered by pushes to the `main` branch on GitHub.
 
 ---
 
-##  Manual Steps Required
+## Railway Setup
 
-### 1. GitHub Repository Secrets
+### Project Configuration
 
-You need to add the following secrets to your GitHub repository:
+| Item | Status | Details |
+|------|--------|---------|
+| Project | ✅ Complete | `vwatek-apply-production` |
+| Region | ✅ Complete | US West (Railway managed) |
+| Auto-Deploy | ✅ Enabled | Triggers on push to `main` |
 
-1. Go to: **Repository → Settings → Secrets and variables → Actions**
+### Environment Variables
 
-2. Add these secrets:
+The following environment variables are configured in Railway:
 
-| Secret Name | Source |
-|-------------|--------|
-| `GCP_SA_KEY` | Contents of `gcp-sa-key.json` (base64 encoded) |
-| `GCP_PROJECT_ID` | `vwatek-apply` |
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string (auto-provisioned) |
+| `GEMINI_API_KEY` | Gemini AI API key |
+| `JWT_SECRET` | JWT signing secret |
+| `STRIPE_SECRET_KEY` | Stripe payment processing |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook verification |
+| `STRIPE_PRICE_PRO_MONTHLY` | Stripe Pro monthly price ID |
+| `STRIPE_PRICE_PRO_YEARLY` | Stripe Pro yearly price ID |
+| `STRIPE_PRICE_PREMIUM_MONTHLY` | Stripe Premium monthly price ID |
+| `STRIPE_PRICE_PREMIUM_YEARLY` | Stripe Premium yearly price ID |
+| `ENVIRONMENT` | `production` |
 
-To encode the key:
-```bash
-cat gcp-sa-key.json | base64 -w 0  # Linux
-cat gcp-sa-key.json | base64       # macOS
-```
+### Database
 
-### 2. Delete Local Service Account Key
-
-After adding to GitHub Secrets, delete the local key file:
-```bash
-rm /Users/efeobukohwo/Desktop/VwaTek/gcp-sa-key.json
-```
-
-### 3. Connect Cloud Build to GitHub
-
-1. Go to: [Cloud Build Triggers](https://console.cloud.google.com/cloud-build/triggers?project=vwatek-apply)
-2. Click **Connect Repository**
-3. Select **GitHub** and authorize
-4. Choose the `VwaTek` repository
-5. Create trigger for `main` branch
+| Item | Status | Details |
+|------|--------|---------|
+| PostgreSQL | ✅ Provisioned | Railway managed PostgreSQL |
+| Auto-Migration | ✅ Enabled | Schema migrations run on startup |
+| SSL | ✅ Required | Connections encrypted |
 
 ---
 
-## Deployment Commands
+## CI/CD Configuration
 
-### Manual Deployment
+### GitHub Actions
 
-```bash
-# Deploy backend to Cloud Run
-cd /Users/efeobukohwo/Desktop/VwaTek
-./deploy.sh
+| Workflow | Purpose | Trigger |
+|----------|---------|---------|
+| `ci.yml` | Continuous Integration | Pull requests, push to main |
+| `release.yml` | Release Management | Tags |
 
-# Or step by step:
-# 1. Build and push Docker image
-gcloud builds submit --tag gcr.io/vwatek-apply/vwatek-backend backend/
+### Railway Auto-Deploy
 
-# 2. Deploy to Cloud Run
-gcloud run deploy vwatek-backend \
-  --image gcr.io/vwatek-apply/vwatek-backend \
-  --platform managed \
-  --region northamerica-northeast1 \
-  --service-account vwatek-cloudrun-sa@vwatek-apply.iam.gserviceaccount.com \
-  --add-cloudsql-instances vwatek-apply:northamerica-northeast1:vwatekapply \
-  --vpc-connector vwatek-connector \
-  --allow-unauthenticated \
-  --set-secrets="CLOUD_SQL_USER=db-username:latest,CLOUD_SQL_PASSWORD=db-password:latest,GEMINI_API_KEY=gemini-api-key:latest"
-```
+Railway automatically builds and deploys when:
+1. Code is pushed to `main` branch
+2. Environment variables are updated
 
-### Build Frontend
+Build process:
+1. Railway detects `Dockerfile` in `backend/`
+2. Builds Docker image using multi-stage build
+3. Deploys to production environment
+4. Health check verifies deployment
 
-```bash
-./gradlew :webApp:jsBrowserProductionWebpack
-```
+---
 
-### Deploy Frontend
+## Backend Configuration
 
-```bash
-gsutil -m rsync -r webApp/build/kotlin-webpack/js/productionExecutable gs://vwatek-apply-web/
-gsutil web set -m index.html -e 404.html gs://vwatek-apply-web
-```
+### Dockerfile (`backend/Dockerfile`)
+
+The backend uses a multi-stage Docker build:
+- **Build stage**: Gradle 8.5 with JDK 17 builds the shadow JAR
+- **Runtime stage**: Eclipse Temurin 17 JRE Alpine for minimal image size
+
+### Build Features
+
+- **Conditional Web Assets**: The `copyWebAssets` task is conditional and skips when building backend-only (Docker builds)
+- **Shadow JAR**: Creates a fat JAR with all dependencies bundled
+- **Non-root User**: Runs as `appuser` for security
 
 ---
 
@@ -192,71 +86,111 @@ gsutil web set -m index.html -e 404.html gs://vwatek-apply-web
 
 | Service | URL |
 |---------|-----|
-| Backend API | `https://api.vwatek.ca` |
-| Backend API (staging) | `https://staging-api.vwatek.ca` |
-| Frontend Web | `https://app.vwatek.ca` |
-| Cloud Console | `https://console.cloud.google.com/run?project=vwatek-apply` |
-| Build History | `https://console.cloud.google.com/cloud-build/builds?project=vwatek-apply` |
-| Metrics Dashboard | `https://api.vwatek.ca/metrics` |
+| Backend API | `https://vwatek-apply-production.up.railway.app` |
+| Health Check | `https://vwatek-apply-production.up.railway.app/health` |
+| Metrics | `https://vwatek-apply-production.up.railway.app/metrics` |
+| Railway Dashboard | `https://railway.app/dashboard` |
 
 ---
 
-## Phase 1 API Endpoints Verification
+## Deployment Commands
 
-After deployment, verify Phase 1 endpoints:
+### Manual Deployment (Local)
 
-1. **Backend Health Check**
 ```bash
-curl https://api.vwatek.ca/health
+# Build backend locally
+./gradlew :backend:shadowJar
+
+# Run locally
+java -jar backend/build/libs/backend-all.jar
 ```
 
-2. **Metrics Endpoint (Prometheus)**
+### Build Web Frontend
+
 ```bash
-curl https://api.vwatek.ca/metrics
+./gradlew :webApp:jsBrowserProductionWebpack
 ```
 
-3. **Database Connection**
+### Build Android App
+
 ```bash
-curl https://api.vwatek.ca/api/status
+./gradlew :androidApp:assembleRelease
 ```
 
-4. **Sync API**
+### Build iOS App
+
 ```bash
-curl -X GET https://api.vwatek.ca/api/v1/sync/status \
-  -H "Authorization: Bearer <token>"
+cd iosApp
+xcodebuild -scheme iosApp -configuration Release
 ```
 
-5. **Privacy API (PIPEDA)**
+---
+
+## API Endpoints Verification
+
+After deployment, verify endpoints:
+
+1. **Health Check**
 ```bash
-curl -X GET https://api.vwatek.ca/api/v1/privacy/consent \
-  -H "Authorization: Bearer <token>"
+curl https://vwatek-apply-production.up.railway.app/health
 ```
 
-6. **Frontend Accessibility**
-Open `https://app.vwatek.ca` in a browser
+2. **Metrics Endpoint**
+```bash
+curl https://vwatek-apply-production.up.railway.app/metrics
+```
+
+3. **API Status**
+```bash
+curl https://vwatek-apply-production.up.railway.app/api/v1/pricing
+```
+
+4. **Auth Endpoints**
+```bash
+curl -X POST https://vwatek-apply-production.up.railway.app/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "password": "password"}'
+```
 
 ---
 
 ## Rollback
 
-If deployment fails:
+Railway maintains deployment history. To rollback:
 
+1. Go to Railway Dashboard
+2. Select the project
+3. Navigate to Deployments
+4. Click on a previous successful deployment
+5. Select "Rollback to this deployment"
+
+---
+
+## Monitoring
+
+### Backend Logs
+
+View logs in Railway Dashboard or via CLI:
 ```bash
-# List revisions
-gcloud run revisions list --service vwatek-backend --region northamerica-northeast1
-
-# Rollback to previous revision
-gcloud run services update-traffic vwatek-backend \
-  --to-revisions [PREVIOUS_REVISION]=100 \
-  --region northamerica-northeast1
+railway logs
 ```
+
+### Metrics
+
+Prometheus metrics available at `/metrics` endpoint:
+- JVM metrics
+- HTTP request metrics
+- Custom application metrics
+
+### Error Tracking
+
+- **Mobile**: Firebase Crashlytics (Android/iOS)
+- **Web**: Sentry for error tracking
 
 ---
 
 ## Support
 
-- **Cloud Run Logs**: `gcloud logs read --service vwatek-backend --region northamerica-northeast1`
-- **Build Logs**: Available in Cloud Build console
-- **Error Investigation**: Check Cloud Logging for detailed traces
-- **Prometheus Metrics**: Available at `/metrics` endpoint
-- **Sentry Dashboard**: Web error tracking at sentry.io
+- **Railway Docs**: https://docs.railway.app
+- **Railway Status**: https://status.railway.app
+- **GitHub Issues**: https://github.com/EfeObus/VwaTek-Apply/issues

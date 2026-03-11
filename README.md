@@ -98,8 +98,8 @@ VwaTek Apply is a high-performance job application assistant built with **Kotlin
 |  Data Persistence     |  SQLDelight (Local Database)        |
 |  Networking           |  Ktor                               |
 |  Dependency Injection |  Koin                               |
-|  Backend              |  Ktor Server on Cloud Run           |
-|  Database             |  MySQL on Cloud SQL                 |
+|  Backend              |  Ktor Server on Railway             |
+|  Database             |  PostgreSQL on Railway              |
 |  Region               |  Canadian (Montreal)                |
 |  Monitoring           |  Firebase Crashlytics, Sentry       |
 |  Metrics              |  Micrometer + Prometheus            |

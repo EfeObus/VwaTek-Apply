@@ -785,7 +785,14 @@ class GeminiApiServiceTest {
 
 ## Backend API (Phase 1)
 
-The VwaTek backend is a Ktor server deployed on Google Cloud Run in the Canadian region (`northamerica-northeast1`).
+The VwaTek backend is a Ktor server deployed on **Railway** with automatic deployments from GitHub.
+
+### Deployment
+
+| Environment | URL | Deployment |
+|-------------|-----|------------|
+| Production | `https://vwatek-apply-production.up.railway.app` | Auto-deploy on push to `main` |
+| Development | `http://localhost:8080` | Local development |
 
 ### API Configuration
 
@@ -793,8 +800,7 @@ The VwaTek backend is a Ktor server deployed on Google Cloud Run in the Canadian
 // shared/src/commonMain/kotlin/com/vwatek/apply/data/api/ApiConfig.kt
 object ApiConfig {
     val BASE_URL = when (BuildKonfig.ENVIRONMENT) {
-        "production" -> "https://api.vwatek.ca"
-        "staging" -> "https://staging-api.vwatek.ca"
+        "production" -> "https://vwatek-apply-production.up.railway.app"
         else -> "http://localhost:8080"  // development
     }
     

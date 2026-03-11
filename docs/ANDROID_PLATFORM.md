@@ -202,6 +202,44 @@ actual class SecureStorage(private val context: Context) {
 }
 ```
 
+### Encrypted Preferences Crash Handling
+
+The `AndroidAuthRepository` includes robust handling for `EncryptedSharedPreferences` corruption. This can occur when:
+- The app is reinstalled and encryption keys are invalidated
+- The device's keystore is reset after a backup restore
+- An OS update invalidates the master key
+
+```kotlin
+// AndroidAuthRepository.kt
+private fun createEncryptedPreferences(): SharedPreferences {
+    return try {
+        EncryptedSharedPreferences.create(
+            context,
+            "vwatek_auth_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        // AEADBadTagException or similar - corrupted encryption data
+        // Clear and recreate fresh preferences
+        android.util.Log.w("AndroidAuthRepo", "Clearing corrupted encrypted prefs: ${e.message}")
+        context.getSharedPreferences("vwatek_auth_prefs", Context.MODE_PRIVATE)
+            .edit().clear().commit()
+        context.deleteSharedPreferences("vwatek_auth_prefs")
+        EncryptedSharedPreferences.create(
+            context,
+            "vwatek_auth_prefs",
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
+}
+```
+
+This approach ensures the app recovers gracefully from encryption issues rather than crashing on startup.
+
 ### Database Driver
 
 ```kotlin

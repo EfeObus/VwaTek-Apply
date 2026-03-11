@@ -658,3 +658,134 @@ if (WebConfig.isDevelopment) {
     console.log("Debug: $message")
 }
 ```
+
+---
+
+## CSS Styling System
+
+The web app uses a comprehensive CSS design system defined in `webApp/src/jsMain/resources/styles.css`.
+
+### CSS Variables
+
+The styling system uses CSS custom properties for consistent theming:
+
+```css
+:root {
+    /* Colors */
+    --color-primary: #3182ce;
+    --color-primary-hover: #2c5282;
+    --color-secondary: #718096;
+    --color-success: #48bb78;
+    --color-danger: #f56565;
+    
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    
+    /* Typography */
+    --font-size-sm: 0.875rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    
+    /* Shadows & Borders */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}
+```
+
+### Component Classes
+
+#### Dashboard Components
+
+| Class | Purpose |
+|-------|---------|
+| `.dashboard-welcome` | Welcome header section with gradient background |
+| `.stats-grid` | Grid layout for statistics cards |
+| `.stat-card` | Individual statistic display card |
+| `.getting-started` | Getting started section container |
+| `.step-card` | Step card with number badge |
+| `.feature-cards-grid` | Grid for feature cards |
+| `.feature-card` | Feature card with icon and description |
+
+#### Subscription/Pricing Components
+
+| Class | Purpose |
+|-------|---------|
+| `.subscription-screen` | Main subscription page container |
+| `.pricing-card` | Individual pricing tier card |
+| `.pricing-card-popular` | Highlighted "popular" pricing card |
+| `.toggle-container` | Billing toggle (monthly/yearly) |
+| `.toggle-btn` | Toggle button styling |
+| `.comparison-table` | Feature comparison table |
+
+#### Profile Components
+
+| Class | Purpose |
+|-------|---------|
+| `.profile-screen` | Profile page container |
+| `.profile-header` | Profile header with centered content |
+| `.profile-avatar-large` | Large profile avatar with ring effect |
+| `.profile-card` | Profile information card |
+| `.profile-item` | Individual profile field row |
+
+#### LinkedIn Optimizer Components
+
+| Class | Purpose |
+|-------|---------|
+| `.linkedin-screen` | LinkedIn optimizer page container |
+| `.linkedin-header` | Header styling |
+| `.tabs` | Tab navigation container |
+| `.tab-btn` | Tab button with active state indicator |
+
+### Usage in Compose for Web
+
+Apply CSS classes using the `classes()` function:
+
+```kotlin
+@Composable
+fun DashboardScreen() {
+    Div(attrs = { classes("dashboard-welcome") }) {
+        H1 { Text("Welcome back!") }
+    }
+    
+    Div(attrs = { classes("stats-grid") }) {
+        Div(attrs = { classes("stat-card") }) {
+            // Stat content
+        }
+    }
+    
+    Div(attrs = { classes("feature-cards-grid") }) {
+        Div(attrs = { classes("feature-card") }) {
+            Div(attrs = { classes("feature-card-icon") }) {
+                // Icon
+            }
+            H3 { Text("Feature Title") }
+        }
+    }
+}
+```
+
+### Responsive Design
+
+The CSS includes responsive breakpoints:
+
+```css
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .feature-cards-grid {
+        grid-template-columns: 1fr;
+    }
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+}
+```
