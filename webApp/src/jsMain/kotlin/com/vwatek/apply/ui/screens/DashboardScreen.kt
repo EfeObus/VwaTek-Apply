@@ -73,7 +73,7 @@ fun DashboardScreen(
             }
         } else {
         // Header
-        Div(attrs = { classes("mb-lg") }) {
+        Div(attrs = { classes("dashboard-welcome", "mb-xl") }) {
             H1 { Text("Welcome to VwaTek Apply") }
             P(attrs = { classes("text-secondary") }) {
                 Text("Your AI-powered career suite. Transform your job hunt into a data-driven strategy.")
@@ -81,54 +81,45 @@ fun DashboardScreen(
         }
         
         // Quick Stats
-        Div(attrs = { classes("grid", "grid-3", "mb-lg") }) {
+        Div(attrs = { classes("stats-grid", "mb-xl") }) {
             // Resume count
             Div(attrs = {
-                classes("card")
+                classes("stat-card")
                 onClick { onNavigateToResumes() }
-                style {
-                    property("cursor", "pointer")
-                    property("text-align", "center")
-                }
+                style { property("cursor", "pointer") }
             }) {
-                H2(attrs = { style { property("color", "var(--color-primary)") } }) {
+                Div(attrs = { classes("stat-value") }) {
                     Text("${resumeState.resumes.size}")
                 }
-                P(attrs = { classes("text-secondary", "text-sm") }) { Text("Resumes") }
+                Div(attrs = { classes("stat-label") }) { Text("Resumes") }
             }
             // Cover Letter count
             Div(attrs = {
-                classes("card")
+                classes("stat-card")
                 onClick { onNavigateToCoverLetters() }
-                style {
-                    property("cursor", "pointer")
-                    property("text-align", "center")
-                }
+                style { property("cursor", "pointer") }
             }) {
-                H2(attrs = { style { property("color", "var(--color-primary)") } }) {
+                Div(attrs = { classes("stat-value") }) {
                     Text("${coverLetterState.coverLetters.size}")
                 }
-                P(attrs = { classes("text-secondary", "text-sm") }) { Text("Cover Letters") }
+                Div(attrs = { classes("stat-label") }) { Text("Cover Letters") }
             }
             // Interview count
             Div(attrs = {
-                classes("card")
+                classes("stat-card")
                 onClick { onNavigateToInterview() }
-                style {
-                    property("cursor", "pointer")
-                    property("text-align", "center")
-                }
+                style { property("cursor", "pointer") }
             }) {
-                H2(attrs = { style { property("color", "var(--color-primary)") } }) {
+                Div(attrs = { classes("stat-value") }) {
                     Text("${interviewState.sessions.size}")
                 }
-                P(attrs = { classes("text-secondary", "text-sm") }) { Text("Interviews") }
+                Div(attrs = { classes("stat-label") }) { Text("Interviews") }
             }
         }
         
         // Getting Started Section
-        Div(attrs = { classes("card", "mb-lg") }) {
-            H3(attrs = { classes("card-title", "mb-md") }) { Text("Getting Started") }
+        Div(attrs = { classes("getting-started", "mb-xl") }) {
+            H2 { Text("Getting Started") }
             
             Div(attrs = { classes("getting-started-list") }) {
                 GettingStartedCard(
@@ -166,80 +157,52 @@ fun DashboardScreen(
         }
         
         // Quick Actions Grid
-        Div(attrs = { classes("grid", "grid-4", "mb-lg") }) {
+        Div(attrs = { classes("feature-cards-grid") }) {
             // Resume Card
             Div(attrs = {
-                classes("card")
+                classes("feature-card")
                 onClick { onNavigateToResumes() }
-                style { property("cursor", "pointer") }
             }) {
-                Div(attrs = { classes("card-header") }) {
-                    H3(attrs = { classes("card-title") }) { Text("Resume Review") }
-                }
-                P(attrs = { classes("text-secondary", "text-sm") }) {
+                Div(attrs = { classes("feature-card-icon") }) { Text("📄") }
+                H3 { Text("Resume Review") }
+                P {
                     Text("Analyze your resume against job descriptions and get ATS optimization tips.")
-                }
-                Div(attrs = { classes("mt-md") }) {
-                    Button(attrs = { classes("btn", "btn-primary") }) {
-                        Text("Get Started")
-                    }
                 }
             }
             
             // Cover Letter Card
             Div(attrs = {
-                classes("card")
+                classes("feature-card")
                 onClick { onNavigateToCoverLetters() }
-                style { property("cursor", "pointer") }
             }) {
-                Div(attrs = { classes("card-header") }) {
-                    H3(attrs = { classes("card-title") }) { Text("Cover Letters") }
-                }
-                P(attrs = { classes("text-secondary", "text-sm") }) {
+                Div(attrs = { classes("feature-card-icon") }) { Text("✉️") }
+                H3 { Text("Cover Letters") }
+                P {
                     Text("Generate tailored cover letters that highlight your skills and experience.")
-                }
-                Div(attrs = { classes("mt-md") }) {
-                    Button(attrs = { classes("btn", "btn-primary") }) {
-                        Text("Create New")
-                    }
                 }
             }
             
             // Interview Prep Card
             Div(attrs = {
-                classes("card")
+                classes("feature-card")
                 onClick { onNavigateToInterview() }
-                style { property("cursor", "pointer") }
             }) {
-                Div(attrs = { classes("card-header") }) {
-                    H3(attrs = { classes("card-title") }) { Text("Interview Prep") }
-                }
-                P(attrs = { classes("text-secondary", "text-sm") }) {
+                Div(attrs = { classes("feature-card-icon") }) { Text("🎯") }
+                H3 { Text("Interview Prep") }
+                P {
                     Text("Practice with AI mock interviews and get STAR method coaching.")
-                }
-                Div(attrs = { classes("mt-md") }) {
-                    Button(attrs = { classes("btn", "btn-primary") }) {
-                        Text("Start Practice")
-                    }
                 }
             }
             
             // Resume Optimizer Card
             Div(attrs = {
-                classes("card")
+                classes("feature-card")
                 onClick { onNavigateToOptimizer() }
-                style { property("cursor", "pointer") }
             }) {
-                Div(attrs = { classes("card-header") }) {
-                    H3(attrs = { classes("card-title") }) { Text("Resume Optimizer") }
-                }
-                P(attrs = { classes("text-secondary", "text-sm") }) {
+                Div(attrs = { classes("feature-card-icon") }) { Text("⚡") }
+                H3 { Text("Resume Optimizer") }
+                P {
                     Text("Check ATS compatibility and rewrite resume sections with AI.")
-                }
-                Div(attrs = { classes("mt-md") }) {
-                    Button(attrs = { classes("btn", "btn-primary") }) {
-                        Text("Optimize")
-                    }
                 }
             }
         }
@@ -324,51 +287,29 @@ private fun GettingStartedCard(
     onClick: () -> Unit
 ) {
     Div(attrs = {
-        classes("getting-started-card")
+        classes("step-card")
         onClick { onClick() }
-        style {
-            property("display", "flex")
-            property("align-items", "center")
-            property("gap", "var(--spacing-md)")
-            property("padding", "var(--spacing-md)")
-            property("background", "var(--color-surface-variant)")
-            property("border-radius", "var(--radius-md)")
-            property("cursor", "pointer")
-            property("transition", "var(--transition-normal)")
-            property("margin-bottom", "var(--spacing-sm)")
-        }
     }) {
         // Step number circle
         Div(attrs = {
-            style {
-                property("width", "36px")
-                property("height", "36px")
-                property("border-radius", "50%")
-                property("background", if (isCompleted) "var(--color-success)" else "var(--color-primary)")
-                property("color", "white")
-                property("display", "flex")
-                property("align-items", "center")
-                property("justify-content", "center")
-                property("font-weight", "600")
-                property("flex-shrink", "0")
+            classes("step-number")
+            if (isCompleted) {
+                style {
+                    property("background", "var(--color-success)")
+                }
             }
         }) {
             if (isCompleted) {
-                Text("")
+                Text("✓")
             } else {
                 Text("$stepNumber")
             }
         }
         
         // Content
-        Div(attrs = { style { property("flex", "1") } }) {
-            H4(attrs = {
-                style {
-                    property("font-size", "var(--font-size-md)")
-                    property("margin-bottom", "var(--spacing-xs)")
-                }
-            }) { Text(title) }
-            P(attrs = { classes("text-secondary", "text-sm") }) {
+        Div(attrs = { classes("step-content") }) {
+            H3 { Text(title) }
+            P {
                 Text(description)
             }
         }
@@ -376,7 +317,7 @@ private fun GettingStartedCard(
         // Chevron
         Span(attrs = {
             classes("text-secondary")
-            style { property("font-size", "1.2rem") }
+            style { property("font-size", "1.5rem") }
         }) {
             Text("›")
         }

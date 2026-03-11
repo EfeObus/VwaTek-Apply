@@ -717,49 +717,33 @@ internal fun ProfileView(
     var passwordMessage by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
     
-    user?.let { u ->
-        H2(attrs = { classes("text-center", "mb-lg") }) { Text("Profile") }
-        
-        // Avatar
-        Div(attrs = { 
-            classes("text-center", "mb-lg")
-        }) {
-            Div(attrs = {
-                style {
-                    property("width", "80px")
-                    property("height", "80px")
-                    property("border-radius", "50%")
-                    property("background", "var(--primary-color)")
-                    property("color", "white")
-                    property("display", "flex")
-                    property("align-items", "center")
-                    property("justify-content", "center")
-                    property("font-size", "2rem")
-                    property("font-weight", "600")
-                    property("margin", "0 auto var(--spacing-md)")
+    Div(attrs = { classes("profile-screen") }) {
+        user?.let { u ->
+            // Profile Header
+            Div(attrs = { classes("profile-header") }) {
+                // Large Avatar with ring
+                Div(attrs = { classes("profile-avatar-large") }) {
+                    Text(u.firstName.first().toString().uppercase())
                 }
-            }) {
-                Text(u.firstName.first().toString().uppercase())
+                H2(attrs = { classes("profile-name") }) { Text("${u.firstName} ${u.lastName}") }
+                P(attrs = { classes("profile-email") }) { Text(u.email) }
             }
-            H3 { Text("${u.firstName} ${u.lastName}") }
-            P(attrs = { classes("text-secondary") }) { Text(u.email) }
-        }
-        
-        // Profile details
-        Div(attrs = { classes("profile-details", "mb-lg") }) {
-            val userPhone = u.phone
-            if (userPhone != null) {
-                ProfileField("Phone", userPhone)
-            }
-            u.address?.let { addr ->
-                val addressStr = listOfNotNull(
-                    addr.street, addr.city, addr.state, addr.zipCode, addr.country
-                ).joinToString(", ")
-                if (addressStr.isNotBlank()) {
-                    ProfileField("Address", addressStr)
+            
+            // Profile Details Card
+            Div(attrs = { classes("profile-card", "mb-lg") }) {
+                val userPhone = u.phone
+                if (userPhone != null) {
+                    ProfileField("Phone", userPhone)
                 }
-            }
-            ProfileField("Auth Provider", u.authProvider.name)
+                u.address?.let { addr ->
+                    val addressStr = listOfNotNull(
+                        addr.street, addr.city, addr.state, addr.zipCode, addr.country
+                    ).joinToString(", ")
+                    if (addressStr.isNotBlank()) {
+                        ProfileField("Address", addressStr)
+                    }
+                }
+                ProfileField("Auth Provider", u.authProvider.name)
         }
         
         // Change Password Section
@@ -870,50 +854,38 @@ internal fun ProfileView(
                     }
                 }
             }
-        }
+            }
         
-        Div(attrs = { classes("flex", "gap-md", "justify-center") }) {
-            Button(attrs = {
-                classes("btn", "btn-secondary")
-                onClick { onNavigateBack() }
-            }) {
-                Text("Back to App")
+            // Profile Actions
+            Div(attrs = { classes("profile-actions") }) {
+                Button(attrs = {
+                    classes("btn", "btn-secondary")
+                    onClick { onNavigateBack() }
+                }) {
+                    Text("Back to App")
+                }
+                Button(attrs = {
+                    classes("btn", "btn-danger")
+                    onClick { onLogout() }
+                }) {
+                    Text("Sign Out")
+                }
             }
-            Button(attrs = {
-                classes("btn", "btn-danger")
-                onClick { onLogout() }
-            }) {
-                Text("Sign Out")
+        } ?: run {
+            P(attrs = { classes("text-center") }) {
+                Text("No user data available")
             }
-        }
-    } ?: run {
-        P(attrs = { classes("text-center") }) {
-            Text("No user data available")
         }
     }
 }
 
 @Composable
 internal fun ProfileField(label: String, value: String) {
-    Div(attrs = { 
-        classes("profile-field")
-        style {
-            property("padding", "var(--spacing-sm) 0")
-            property("border-bottom", "1px solid var(--border-color)")
-        }
-    }) {
-        Label(attrs = { 
-            classes("text-secondary")
-            style { property("font-size", "0.85rem") }
-        }) { 
+    Div(attrs = { classes("profile-item") }) {
+        Span(attrs = { classes("profile-item-label") }) { 
             Text(label) 
         }
-        P(attrs = { 
-            style { 
-                property("font-weight", "500")
-                property("margin-top", "var(--spacing-xs)")
-            }
-        }) { 
+        Span(attrs = { classes("profile-item-value") }) { 
             Text(value) 
         }
     }
