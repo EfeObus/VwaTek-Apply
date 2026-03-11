@@ -123,56 +123,7 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
     
     route("/subscriptions") {
         
-        authenticate("jwt") {
-        // Get current user's subscription
-        get {
-            val userId = call.requireUserId() ?: return@get
-            
-            val subscription = transaction {
-                SubscriptionsTable.select { SubscriptionsTable.userId eq userId }
-                    .singleOrNull()
-            }
-            
-            if (subscription == null) {
-                // Return free tier
-                val freeLimits = FeatureLimits.forTier(SubscriptionTier.FREE)
-                call.respond(
-                    SubscriptionResponse(
-                        subscription = SubscriptionDto(
-                            id = "",
-                            userId = userId,
-                            tier = "FREE",
-                            status = "ACTIVE",
-                            billingPeriod = "MONTHLY",
-                            paymentProvider = "NONE",
-                            currentPeriodStart = Clock.System.now().toString(),
-                            currentPeriodEnd = Clock.System.now().toString(),
-                            cancelAtPeriodEnd = false,
-                            canceledAt = null,
-                            trialStart = null,
-                            trialEnd = null
-                        ),
-                        limits = freeLimits,
-                        pricing = null
-                    )
-                )
-                return@get
-            }
-            
-            val tier = SubscriptionTier.valueOf(subscription[SubscriptionsTable.tier])
-            val limits = FeatureLimits.forTier(tier)
-            val pricing = SubscriptionPricing.forTier(tier)
-            
-            call.respond(
-                SubscriptionResponse(
-                    subscription = subscription.toDto(),
-                    limits = limits,
-                    pricing = pricing
-                )
-            )
-        }
-        
-        // Get pricing tiers
+        // PUBLIC endpoint - no auth required (for pricing page)
         get("/pricing") {
             val pricing = listOf(
                 TierPricingDto(
@@ -238,6 +189,55 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
             )
             
             call.respond(PricingResponse(pricing = pricing))
+        }
+        
+        authenticate("jwt") {
+        // Get current user's subscription
+        get {
+            val userId = call.requireUserId() ?: return@get
+            
+            val subscription = transaction {
+                SubscriptionsTable.select { SubscriptionsTable.userId eq userId }
+                    .singleOrNull()
+            }
+            
+            if (subscription == null) {
+                // Return free tier
+                val freeLimits = FeatureLimits.forTier(SubscriptionTier.FREE)
+                call.respond(
+                    SubscriptionResponse(
+                        subscription = SubscriptionDto(
+                            id = "",
+                            userId = userId,
+                            tier = "FREE",
+                            status = "ACTIVE",
+                            billingPeriod = "MONTHLY",
+                            paymentProvider = "NONE",
+                            currentPeriodStart = Clock.System.now().toString(),
+                            currentPeriodEnd = Clock.System.now().toString(),
+                            cancelAtPeriodEnd = false,
+                            canceledAt = null,
+                            trialStart = null,
+                            trialEnd = null
+                        ),
+                        limits = freeLimits,
+                        pricing = null
+                    )
+                )
+                return@get
+            }
+            
+            val tier = SubscriptionTier.valueOf(subscription[SubscriptionsTable.tier])
+            val limits = FeatureLimits.forTier(tier)
+            val pricing = SubscriptionPricing.forTier(tier)
+            
+            call.respond(
+                SubscriptionResponse(
+                    subscription = subscription.toDto(),
+                    limits = limits,
+                    pricing = pricing
+                )
+            )
         }
         
         // Create checkout session
