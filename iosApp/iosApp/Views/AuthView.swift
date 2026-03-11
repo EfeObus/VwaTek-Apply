@@ -6,6 +6,7 @@ struct AuthView: View {
     @State private var showError = false
     
     var body: some View {
+        let _ = print("🟡 [BOOT] AuthView.body evaluated")
         NavigationStack {
             ZStack {
                 Color(.systemBackground)
@@ -13,6 +14,7 @@ struct AuthView: View {
                 
                 switch currentView {
                 case .login:
+                    let _ = print("🟡 [BOOT] AuthView showing LoginView")
                     LoginView(
                         viewModel: viewModel,
                         onSwitchToRegister: { currentView = .register },

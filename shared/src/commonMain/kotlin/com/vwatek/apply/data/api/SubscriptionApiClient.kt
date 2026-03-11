@@ -73,6 +73,18 @@ class SubscriptionApiClient(
                     cancelUrl = cancelUrl
                 ))
             }
+            
+            if (!response.status.isSuccess()) {
+                // Try to extract error message from response
+                val errorBody = try {
+                    response.body<ErrorResponse>()
+                } catch (e: Exception) {
+                    null
+                }
+                val errorMsg = errorBody?.error ?: "Checkout failed with status ${response.status.value}"
+                return Result.failure(Exception(errorMsg))
+            }
+            
             Result.success(response.body())
         } catch (e: Exception) {
             Result.failure(e)
@@ -251,4 +263,10 @@ data class CheckoutSessionResponse(
 data class PortalSessionResponse(
     val sessionId: String,
     val portalUrl: String
+)
+
+@Serializable
+data class ErrorResponse(
+    val error: String? = null,
+    val message: String? = null
 )

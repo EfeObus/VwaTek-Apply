@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var deepLinkTab: Int? = nil
     
     var body: some View {
+        let _ = print("🟡 [BOOT] ContentView.body evaluated - isAuthenticated=\(authViewModel.isAuthenticated)")
         Group {
             if authViewModel.isAuthenticated {
                 if horizontalSizeClass == .regular {
@@ -21,6 +22,7 @@ struct ContentView: View {
             }
         }
         .task {
+            print("🟡 [BOOT] .task fired, calling observeState()")
             authViewModel.observeState()
         }
         .onOpenURL { url in

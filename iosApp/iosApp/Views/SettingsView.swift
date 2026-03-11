@@ -4,6 +4,9 @@ import shared
 /// Settings View for iOS
 /// Manages app preferences, API keys, and user settings
 struct SettingsView: View {
+    @StateObject private var authViewModel = AuthViewModelWrapper()
+    @State private var showLogoutAlert = false
+    
     // Notification preferences
     @State private var pushNotifications = true
     @State private var emailNotifications = true
@@ -169,12 +172,33 @@ struct SettingsView: View {
                             }
                             .foregroundColor(.primary)
                         }
+                        
+                        // Account Section with Logout
+                        Section("Account") {
+                            Button {
+                                showLogoutAlert = true
+                            } label: {
+                                HStack {
+                                    Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                                    Spacer()
+                                }
+                            }
+                            .foregroundColor(.red)
+                        }
                     }
                 }
             }
             .navigationTitle("Settings")
             .onAppear {
                 loadSettings()
+            }
+            .alert("Sign Out", isPresented: $showLogoutAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Sign Out", role: .destructive) {
+                    authViewModel.logout()
+                }
+            } message: {
+                Text("Are you sure you want to sign out?")
             }
             .alert("Export Data", isPresented: $showExportAlert) {
                 Button("Cancel", role: .cancel) { }

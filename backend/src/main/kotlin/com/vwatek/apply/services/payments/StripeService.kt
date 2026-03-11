@@ -347,12 +347,20 @@ data class StripeInvoiceSettings(
 
 @Serializable
 data class StripeCheckoutSession(
-    val id: String,
-    val url: String,
+    val id: String = "",
+    val url: String? = null,
     val customer: String? = null,
     val subscription: String? = null,
-    val status: String,
-    val payment_status: String
+    val status: String = "",
+    val payment_status: String = "",
+    val error: StripeError? = null
+)
+
+@Serializable
+data class StripeError(
+    val message: String = "",
+    val type: String = "",
+    val code: String? = null
 )
 
 @Serializable

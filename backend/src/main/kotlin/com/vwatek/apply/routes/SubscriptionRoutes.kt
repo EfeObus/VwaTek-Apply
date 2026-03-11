@@ -285,9 +285,17 @@ fun Route.subscriptionRoutes(httpClient: HttpClient) {
                     trialPeriodDays = 14  // 14-day free trial
                 )
                 
+                // Validate Stripe response has required fields
+                val checkoutUrl = session.url
+                if (checkoutUrl.isNullOrEmpty() || session.id.isEmpty()) {
+                    val errorMsg = session.error?.message ?: "Stripe did not return a valid checkout session"
+                    call.respond(HttpStatusCode.InternalServerError, mapOf("error" to errorMsg))
+                    return@post
+                }
+                
                 call.respond(CheckoutResponse(
                     sessionId = session.id,
-                    checkoutUrl = session.url
+                    checkoutUrl = checkoutUrl
                 ))
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to create checkout session: ${e.message}"))

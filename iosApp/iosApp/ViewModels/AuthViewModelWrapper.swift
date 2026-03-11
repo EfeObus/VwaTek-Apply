@@ -38,8 +38,10 @@ class AuthViewModelWrapper: ObservableObject {
     private var stateWatcher: Closeable?
     
     init() {
+        print("🟡 [BOOT] AuthViewModelWrapper.init() START")
         // Get AuthViewModel from Koin
         self.viewModel = KoinHelperKt.getAuthViewModel()
+        print("🟢 [BOOT] AuthViewModelWrapper.init() DONE - got AuthViewModel")
     }
     
     deinit {
@@ -47,9 +49,15 @@ class AuthViewModelWrapper: ObservableObject {
     }
     
     func observeState() {
+        print("🟡 [BOOT] observeState() called")
         // Use FlowExtensionsKt.watch to observe StateFlow
         stateWatcher = FlowExtensionsKt.watch(viewModel.state) { [weak self] (state: Any?) in
-            guard let self = self, let authState = state as? AuthViewState else { return }
+            print("🟡 [BOOT] StateFlow emitted: \(String(describing: state))")
+            guard let self = self, let authState = state as? AuthViewState else {
+                print("🔴 [BOOT] State cast to AuthViewState FAILED")
+                return
+            }
+            print("🟢 [BOOT] AuthState: isAuth=\(authState.isAuthenticated), isLoading=\(authState.isLoading), error=\(String(describing: authState.error))")
             Task { @MainActor in
                 self.isLoading = authState.isLoading
                 self.isAuthenticated = authState.isAuthenticated
