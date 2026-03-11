@@ -27,9 +27,9 @@ fun LinkedInOptimizerScreen() {
         manager.loadHistory()
     }
 
-    Div {
+    Div(attrs = { classes("linkedin-screen") }) {
         // Header
-        Div(attrs = { classes("mb-xl") }) {
+        Div(attrs = { classes("linkedin-header", "mb-xl") }) {
             H1(attrs = { classes("mb-xs") }) {
                 Text("LinkedIn Optimizer")
             }
@@ -39,7 +39,7 @@ fun LinkedInOptimizerScreen() {
         }
 
         // Tab Navigation
-        Div(attrs = { classes("tabs-nav", "mb-lg") }) {
+        Div(attrs = { classes("tabs", "mb-lg") }) {
             Button(attrs = {
                 classes(buildList {
                     add("tab-btn")
