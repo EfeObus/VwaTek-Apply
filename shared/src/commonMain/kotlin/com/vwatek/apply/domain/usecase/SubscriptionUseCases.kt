@@ -242,6 +242,31 @@ class SubscriptionManager(
             PremiumFeature.UNLIMITED_INTERVIEWS -> SubscriptionTier.PREMIUM
         }
     }
+    
+    /**
+     * Create a Stripe checkout session and return the checkout URL.
+     * Throws an exception on failure (easier for Swift interop than Result type).
+     */
+    @Throws(Exception::class)
+    suspend fun createCheckoutSession(
+        tier: SubscriptionTier,
+        billingPeriod: BillingPeriod,
+        successUrl: String,
+        cancelUrl: String
+    ): String {
+        if (tier == SubscriptionTier.FREE) {
+            throw IllegalArgumentException("Cannot checkout for free tier")
+        }
+        
+        val result = subscriptionApiClient.createCheckoutSession(
+            tier = tier,
+            billingPeriod = billingPeriod,
+            successUrl = successUrl,
+            cancelUrl = cancelUrl
+        )
+        
+        return result.getOrThrow().checkoutUrl
+    }
 }
 
 sealed class SubscriptionState {

@@ -1,9 +1,10 @@
 import SwiftUI
 import shared
 import StoreKit
+import SafariServices
 
 /// Subscription View for iOS
-/// Shows pricing tiers and allows users to upgrade via StoreKit
+/// Shows pricing tiers and allows users to upgrade via Stripe (or StoreKit if configured)
 /// Wired to shared SubscriptionManager via SubscriptionManagerWrapper
 struct SubscriptionView: View {
     @StateObject private var viewModel = SubscriptionManagerWrapper()
@@ -11,6 +12,8 @@ struct SubscriptionView: View {
     @State private var showManageBilling = false
     @State private var showError: String? = nil
     @State private var isPurchasing = false
+    @State private var showCheckoutSafari = false
+    @State private var checkoutURL: URL? = nil
     
     // StoreKit products
     @State private var products: [Product] = []
@@ -62,6 +65,23 @@ struct SubscriptionView: View {
             .onAppear {
                 Task {
                     await loadProducts()
+                }
+            }
+            .onOpenURL { url in
+                // Handle checkout callback deep links
+                if url.scheme == "vwatekapply" && url.host == "checkout" {
+                    showCheckoutSafari = false
+                    if url.path.contains("success") {
+                        // Refresh subscription after successful payment
+                        Task {
+                            await viewModel.refreshSubscription()
+                        }
+                    }
+                }
+            }
+            .sheet(isPresented: $showCheckoutSafari) {
+                if let url = checkoutURL {
+                    SafariView(url: url)
                 }
             }
             .alert("Error", isPresented: .init(
@@ -261,9 +281,10 @@ struct SubscriptionView: View {
         }
     }
     
-    // MARK: - Data Loading & StoreKit
+    // MARK: - Data Loading & Stripe Checkout
     
     private func loadProducts() async {
+        // Try to load StoreKit products (optional - may not be configured)
         do {
             let productIds = [
                 "com.vwatek.apply.pro.monthly",
@@ -273,51 +294,48 @@ struct SubscriptionView: View {
             ]
             products = try await Product.products(for: productIds)
         } catch {
-            showError = "Failed to load products: \(error.localizedDescription)"
+            // StoreKit products not available, will use Stripe checkout
+            print("StoreKit products not available, using Stripe checkout")
         }
     }
     
     private func purchaseProduct(tier: SubscriptionTier) async {
-        let productId: String
-        switch (tier, selectedBillingPeriod) {
-        case (.pro, .monthly): productId = "com.vwatek.apply.pro.monthly"
-        case (.pro, .yearly): productId = "com.vwatek.apply.pro.yearly"
-        case (.premium, .monthly): productId = "com.vwatek.apply.premium.monthly"
-        case (.premium, .yearly): productId = "com.vwatek.apply.premium.yearly"
-        default: return
+        // Convert to shared Kotlin types
+        let sharedTier: shared.SubscriptionTier
+        let sharedBillingPeriod: shared.BillingPeriod
+        
+        switch tier {
+        case .free: return // Can't purchase free tier
+        case .pro: sharedTier = shared.SubscriptionTier.pro
+        case .premium: sharedTier = shared.SubscriptionTier.premium
         }
         
-        guard let product = products.first(where: { $0.id == productId }) else {
-            showError = "Product not available. Please try again later."
-            return
+        switch selectedBillingPeriod {
+        case .monthly: sharedBillingPeriod = shared.BillingPeriod.monthly
+        case .yearly: sharedBillingPeriod = shared.BillingPeriod.yearly
         }
         
         isPurchasing = true
-        defer { isPurchasing = false }
         
         do {
-            let result = try await product.purchase()
+            // Use Stripe checkout via the shared API client
+            // URLs are hardcoded in the wrapper for mobile deep link handling
+            let checkoutUrlString = try await viewModel.createCheckoutSession(
+                tier: sharedTier,
+                billingPeriod: sharedBillingPeriod
+            )
             
-            switch result {
-            case .success(let verification):
-                switch verification {
-                case .verified(let transaction):
-                    // Finish the transaction
-                    await transaction.finish()
-                    // Refresh subscription state from the shared manager
-                    await viewModel.refreshSubscription()
-                case .unverified(_, let error):
-                    showError = "Purchase verification failed: \(error.localizedDescription)"
-                }
-            case .userCancelled:
-                // User cancelled, do nothing
-                break
-            case .pending:
-                showError = "Purchase is pending approval."
-            @unknown default:
-                showError = "Unknown purchase result."
+            isPurchasing = false
+            
+            if let url = URL(string: checkoutUrlString) {
+                checkoutURL = url
+                showCheckoutSafari = true
+            } else {
+                showError = "Failed to create checkout session"
             }
         } catch {
+            isPurchasing = false
+            showError = "Checkout failed: \(error.localizedDescription)"
             showError = "Purchase failed: \(error.localizedDescription)"
         }
     }
@@ -526,6 +544,22 @@ struct ComparisonRow: View {
                 .fontWeight(premium == "∞" ? .bold : .regular)
                 .frame(width: 60)
         }
+    }
+}
+
+// MARK: - Safari View for Stripe Checkout
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let config = SFSafariViewController.Configuration()
+        config.entersReaderIfAvailable = false
+        let safariVC = SFSafariViewController(url: url, configuration: config)
+        return safariVC
+    }
+    
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
+        // No update needed
     }
 }
 

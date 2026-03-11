@@ -1,5 +1,7 @@
 package com.vwatek.apply.android.ui
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,12 +23,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vwatek.apply.android.ui.screens.*
 import com.vwatek.apply.android.ui.theme.VwaTekApplyTheme
+import com.vwatek.apply.data.api.SubscriptionApiClient
+import com.vwatek.apply.domain.model.BillingPeriod
+import com.vwatek.apply.domain.model.SubscriptionTier
 import com.vwatek.apply.i18n.LocaleManager
 import com.vwatek.apply.i18n.Strings
 import com.vwatek.apply.presentation.auth.AuthViewModel
@@ -134,19 +140,72 @@ fun VwaTekApp(
     onDeepLinkConsumed: () -> Unit = {}
 ) {
     val authViewModel: AuthViewModel = koinInject()
+    val subscriptionApiClient: SubscriptionApiClient = koinInject()
     val authState by authViewModel.state.collectAsState()
     val locale by LocaleManager.currentLocale.collectAsState()
     val s = LocaleManager.strings
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     var selectedItem by remember { mutableStateOf(NavigationItem.Home) }
+    var checkoutMessage by remember { mutableStateOf<String?>(null) }
+    var isCheckingOut by remember { mutableStateOf(false) }
 
     // Handle deep links
     LaunchedEffect(deepLinkUri) {
         if (deepLinkUri != null) {
-            val host = deepLinkUri.removePrefix("vwatekapply://").split("/").firstOrNull()
-            val target = NavigationItem.entries.firstOrNull { it.route == host }
-            if (target != null) selectedItem = target
+            when {
+                // Handle checkout success callback
+                deepLinkUri.startsWith("vwatekapply://checkout/success") -> {
+                    checkoutMessage = "Payment successful! Your subscription is now active."
+                    selectedItem = NavigationItem.Subscription
+                }
+                // Handle checkout cancel callback
+                deepLinkUri.startsWith("vwatekapply://checkout/cancel") -> {
+                    checkoutMessage = "Payment cancelled."
+                    selectedItem = NavigationItem.Subscription
+                }
+                // Handle other deep links
+                else -> {
+                    val host = deepLinkUri.removePrefix("vwatekapply://").split("/").firstOrNull()
+                    val target = NavigationItem.entries.firstOrNull { it.route == host }
+                    if (target != null) selectedItem = target
+                }
+            }
             onDeepLinkConsumed()
+        }
+    }
+    
+    // Show checkout message
+    LaunchedEffect(checkoutMessage) {
+        checkoutMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            checkoutMessage = null
+        }
+    }
+    
+    // Checkout handler function
+    val handleCheckout: (SubscriptionTier, BillingPeriod) -> Unit = { tier, billingPeriod ->
+        scope.launch {
+            isCheckingOut = true
+            val successUrl = "vwatekapply://checkout/success"
+            val cancelUrl = "vwatekapply://checkout/cancel"
+            
+            subscriptionApiClient.createCheckoutSession(
+                tier = tier,
+                billingPeriod = billingPeriod,
+                successUrl = successUrl,
+                cancelUrl = cancelUrl
+            ).onSuccess { response ->
+                isCheckingOut = false
+                // Open checkout URL in browser
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(response.checkoutUrl))
+                context.startActivity(intent)
+            }.onFailure { error ->
+                isCheckingOut = false
+                checkoutMessage = "Checkout failed: ${error.message}"
+            }
         }
     }
 
@@ -159,14 +218,20 @@ fun VwaTekApp(
                 selectedItem = selectedItem,
                 onItemSelected = { selectedItem = it },
                 authViewModel = authViewModel,
-                authState = authState
+                authState = authState,
+                onStartCheckout = handleCheckout,
+                isCheckingOut = isCheckingOut,
+                snackbarHostState = snackbarHostState
             )
         } else {
             PhoneLayout(
                 selectedItem = selectedItem,
                 onItemSelected = { selectedItem = it },
                 authViewModel = authViewModel,
-                authState = authState
+                authState = authState,
+                onStartCheckout = handleCheckout,
+                isCheckingOut = isCheckingOut,
+                snackbarHostState = snackbarHostState
             )
         }
     }
@@ -180,7 +245,10 @@ private fun PhoneLayout(
     selectedItem: NavigationItem,
     onItemSelected: (NavigationItem) -> Unit,
     authViewModel: AuthViewModel,
-    authState: com.vwatek.apply.presentation.auth.AuthViewState
+    authState: com.vwatek.apply.presentation.auth.AuthViewState,
+    onStartCheckout: (SubscriptionTier, BillingPeriod) -> Unit = { _, _ -> },
+    isCheckingOut: Boolean = false,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -199,6 +267,7 @@ private fun PhoneLayout(
         }
     ) {
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 @OptIn(ExperimentalMaterial3Api::class)
                 CenterAlignedTopAppBar(
@@ -252,7 +321,9 @@ private fun PhoneLayout(
                     selectedItem = selectedItem,
                     authViewModel = authViewModel,
                     authState = authState,
-                    onNavigateToItem = onItemSelected
+                    onNavigateToItem = onItemSelected,
+                    onStartCheckout = onStartCheckout,
+                    isCheckingOut = isCheckingOut
                 )
             }
         }
@@ -267,7 +338,10 @@ private fun TabletLayout(
     selectedItem: NavigationItem,
     onItemSelected: (NavigationItem) -> Unit,
     authViewModel: AuthViewModel,
-    authState: com.vwatek.apply.presentation.auth.AuthViewState
+    authState: com.vwatek.apply.presentation.auth.AuthViewState,
+    onStartCheckout: (SubscriptionTier, BillingPeriod) -> Unit = { _, _ -> },
+    isCheckingOut: Boolean = false,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
 ) {
     PermanentNavigationDrawer(
         drawerContent = {
@@ -294,12 +368,20 @@ private fun TabletLayout(
             }
         }
     ) {
-        ScreenContent(
-            selectedItem = selectedItem,
-            authViewModel = authViewModel,
-            authState = authState,
-            onNavigateToItem = onItemSelected
-        )
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) }
+        ) { padding ->
+            Box(modifier = Modifier.padding(padding)) {
+                ScreenContent(
+                    selectedItem = selectedItem,
+                    authViewModel = authViewModel,
+                    authState = authState,
+                    onNavigateToItem = onItemSelected,
+                    onStartCheckout = onStartCheckout,
+                    isCheckingOut = isCheckingOut
+                )
+            }
+        }
     }
 }
 
@@ -427,7 +509,9 @@ private fun ScreenContent(
     selectedItem: NavigationItem,
     authViewModel: AuthViewModel,
     authState: com.vwatek.apply.presentation.auth.AuthViewState,
-    onNavigateToItem: (NavigationItem) -> Unit
+    onNavigateToItem: (NavigationItem) -> Unit,
+    onStartCheckout: (SubscriptionTier, BillingPeriod) -> Unit = { _, _ -> },
+    isCheckingOut: Boolean = false
 ) {
     when (selectedItem) {
         NavigationItem.Home -> HomeScreen(
@@ -450,7 +534,8 @@ private fun ScreenContent(
         NavigationItem.LinkedInOptimizer -> LinkedInOptimizerScreen()
         NavigationItem.Organization -> OrganizationScreen()
         NavigationItem.Subscription -> SubscriptionScreen(
-            onNavigateBack = { onNavigateToItem(NavigationItem.Home) }
+            onNavigateBack = { onNavigateToItem(NavigationItem.Home) },
+            onStartCheckout = onStartCheckout
         )
         NavigationItem.Profile -> ProfileScreen(authViewModel, authState)
         NavigationItem.Settings -> SettingsScreen(onNavigateBack = { onNavigateToItem(NavigationItem.Home) })

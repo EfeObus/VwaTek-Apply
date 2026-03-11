@@ -138,4 +138,22 @@ class SubscriptionManagerWrapper: ObservableObject {
     var isInDemoMode: Bool {
         return manager.isInDemoMode
     }
+    
+    // MARK: - Checkout Session
+    
+    /// Create a Stripe checkout session for upgrading
+    /// Returns the checkout URL on success
+    func createCheckoutSession(tier: shared.SubscriptionTier, billingPeriod: shared.BillingPeriod) async throws -> String {
+        // Use URL scheme deep links for mobile checkout callbacks
+        let successUrl = "vwatekapply://checkout/success"
+        let cancelUrl = "vwatekapply://checkout/cancel"
+        
+        // Call the manager's createCheckoutSession method which returns URL or throws
+        return try await manager.createCheckoutSession(
+            tier: tier,
+            billingPeriod: billingPeriod,
+            successUrl: successUrl,
+            cancelUrl: cancelUrl
+        )
+    }
 }

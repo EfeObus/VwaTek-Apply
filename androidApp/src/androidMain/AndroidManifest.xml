@@ -83,6 +83,14 @@
                 <data android:scheme="vwatekapply" android:host="profile" />
                 <data android:scheme="vwatekapply" android:host="settings" />
             </intent-filter>
+            
+            <!-- Deep link for Stripe checkout callbacks -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="vwatekapply" android:host="checkout" />
+            </intent-filter>
         </activity>
 
         <!-- FileProvider for sharing PDF exports -->

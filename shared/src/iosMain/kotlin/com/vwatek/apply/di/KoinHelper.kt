@@ -10,6 +10,7 @@ import com.vwatek.apply.presentation.noc.NOCViewModel
 import com.vwatek.apply.presentation.jobbank.JobBankViewModel
 import com.vwatek.apply.domain.usecase.SubscriptionManager
 import com.vwatek.apply.domain.usecase.SalaryIntelligenceManager
+import com.vwatek.apply.domain.usecase.CreateCheckoutSessionUseCase
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -32,6 +33,7 @@ object KoinHelper : KoinComponent {
     private val settingsRepository: SettingsRepository by inject()
     private val linkedInOptimizerManager: com.vwatek.apply.domain.usecase.LinkedInOptimizerManager by inject()
     private val organizationViewModel: com.vwatek.apply.presentation.organization.OrganizationViewModel by inject()
+    private val createCheckoutSessionUseCase: CreateCheckoutSessionUseCase by inject()
     
     fun getAuthViewModel(): AuthViewModel = authViewModel
     fun getResumeViewModel(): ResumeViewModel = resumeViewModel
@@ -45,6 +47,7 @@ object KoinHelper : KoinComponent {
     fun getSettingsRepository(): SettingsRepository = settingsRepository
     fun getLinkedInOptimizerManager(): com.vwatek.apply.domain.usecase.LinkedInOptimizerManager = linkedInOptimizerManager
     fun getOrganizationViewModel(): com.vwatek.apply.presentation.organization.OrganizationViewModel = organizationViewModel
+    fun getCreateCheckoutSessionUseCase(): CreateCheckoutSessionUseCase = createCheckoutSessionUseCase
 }
 
 /**
@@ -94,6 +97,7 @@ fun getSalaryIntelligenceManager(): SalaryIntelligenceManager = KoinHelper.getSa
 fun getSettingsRepository(): SettingsRepository = KoinHelper.getSettingsRepository()
 fun getLinkedInOptimizerManager(): com.vwatek.apply.domain.usecase.LinkedInOptimizerManager = KoinHelper.getLinkedInOptimizerManager()
 fun getOrganizationViewModel(): com.vwatek.apply.presentation.organization.OrganizationViewModel = KoinHelper.getOrganizationViewModel()
+fun getCreateCheckoutSessionUseCase(): CreateCheckoutSessionUseCase = KoinHelper.getCreateCheckoutSessionUseCase()
 
 // Settings helper functions for Swift
 fun getSetting(key: String): String? = SettingsHelper.getSetting(key)
