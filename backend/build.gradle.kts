@@ -15,21 +15,16 @@ application {
 
 // Copy web frontend assets into backend resources so they're embedded in the JAR
 // Only when webApp project is available (not in backend-only Docker builds)
-val hasWebApp = rootProject.findProject(":webApp") != null
-val copyWebAssets by tasks.registering(Copy::class) {
-    onlyIf { hasWebApp }
-    from(rootProject.file("webApp/build/dist/js/productionExecutable"))
-    into(layout.buildDirectory.dir("resources/main/web"))
-}
+val webAppProject = rootProject.findProject(":webApp")
 
-if (hasWebApp) {
-    tasks.named("copyWebAssets") {
+if (webAppProject != null) {
+    val copyWebAssets by tasks.registering(Copy::class) {
         dependsOn(":webApp:jsBrowserDistribution")
+        from(rootProject.file("webApp/build/dist/js/productionExecutable"))
+        into(layout.buildDirectory.dir("resources/main/web"))
     }
-}
 
-tasks.named("processResources") {
-    if (hasWebApp) {
+    tasks.named("processResources") {
         dependsOn(copyWebAssets)
     }
 }
