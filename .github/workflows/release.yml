@@ -1,5 +1,5 @@
 # VwaTek Apply - Release Pipeline
-# Creates releases and deploys to production
+# Creates releases when tags are published
 
 name: Release
 
@@ -11,10 +11,6 @@ on:
       version:
         description: 'Release version (e.g., 1.0.0)'
         required: true
-
-env:
-  PROJECT_ID: vwatek-apply
-  REGION: us-central1
 
 jobs:
   release:
@@ -69,9 +65,3 @@ jobs:
           files: |
             release/*.jar
             release/webapp.zip
-            
-      - name: Trigger Deployment
-        uses: peter-evans/repository-dispatch@v2
-        with:
-          event-type: deploy-release
-          client-payload: '{"version": "${{ steps.version.outputs.version }}"}'
