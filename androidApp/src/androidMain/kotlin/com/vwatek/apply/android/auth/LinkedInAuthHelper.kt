@@ -17,7 +17,7 @@ class LinkedInAuthHelper(private val context: Context) {
         // LinkedIn OAuth configuration
         private const val LINKEDIN_CLIENT_ID = "86zpbbqqqa32et"
         private const val LINKEDIN_AUTH_URL = "https://www.linkedin.com/oauth/v2/authorization"
-        private const val LINKEDIN_REDIRECT_URI = "https://vwatek-apply-production.up.railway.app/auth/linkedin/callback"
+        private const val LINKEDIN_REDIRECT_URI = "https://vwatek-apply-backend-production.up.railway.app/linkedin-callback"
         
         // OAuth scopes
         private val SCOPES = listOf("openid", "profile", "email")

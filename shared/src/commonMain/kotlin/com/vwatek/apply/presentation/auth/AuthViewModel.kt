@@ -164,7 +164,8 @@ class AuthViewModel(
             AuthIntent.ClearSuccess -> _state.value = _state.value.copy(
                 registrationSuccess = false,
                 passwordResetSent = false,
-                uploadedResume = null
+                uploadedResume = null,
+                linkedInAuthUrl = null
             )
         }
     }

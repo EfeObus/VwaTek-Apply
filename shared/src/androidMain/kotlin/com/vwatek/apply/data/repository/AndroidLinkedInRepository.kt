@@ -1,16 +1,35 @@
 package com.vwatek.apply.data.repository
 
+import android.net.Uri
 import com.vwatek.apply.domain.model.LinkedInProfile
 import com.vwatek.apply.domain.model.Resume
 import com.vwatek.apply.domain.model.ResumeSourceType
 import com.vwatek.apply.domain.repository.LinkedInRepository
 import kotlinx.datetime.Clock
+import java.util.UUID
 
 class AndroidLinkedInRepository : LinkedInRepository {
     
+    // LinkedIn OAuth configuration
+    private val clientId = "86zpbbqqqa32et"
+    private val redirectUri = "https://vwatek-apply-backend-production.up.railway.app/linkedin-callback"
+    private val scope = "openid profile email"
+    
     override suspend fun getAuthorizationUrl(): String {
-        // In production, this would return a real LinkedIn OAuth URL
-        return "https://www.linkedin.com/oauth/v2/authorization"
+        // Generate a state parameter for CSRF protection
+        val state = UUID.randomUUID().toString()
+        
+        return Uri.Builder()
+            .scheme("https")
+            .authority("www.linkedin.com")
+            .path("/oauth/v2/authorization")
+            .appendQueryParameter("response_type", "code")
+            .appendQueryParameter("client_id", clientId)
+            .appendQueryParameter("redirect_uri", redirectUri)
+            .appendQueryParameter("scope", scope)
+            .appendQueryParameter("state", state)
+            .build()
+            .toString()
     }
     
     override suspend fun exchangeCodeForToken(authCode: String): Result<String> {

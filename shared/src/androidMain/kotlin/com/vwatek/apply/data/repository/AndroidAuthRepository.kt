@@ -178,8 +178,16 @@ class AndroidAuthRepository(
             if (response.status.isSuccess()) {
                 val authResponse: AuthApiResponse = response.body()
                 val user = authResponse.user.toUser()
-                saveAuthData(user, authResponse.token)
-                android.util.Log.d("AndroidAuthRepo", "Login successful: ${user.email}")
+                // Only persist auth data if "Remember Me" is checked
+                if (rememberMe) {
+                    saveAuthData(user, authResponse.token)
+                    android.util.Log.d("AndroidAuthRepo", "Login successful (persisted): ${user.email}")
+                } else {
+                    // Update in-memory state only for session
+                    _authState.value = AuthState(isAuthenticated = true, user = user)
+                    _authToken = authResponse.token
+                    android.util.Log.d("AndroidAuthRepo", "Login successful (session only): ${user.email}")
+                }
                 Result.success(user)
             } else {
                 val errorBody = response.bodyAsText()

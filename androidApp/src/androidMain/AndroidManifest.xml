@@ -63,6 +63,16 @@
                     android:host="auth" />
             </intent-filter>
             
+            <!-- LinkedIn OAuth callback deep link -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="vwatekapply"
+                    android:host="linkedin-callback" />
+            </intent-filter>
+            
             <!-- Deep links for in-app screen navigation -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

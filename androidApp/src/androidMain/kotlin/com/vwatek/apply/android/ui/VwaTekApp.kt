@@ -155,7 +155,22 @@ fun VwaTekApp(
     // Handle deep links
     LaunchedEffect(deepLinkUri) {
         if (deepLinkUri != null) {
+            android.util.Log.d("VwaTekApp", "Handling deep link: $deepLinkUri")
             when {
+                // Handle LinkedIn OAuth callback
+                deepLinkUri.startsWith("vwatekapply://linkedin-callback") -> {
+                    val uri = android.net.Uri.parse(deepLinkUri)
+                    val code = uri.getQueryParameter("code")
+                    val error = uri.getQueryParameter("error")
+                    
+                    if (code != null) {
+                        android.util.Log.d("VwaTekApp", "LinkedIn auth code received")
+                        authViewModel.onIntent(com.vwatek.apply.presentation.auth.AuthIntent.LinkedInCallback(code))
+                    } else if (error != null) {
+                        android.util.Log.e("VwaTekApp", "LinkedIn auth error: $error")
+                        snackbarHostState.showSnackbar("LinkedIn login failed: $error")
+                    }
+                }
                 // Handle checkout success callback
                 deepLinkUri.startsWith("vwatekapply://checkout/success") -> {
                     checkoutMessage = "Payment successful! Your subscription is now active."

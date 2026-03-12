@@ -1,5 +1,7 @@
 package com.vwatek.apply.android.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -36,6 +38,7 @@ import kotlinx.coroutines.launch
 fun AuthScreen(viewModel: AuthViewModel) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     // Show Snackbar on error
     LaunchedEffect(state.error) {
@@ -43,6 +46,21 @@ fun AuthScreen(viewModel: AuthViewModel) {
             snackbarHostState.showSnackbar(message = it, duration = SnackbarDuration.Short)
             kotlinx.coroutines.delay(5000)
             viewModel.onIntent(AuthIntent.ClearError)
+        }
+    }
+    
+    // Open LinkedIn auth URL when available
+    LaunchedEffect(state.linkedInAuthUrl) {
+        state.linkedInAuthUrl?.let { url ->
+            Log.d("AuthScreen", "Opening LinkedIn auth URL: $url")
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                context.startActivity(intent)
+                // Clear the URL to prevent reopening
+                viewModel.onIntent(AuthIntent.ClearSuccess)
+            } catch (e: Exception) {
+                Log.e("AuthScreen", "Failed to open LinkedIn URL: ${e.message}")
+            }
         }
     }
     
@@ -276,11 +294,16 @@ private fun LoginContent(
         
         Spacer(modifier = Modifier.height(16.dp))
         
+        // Debug: Log button states
+        Log.d("AuthScreen", "Button states - isLoading: $isLoading, googleSignInLoading: $googleSignInLoading")
+        
         // Google Sign-In Button
         OutlinedButton(
             onClick = {
+                Log.d("AuthScreen", "=== GOOGLE BUTTON CLICKED ===")
                 googleSignInLoading = true
                 scope.launch {
+                    Log.d("AuthScreen", "Launching Google sign-in coroutine")
                     when (val result = googleSignInHelper.signIn()) {
                         is GoogleSignInHelper.SignInResult.Success -> {
                             Log.d("AuthScreen", "Google sign-in success: ${result.email}")
@@ -349,7 +372,10 @@ private fun LoginContent(
         
         // LinkedIn Sign-In Button
         OutlinedButton(
-            onClick = onLinkedInSignIn,
+            onClick = {
+                Log.d("AuthScreen", "=== LINKEDIN BUTTON CLICKED ===")
+                onLinkedInSignIn()
+            },
             enabled = !isLoading && !googleSignInLoading,
             modifier = Modifier
                 .fillMaxWidth()

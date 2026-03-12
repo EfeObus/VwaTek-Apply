@@ -1,6 +1,8 @@
 package com.vwatek.apply.android.auth
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -25,12 +27,25 @@ class GoogleSignInHelper(private val context: Context) {
     companion object {
         private const val TAG = "GoogleSignInHelper"
         
-        // Web Client ID from Google Cloud Console
-        // This should be the OAuth 2.0 Client ID for Web application type
+        // Web Client ID from Google Cloud Console - used for server-side token verification
+        // The CredentialManager uses Web Client ID even on Android for ID token verification
         const val WEB_CLIENT_ID = "21443684777-b3fbd6nd22ggk7shckddina56lm4rq7a.apps.googleusercontent.com"
+        
+        // Android Client ID - the app's SHA-1 fingerprint must be registered with this
+        const val ANDROID_CLIENT_ID = "21443684777-g1r9mtmo1m3njn9th2via6mdf2rg10s1.apps.googleusercontent.com"
     }
     
     private val credentialManager = CredentialManager.create(context)
+    
+    // Helper to get Activity from Context
+    private fun Context.findActivity(): Activity? {
+        var ctx = this
+        while (ctx is ContextWrapper) {
+            if (ctx is Activity) return ctx
+            ctx = ctx.baseContext
+        }
+        return null
+    }
     
     /**
      * Result of Google Sign-In attempt
@@ -54,8 +69,16 @@ class GoogleSignInHelper(private val context: Context) {
      * Initiates Google Sign-In flow using Credential Manager.
      * This is the recommended approach for Android 14+ and works on older versions too.
      */
-    suspend fun signIn(): SignInResult = withContext(Dispatchers.IO) {
+    suspend fun signIn(): SignInResult = withContext(Dispatchers.Main) {
         try {
+            val activity = context.findActivity()
+            if (activity == null) {
+                Log.e(TAG, "Could not find Activity from context")
+                return@withContext SignInResult.Error("Could not find Activity context")
+            }
+            
+            Log.d(TAG, "Starting Google Sign-In flow")
+            
             // Generate a nonce for security
             val nonce = generateNonce()
             
@@ -72,9 +95,11 @@ class GoogleSignInHelper(private val context: Context) {
                 .addCredentialOption(googleIdOption)
                 .build()
             
-            // Request credentials
+            Log.d(TAG, "Requesting credentials from CredentialManager")
+            
+            // Request credentials - MUST use Activity context
             val result = credentialManager.getCredential(
-                context = context,
+                context = activity,
                 request = request
             )
             
@@ -97,8 +122,13 @@ class GoogleSignInHelper(private val context: Context) {
     /**
      * Try to sign in with previously authorized account (silent sign-in).
      */
-    suspend fun signInWithExistingAccount(): SignInResult = withContext(Dispatchers.IO) {
+    suspend fun signInWithExistingAccount(): SignInResult = withContext(Dispatchers.Main) {
         try {
+            val activity = context.findActivity()
+            if (activity == null) {
+                return@withContext SignInResult.Error("Could not find Activity context")
+            }
+            
             val nonce = generateNonce()
             
             val googleIdOption = GetGoogleIdOption.Builder()
@@ -113,7 +143,7 @@ class GoogleSignInHelper(private val context: Context) {
                 .build()
             
             val result = credentialManager.getCredential(
-                context = context,
+                context = activity,
                 request = request
             )
             
