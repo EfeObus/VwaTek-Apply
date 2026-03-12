@@ -27,7 +27,7 @@ class GoogleSignInHelper(private val context: Context) {
         
         // Web Client ID from Google Cloud Console
         // This should be the OAuth 2.0 Client ID for Web application type
-        const val WEB_CLIENT_ID = "21443684777-vp58jf5fq1k7lvqk8m5eo5v5dv8m1h9t.apps.googleusercontent.com"
+        const val WEB_CLIENT_ID = "21443684777-b3fbd6nd22ggk7shckddina56lm4rq7a.apps.googleusercontent.com"
     }
     
     private val credentialManager = CredentialManager.create(context)

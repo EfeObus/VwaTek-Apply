@@ -121,7 +121,7 @@ fun Sidebar(
                         property("padding", "10px 16px")
                         property("border", "none")
                         property("border-radius", "8px")
-                        property("background", "var(--primary-color)")
+                        property("background", "var(--gradient-primary)")
                         property("color", "white")
                         property("font-weight", "500")
                         property("font-size", "0.875rem")
